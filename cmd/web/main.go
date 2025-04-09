@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
+
 	_ "github.com/lib/pq"
 )
 
@@ -42,6 +43,7 @@ func main() {
 
 	defer db.Close()
 
+	// Initialize the template cache
 	templateCache, err := NewTemplateCache()
 	if err != nil {
 		logger.Error(err.Error())
@@ -49,14 +51,15 @@ func main() {
 	}
 
 	app := &application{
-		addr:   addr,
-		logger: logger,
-
+		addr:            addr,
+		logger:          logger,
+		MenuItems:       &data.MenuItemModel{DB: db},
 		Orders:          &data.OrderModel{DB: db},
 		Categories:      &data.CategoryModel{DB: db},
 		Users:           &data.UserModel{DB: db},
 		Analytics:       &data.AnalyticsModel{DB: db},
 		Recommendations: &data.RecommendationModel{DB: db},
+		templateCache:   templateCache,
 	}
 
 	err = app.serve()

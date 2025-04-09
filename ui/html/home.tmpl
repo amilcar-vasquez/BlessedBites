@@ -1,20 +1,65 @@
 {{define "content"}}
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {{range .}}
-            <div class="bg-white shadow-lg rounded-lg overflow-hidden p-4">
-                <img src="https://via.placeholder.com/150" alt="food" class="w-full h-40 object-cover rounded-md">
-                <div class="pt-4 text-center">
-                    <h3 class="text-xl font-semibold">{{.Name}}</h3>
-                    <p class="text-gray-500 text-sm">{{.Description}}</p>
-                    <p class="text-lg font-bold text-bbAccent">${{.Price}}</p>
-                    <button
-                        class="mt-4 py-2 px-6 bg-bbPrimary text-white rounded-full"
-                        onclick=""
-                    >
-                        Add to Cart
-                    </button>
+<!-- Top Buttons for Related Foods -->
+<div class="top-buttons">
+    <a class="btn">Pizza</a>
+    <a class="btn">Wraps</a>
+    <a class="btn">Drinks</a>
+    <a class="btn">Desserts</a>
+</div>
+
+<div class="row" style="margin-top: 2rem;">
+    <!-- Sidebar -->
+    <div class="col s12 m4 l3">
+        <div class="category-sidebar">
+            <h5>Categories</h5>
+
+            <div class="category-item">
+                <img src="https://via.placeholder.com/40?text=B" alt="Burger">
+                <span>Burgers</span>
+            </div>
+            <div class="category-item">
+                <img src="https://via.placeholder.com/40?text=P" alt="Pizza">
+                <span>Pizza</span>
+            </div>
+            <div class="category-item">
+                <img src="https://via.placeholder.com/40?text=W" alt="Wrap">
+                <span>Wraps</span>
+            </div>
+            <div class="category-item">
+                <img src="https://via.placeholder.com/40?text=D" alt="Drinks">
+                <span>Drinks</span>
+            </div>
+            <div class="category-item">
+                <img src="https://via.placeholder.com/40?text=DS" alt="Desserts">
+                <span>Desserts</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Items Grid -->
+    <div class="col s12 m8 l9">
+        <div class="row">
+            <!-- Repeatable Card Layout -->
+            <div class="col s12 m6 l4">
+                <div class="card">
+                    <div class="card-image">
+                        <img src="https://via.placeholder.com/300x200" alt="Food Image">
+                    </div>
+                    <div class="card-content">
+                        <span class="card-title">Cheeseburger</span>
+                        <p>Juicy burger with cheddar cheese and pickles.</p>
+                        <p><strong>$5.99</strong></p>
+                    </div>
+                    <div class="card-action">
+                        <a href="#">Add to Cart</a>
+                    </div>
                 </div>
             </div>
-        {{end}}
+
+            <!-- ... more items here ... -->
+        </div>
     </div>
+</div>
+</div>
+
 {{end}}

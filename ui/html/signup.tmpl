@@ -1,0 +1,35 @@
+{{ define "content" }}
+<div class="container" style="margin-top: 3rem;">
+  <h4>Sign Up</h4>
+  <form action="/signup/new" method="POST" class="col s12">
+    <div class="input-field">
+        <input id="fullname" name="fullname" type="text" value="{{index .FormData "fullname"}}">
+      <label for="fullname">Full Name</label>
+    </div>
+    {{with .FormErrors.fullname}}
+        <div class="error">{{.}}</div>
+    {{end}}
+    <div class="input-field">
+      <input id="email" name="email" type="email" value=""{{index .FormData "email"}}>
+      <label for="email">Email</label>
+    </div>
+    {{with .FormErrors.email}}
+        <div class="error">{{.}}</div>
+    {{end}}
+    <div class="input-field">
+      <input id="phoneNo" name="phoneNo" type="text" value="{{index .FormData "phoneNo"}}">
+      <label for="phoneNo">Phone Number</label>
+    </div>
+    <div class="input-field">
+      <input id="password" name="password" type="password" value="{{index .FormData "password"}}">
+      <label for="password">Password</label>
+    </div>
+    {{with .FormErrors.password}}
+        <div class="error">{{.}}</div>
+    {{end}}
+    <button class="btn waves-effect waves-light burgundy darken-3" type="submit">
+      Create Account
+    </button>
+  </form>
+</div>
+{{ end }}

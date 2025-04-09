@@ -4,6 +4,7 @@ package main
 type TemplateData struct {
 	Title      string
 	HeaderText string
+
 	FormErrors map[string]string
 	FormData   map[string]string
 }

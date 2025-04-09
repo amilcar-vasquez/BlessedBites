@@ -1,7 +1,71 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css');
+
+
+:root {
+  --burgundy: #6b041f;
+  --mustard: #e49629;
+  --light-bg: #f4f4f4;
+  --text-dark: #333;
+  --card-radius: 16px;
+  --btn-radius: 25px;
+}
 
 body {
   font-family: 'Poppins', sans-serif;
+  background-color: var(--light-bg);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+}
+
+nav {
+  background-color: var(--burgundy);
+  border-radius: 0 0 20px 20px;
+}
+
+nav .brand-logo {
+  color: var(--mustard);
+}
+
+/* Big Top Buttons */
+.top-buttons {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.top-buttons .btn {
+  font-size: 1.2rem;
+  border-radius: var(--btn-radius);
+  background-color: var(--mustard);
+  color: white;
+  text-transform: capitalize;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.top-buttons .btn:hover {
+
+  background-color: var(--burgundy);
+  color: white;
+  box-shadow: 0 6px 8px rgba(0,0,0,0.2);
+}
+
+/* Menu Cards */
+.card {
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+
+/* Category Sidebar */
+.category-sidebar {
+  background-color: white;
+  padding: 1rem;
+}
+
+.error{
+  color: red;
+  font-size: 0.9rem;
 }

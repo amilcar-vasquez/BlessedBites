@@ -3,25 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blessed Bites</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Blessed Bites - eMenu</title>
+
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
-<body class="font-poppins bg-gray-50">
+<body>
+    <div class="container">
+        <!-- Navbar -->
+        <nav>
+            <div class="nav-wrapper">
+                <a href="#" class="brand-logo center">Blessed Bites</a>
+            </div>
+        </nav>
+    
+        {{ block "content" .}}
+        {{ end }}
 
-    <header class="bg-bbPrimary text-white p-4">
-        <h1 class="text-3xl font-bold">Blessed Bites</h1>
-    </header>
+    <!-- Materialize JS and jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
-    <main class="container mx-auto p-6">
-        {{block "content" .}}{{end}}
-    </main>
-
-    <footer class="bg-bbPrimary text-white p-4 text-center">
-        <p>&copy; 2025 Blessed Bites. All Rights Reserved.</p>
-    </footer>
-
-    <!-- Import JS files -->
-    <script src="/assets/js/main.js"></script>
+    <script>
+        // Initialize Materialize components
+        M.AutoInit();
+    </script>
 </body>
 </html>
