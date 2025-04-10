@@ -1,9 +1,15 @@
 // file: cmd/web/templateData.go
 package main
 
+import (
+	"github.com/amilcar-vasquez/blessed-bites/internal/data"
+)
+
 type TemplateData struct {
 	Title      string
 	HeaderText string
+	MenuItems  []*data.MenuItem
+	Categories []*data.Category
 
 	FormErrors map[string]string
 	FormData   map[string]string

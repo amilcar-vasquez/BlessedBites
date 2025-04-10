@@ -1,0 +1,50 @@
+{{define "content"}}
+<div class="container" style="margin-top: 3rem;">
+  <h4>Menu Items</h4>
+
+  {{ if .MenuItems }}
+  <table class="highlight">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Price (BZD)</th>
+        <th>Category ID</th>
+        <th>Image</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .MenuItems }}
+      <tr>
+        <td>{{ .Name }}</td>
+        <td>{{ .Description }}</td>
+        <td>${{ printf "%.2f" .Price }}</td>
+        <td>{{ .CategoryID }}</td>
+        <td>
+          {{ if .ImageURL }}
+          <img src="{{ .ImageURL }}" alt="{{ .Name }}" style="height: 50px;">
+          {{ else }}
+          <span class="grey-text">No image</span>
+          {{ end }}
+        </td>
+        <td>
+          <a href="/menu/update" class="btn-small blue">Update</a>
+          <form action="/menu/delete" method="POST" style="display:inline;">
+            <input type="hidden" name="id" value="{{.ID}}">
+            <button class="btn-small red" type="submit" onclick="return confirm('Delete this item?');">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+  {{ else }}
+  <p>No menu items available.</p>
+  {{ end }}
+
+  <div class="right-align" style="margin-top: 2rem;">
+    <a href="/menu/add" class="btn waves-effect waves-light green darken-2">Add New Menu Item</a>
+  </div>
+</div>
+{{ end }}

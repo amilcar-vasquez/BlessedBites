@@ -68,7 +68,7 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	err = app.Users.Insert(user)
+	err = app.User.Insert(user)
 	if err != nil {
 		app.logger.Error("Error inserting user into database", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

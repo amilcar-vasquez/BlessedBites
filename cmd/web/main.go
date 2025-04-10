@@ -1,3 +1,4 @@
+// filepath: cmd/web/main.go
 package main
 
 import (
@@ -16,10 +17,10 @@ import (
 
 type application struct {
 	addr            *string
-	MenuItems       *data.MenuItemModel
-	Orders          *data.OrderModel
-	Categories      *data.CategoryModel
-	Users           *data.UserModel
+	MenuItem        *data.MenuItemModel
+	Order           *data.OrderModel
+	Category        *data.CategoryModel
+	User            *data.UserModel
 	Analytics       *data.AnalyticsModel
 	Recommendations *data.RecommendationModel
 	logger          *slog.Logger
@@ -53,10 +54,10 @@ func main() {
 	app := &application{
 		addr:            addr,
 		logger:          logger,
-		MenuItems:       &data.MenuItemModel{DB: db},
-		Orders:          &data.OrderModel{DB: db},
-		Categories:      &data.CategoryModel{DB: db},
-		Users:           &data.UserModel{DB: db},
+		MenuItem:        &data.MenuItemModel{DB: db},
+		Order:           &data.OrderModel{DB: db},
+		Category:        &data.CategoryModel{DB: db},
+		User:            &data.UserModel{DB: db},
 		Analytics:       &data.AnalyticsModel{DB: db},
 		Recommendations: &data.RecommendationModel{DB: db},
 		templateCache:   templateCache,
