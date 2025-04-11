@@ -1,6 +1,6 @@
 # BlessedBites
 
-**BlessedBites** is a web-based application designed to streamline the operations of a small to mid-sized food service or catering business. It provides functionalities to manage menu items, track orders, handle customer data, and support operational decision-making using a backend database.
+**BlessedBites** is a web-based application designed to streamline the operations of a small to mid-sized food restaurant. It provides functionalities to manage menu items.  It will also support orders and suggestions through future implementations.
 
 ---
 
