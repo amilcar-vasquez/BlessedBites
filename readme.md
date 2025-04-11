@@ -26,8 +26,8 @@ This project includes:
 > ⚠️ **Important:** These are for **testing purposes** use only.
 
 ```text
-Database: blessedbites
+Database: blessed_bites
 User: blessed_bites
-Password: Matthee3.5:6
+Password: Matthew3.5:6
 Host: localhost
 Port: 4000
