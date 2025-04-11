@@ -28,6 +28,18 @@ nav .brand-logo {
   color: var(--mustard);
 }
 
+.btn-mustard {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: var(--mustard);
+  border-radius: var(--btn-radius);
+  color: white;
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
 /* Big Top Buttons */
 .top-buttons {
   margin-top: 1.5rem;
