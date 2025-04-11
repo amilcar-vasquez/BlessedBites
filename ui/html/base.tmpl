@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blessed Bites - eMenu</title>
+    <title>{{.Title}}</title>
 
     <!-- Compiled and minified CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
@@ -19,7 +19,7 @@
         <!-- Navbar -->
         <nav>
             <div class="nav-wrapper">
-                <a href="#" class="brand-logo center">Blessed Bites</a>
+                <a href="/" class="brand-logo center">Blessed Bites</a>
             </div>
         </nav>
     
@@ -33,7 +33,10 @@
     <script>
         // Initialize Materialize components
         M.AutoInit();
-
+        document.addEventListener('DOMContentLoaded', function() {
+        var elems = document.querySelectorAll('select');
+        M.FormSelect.init(elems);
+        });
     </script>
 </body>
 </html>

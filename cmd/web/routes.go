@@ -17,6 +17,8 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /menu/add/new", app.addMenuItemHandler)
 	mux.HandleFunc("GET /menu", app.menuPageHandler)
 	mux.HandleFunc("POST /menu/delete", app.deleteMenuItem)
+	mux.HandleFunc("POST /menu/edit", app.editMenuItem)
+	mux.HandleFunc("POST /menu/update", app.updateMenuItem)
 	mux.HandleFunc("POST /category/add", app.addCategory)
 	mux.HandleFunc("POST /category/delete", app.deleteCategory)
 

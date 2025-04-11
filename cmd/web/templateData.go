@@ -6,10 +6,12 @@ import (
 )
 
 type TemplateData struct {
-	Title      string
-	HeaderText string
-	MenuItems  []*data.MenuItem
-	Categories []*data.Category
+	Title       string
+	HeaderText  string
+	MenuItems   []*data.MenuItem
+	MenuItem    *data.MenuItem
+	Categories  []*data.Category
+	CategoryMap map[int]string
 
 	FormErrors map[string]string
 	FormData   map[string]string

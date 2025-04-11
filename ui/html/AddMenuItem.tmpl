@@ -31,65 +31,43 @@
   
     <!-- Main Menu Content -->
     <div class="col s12 m8 l9">
-        <div class="container" style="margin-top: 3rem;">
-            <h4>Add Menu Item</h4>
-            <form action="/menu/add/new" method="POST" class="col s12">
-          
-              <!-- Name -->
-              <div class="input-field">
-                <input id="name" name="name" type="text" value="{{index .FormData "name"}}">
-                <label for="name">Item Name</label>
-              </div>
-              {{ with .FormErrors.name }}
-                <div class="error">{{ . }}</div>
-              {{ end }}
-          
-              <!-- Description -->
-              <div class="input-field">
-                <textarea id="description" name="description" class="materialize-textarea">{{index .FormData "description"}}</textarea>
-                <label for="description">Description</label>
-              </div>
-              {{ with .FormErrors.description }}
-                <div class="error">{{ . }}</div>
-              {{ end }}
-          
-              <!-- Price -->
-              <div class="input-field">
-                <input id="price" name="price" type="number" step="0.01" value="{{index .FormData "price"}}">
-                <label for="price">Price (BZD)</label>
-              </div>
-              {{ with .FormErrors.price }}
-                <div class="error">{{ . }}</div>
-              {{ end }}
-          
-              <!-- Category Select Dropdown -->
-            <div class="input-field">
-                <select name="category_id">
-                <option value="" disabled selected>Choose a category</option>
-                {{ range .Categories }}
-                <option value="{{ .ID }}" {{ if eq (index $.FormData "category_id") (printf "%d" .ID) }}selected{{ end }}>
-                    {{ .Name }}
-                </option>
-                {{ end }}
-                </select>
-                <label>Category</label>
-            </div>
-          
-              <!-- Image URL -->
-              <div class="input-field">
-                <input id="image_url" name="image_url" type="text" value="{{index .FormData "image_url"}}">
-                <label for="image_url">Image URL</label>
-              </div>
-              {{ with .FormErrors.image_url }}
-                <div class="error">{{ . }}</div>
-              {{ end }}
-          
-              <!-- Submit -->
-              <button class="btn waves-effect waves-light burgundy darken-3" type="submit">
-                Add Item
-              </button>
-            </form>
+      <div class="container" style="margin-top: 3rem;">
+        <h4>{{ .HeaderText }}</h4>
+      
+        <form action="{{ if .MenuItem }}/menu/update{{ else }}/menu/add/new{{ end }}" method="POST">
+          {{ if .MenuItem }}
+            <input type="hidden" name="id" value="{{ .MenuItem.ID }}">
+          {{ end }}
+      
+          <div class="input-field">
+            <input type="text" name="name" id="name" value="{{ if .MenuItem }}{{ .MenuItem.Name }}{{ end }}" required>
+            <label for="name" class="active">Name</label>
           </div>
+      
+          <div class="input-field">
+            <textarea name="description" id="description" class="materialize-textarea">{{ if .MenuItem }}{{ .MenuItem.Description }}{{ end }}</textarea>
+            <label for="description" class="active">Description</label>
+          </div>
+      
+          <div class="input-field">
+            <input type="number" name="price" id="price" value="{{ if .MenuItem }}{{ .MenuItem.Price }}{{ end }}" step="0.01" required>
+            <label for="price" class="active">Price (BZD)</label>
+          </div>
+      
+          <div class="input-field">
+            <select name="category_id" id="category_id">
+              {{ range .Categories }}
+                <option value="{{ .ID }}" {{ if $.MenuItem }}{{ if eq .ID $.MenuItem.CategoryID }}selected{{ end }}{{ end }}>{{ .Name }}</option>
+              {{ end }}
+            </select>
+            <label for="category_id">Category</label>
+          </div>
+      
+          <div class="right-align">
+            <button type="submit" class="btn waves-effect green darken-2">{{ if .MenuItem }}Update{{ else }}Add{{ end }} Menu Item</button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
+</div>
 {{ end }}

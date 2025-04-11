@@ -9,7 +9,7 @@
         <th>Name</th>
         <th>Description</th>
         <th>Price (BZD)</th>
-        <th>Category ID</th>
+        <th>Category</th>
         <th>Image</th>
         <th>Actions</th>
       </tr>
@@ -20,7 +20,7 @@
         <td>{{ .Name }}</td>
         <td>{{ .Description }}</td>
         <td>${{ printf "%.2f" .Price }}</td>
-        <td>{{ .CategoryID }}</td>
+        <td>{{ index $.CategoryMap .CategoryID }}</td>
         <td>
           {{ if .ImageURL }}
           <img src="{{ .ImageURL }}" alt="{{ .Name }}" style="height: 50px;">
@@ -29,7 +29,10 @@
           {{ end }}
         </td>
         <td>
-          <a href="/menu/update" class="btn-small blue">Update</a>
+          <form action="/menu/edit" method="POST" style="display:inline;">
+            <input type="hidden" name="id" value="{{.ID}}">
+            <button class="btn-small blue" type="submit">Update</button>
+          </form>
           <form action="/menu/delete" method="POST" style="display:inline;">
             <input type="hidden" name="id" value="{{.ID}}">
             <button class="btn-small red" type="submit" onclick="return confirm('Delete this item?');">Delete</button>

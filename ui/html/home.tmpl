@@ -13,26 +13,12 @@
         <div class="category-sidebar">
             <h5>Categories</h5>
 
+            {{range .Categories}}
             <div class="category-item">
-                <img src="https://via.placeholder.com/40?text=B" alt="Burger">
-                <span>Burgers</span>
+                <span>{{.Name}}</span>
             </div>
-            <div class="category-item">
-                <img src="https://via.placeholder.com/40?text=P" alt="Pizza">
-                <span>Pizza</span>
-            </div>
-            <div class="category-item">
-                <img src="https://via.placeholder.com/40?text=W" alt="Wrap">
-                <span>Wraps</span>
-            </div>
-            <div class="category-item">
-                <img src="https://via.placeholder.com/40?text=D" alt="Drinks">
-                <span>Drinks</span>
-            </div>
-            <div class="category-item">
-                <img src="https://via.placeholder.com/40?text=DS" alt="Desserts">
-                <span>Desserts</span>
-            </div>
+
+            {{end}}
         </div>
     </div>
 
@@ -40,22 +26,23 @@
     <div class="col s12 m8 l9">
         <div class="row">
             <!-- Repeatable Card Layout -->
-            <div class="col s12 m6 l4">
-                <div class="card">
-                    <div class="card-image">
-                        <img src="https://via.placeholder.com/300x200" alt="Food Image">
-                    </div>
-                    <div class="card-content">
-                        <span class="card-title">Cheeseburger</span>
-                        <p>Juicy burger with cheddar cheese and pickles.</p>
-                        <p><strong>$5.99</strong></p>
-                    </div>
-                    <div class="card-action">
-                        <a href="#">Add to Cart</a>
+            {{range .MenuItems}}
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="{{.ImageURL}}" alt="{{.Name}}">
+                        </div>
+                        <div class="card-content">
+                            <span class="card-title">{{.Name}}</span>
+                            <p>{{.Description}}</p>
+                            <p><strong>${{printf "%.2f" .Price}}</strong></p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#">Add to Cart</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-
+            {{end}}
             <!-- ... more items here ... -->
         </div>
     </div>

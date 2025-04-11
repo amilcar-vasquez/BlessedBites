@@ -97,3 +97,38 @@ func (m *MenuItemModel) Delete(id int64) error {
 	}
 	return nil
 }
+
+// update updates a menu item in the database
+func (m *MenuItemModel) Update(item *MenuItem) error {
+	query := `UPDATE menu_items 
+			  SET name = $1, description = $2, price = $3, category_id = $4, image_url = $5 
+			  WHERE id = $6`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := m.DB.ExecContext(
+		ctx,
+		query,
+		item.Name,
+		item.Description,
+		item.Price,
+		item.CategoryID,
+		item.ImageURL,
+		item.ID,
+	)
+	return err
+}
+
+// Get retrieves a menu item by ID from the database
+func (m *MenuItemModel) Get(id int64) (*MenuItem, error) {
+	query := `SELECT id, name, description, price, category_id, order_count, is_active, image_url, created_at 
+			  FROM menu_items 
+			  WHERE id = $1`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	item := &MenuItem{}
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(&item.ID, &item.Name, &item.Description, &item.Price, &item.CategoryID, &item.OrderCount, &item.IsActive, &item.ImageURL, &item.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
+}
