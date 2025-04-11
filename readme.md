@@ -9,7 +9,7 @@
 This project includes:
 - A backend database to store and manage data related to food services.
 - A front-end to display menu items (the actual menu).
--a "admin" panel to manage menu items
+- an "admin" panel to manage menu items
 - SQL database dump and diagram for setup and customization.
 
 ---
