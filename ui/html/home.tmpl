@@ -1,10 +1,9 @@
 {{define "content"}}
 <!-- Top Buttons for Related Foods -->
 <div class="top-buttons">
-    <a class="btn">Pizza</a>
-    <a class="btn">Wraps</a>
-    <a class="btn">Drinks</a>
-    <a class="btn">Desserts</a>
+    {{range .RandomMenuItems}}
+        <a class="btn">{{.Name}}</a>
+    {{end}}
 </div>
 
 <div class="row" style="margin-top: 2rem;">
