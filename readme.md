@@ -16,8 +16,8 @@ This project includes:
 
 ## 📂 Documentation
 
-- [📊 Database Schema Diagram](documentation/db-diagram.png)
-- [💾 Database Dump (.sql file)](documentation/blessedbites-db-dump.sql)
+- [📊 Database Schema Diagram](documentation/BlessedBites.png)
+- [💾 Database Dump (.sql file)](documentation/blessed_bites_dump.sql)
 
 ---
 
