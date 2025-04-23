@@ -39,6 +39,12 @@ nav .brand-logo {
   box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
+.btn-mustard:hover {
+  background-color:#ff9500;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
 /* Big Top Buttons */
 .top-buttons {
   margin-top: 1.5rem;
@@ -64,6 +70,18 @@ nav .brand-logo {
   box-shadow: 0 6px 8px rgba(0,0,0,0.2);
 }
 
+.burgundy {
+  background-color: var(--burgundy);
+  border-radius: var(--btn-radius);
+  margin: 0.25rem;
+}
+
+.mustard {
+  background-color: var(--mustard);
+  border-radius: var(--btn-radius);
+  margin: 0.25rem;
+}
+
 /* Menu Cards */
 .card {
   border-radius: var(--card-radius);
@@ -74,6 +92,14 @@ nav .brand-logo {
 .category-sidebar {
   background-color: white;
   padding: 1rem;
+}
+
+.order-sidebar {
+  color: var(--light-bg);
+  background-color: var(--burgundy);
+  padding: 1rem;
+  border-radius: var(--card-radius);
+  border-color: var(--mustard)
 }
 
 .error{

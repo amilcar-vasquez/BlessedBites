@@ -30,3 +30,8 @@ db/migrations/new:
 db/migrations/up:
 		@echo "Applying all up migrations..."
 		migrate -path ./migrations -database ${JOURNAL_DB_DSN} up
+
+.PHONY: dev
+dev:
+		@echo "Running in development mode..."
+		@air

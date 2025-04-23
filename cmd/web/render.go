@@ -1,3 +1,4 @@
+// file: cmd/web/render.go
 package main
 
 import (

@@ -31,11 +31,11 @@
         <td>
           <form action="/menu/edit" method="POST" style="display:inline;">
             <input type="hidden" name="id" value="{{.ID}}">
-            <button class="btn-small blue" type="submit">Update</button>
+            <button class="btn-small mustard" type="submit">Update</button>
           </form>
           <form action="/menu/delete" method="POST" style="display:inline;">
             <input type="hidden" name="id" value="{{.ID}}">
-            <button class="btn-small red" type="submit" onclick="return confirm('Delete this item?');">Delete</button>
+            <button class="btn-small burgundy" type="submit" onclick="return confirm('Delete this item?');">Delete</button>
           </form>
         </td>
       </tr>
@@ -47,7 +47,7 @@
   {{ end }}
 
   <div class="right-align" style="margin-top: 2rem;">
-    <a href="/menu/add" class="btn waves-effect waves-light green darken-2">Add New Menu Item</a>
+    <a href="/menu/add" class="btn mustard">Add New Menu Item</a>
   </div>
 </div>
 {{ end }}
