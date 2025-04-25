@@ -21,8 +21,8 @@ type TemplateData struct {
 // factory function to initialize a new templateData struct
 func NewTemplateData() *TemplateData {
 	return &TemplateData{
-		Title:      "Welcome to Tapir Journals",
-		HeaderText: "Welcome to Tapir Journals",
+		Title:      "Welcome to Blessed Bites",
+		HeaderText: "Welcome to Blessed Bites",
 		FormErrors: map[string]string{},
 		FormData:   map[string]string{},
 	}

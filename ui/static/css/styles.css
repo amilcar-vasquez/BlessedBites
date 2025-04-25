@@ -103,6 +103,10 @@ nav .brand-logo {
 }
 
 .error{
-  color: red;
+  color: var(--burgundy);
   font-size: 0.9rem;
+}
+
+.invalid-input{
+  border: 1px solid var(--burgundy);
 }

@@ -48,12 +48,16 @@ func (m *MenuItemModel) Insert(menuItem *MenuItem) error {
 // ValidateMenuItem validates the fields of a menu item
 func ValidateMenuItem(v *validator.Validator, item *MenuItem) {
 	v.Check(validator.NotBlank(item.Name), "name", "Name is required")
-	v.Check(validator.MaxLength(item.Name, 100), "name", "Name must be less than 100 characters")
+	v.Check(validator.MinLength(item.Name, 3), "name", "Name must be at least 3 characters")
+	v.Check(validator.MaxLength(item.Name, 100), "name", "Name must be less than 50 characters")
 
 	v.Check(item.Price > 0, "price", "Price must be greater than zero")
 
+	v.Check(validator.NotBlank(item.Description), "description", "Description is required")
 	v.Check(validator.MaxLength(item.Description, 500), "description", "Description must be less than 500 characters")
-	v.Check(item.CategoryID >= 0, "category_id", "Category ID must be a non-negative integer")
+	v.Check(validator.MinLength(item.Description, 10), "description", "Description must be at least 10 characters")
+
+	v.Check(item.CategoryID >= 0, "category_id", "Please select a category")
 }
 
 // GetAll retrieves all menu items from the database

@@ -40,27 +40,39 @@
           {{ end }}
       
           <div class="input-field">
-            <input type="text" name="name" id="name" value="{{ if .MenuItem }}{{ .MenuItem.Name }}{{ end }}" required>
-            <label for="name" class="active">Name</label>
+            <input type="text" name="name" id="name" value="{{ if .MenuItem }}{{ .MenuItem.Name }}{{ end }}" class="{{if .FormErrors.name}} invalid-input {{end}}">
+            <label for="name" class=" active">Name</label>
+            {{ with .FormErrors.name }}
+              <div class="error">{{ . }}</div>
+            {{ end }}
           </div>
       
           <div class="input-field">
-            <textarea name="description" id="description" class="materialize-textarea">{{ if .MenuItem }}{{ .MenuItem.Description }}{{ end }}</textarea>
+            <textarea name="description" id="description" class="{{if .FormErrors.description}} invalid-input {{else}} materialize-textarea {{end}}">{{ if .MenuItem }}{{ .MenuItem.Description }}{{ end }}</textarea>
             <label for="description" class="active">Description</label>
+            {{ with .FormErrors.description }}
+              <div class="error">{{ . }}</div>
+            {{ end }}
           </div>
       
           <div class="input-field">
-            <input type="number" name="price" id="price" value="{{ if .MenuItem }}{{ .MenuItem.Price }}{{ end }}" step="0.01" required>
+            <input type="number" name="price" id="price" value="{{ if .MenuItem }}{{ .MenuItem.Price }}{{ end }}" step="0.01" class="{{if .FormErrors.price}} invalid-input {{end}}">
             <label for="price" class="active">Price (BZD)</label>
+            {{ with .FormErrors.price }}
+              <div class="error">{{ . }}</div>
+            {{ end }}
           </div>
       
           <div class="input-field">
-            <select name="category_id" id="category_id">
+            <select name="category_id" id="category_id" class="{{if .FormErrors.category_id}} invalid-input {{end}}">
               {{ range .Categories }}
                 <option value="{{ .ID }}" {{ if $.MenuItem }}{{ if eq .ID $.MenuItem.CategoryID }}selected{{ end }}{{ end }}>{{ .Name }}</option>
               {{ end }}
             </select>
             <label for="category_id">Category</label>
+            {{ with .FormErrors.category_id }}
+            <div class="error">{{ . }}</div>
+            {{ end }}
           </div>
       
           <div class="right-align">
