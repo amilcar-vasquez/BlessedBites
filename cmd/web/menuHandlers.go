@@ -8,9 +8,36 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
+
+func generateFileName(categoryID, name, originalFilename string) string {
+	// Get extension
+	ext := filepath.Ext(originalFilename)
+	if ext == "" {
+		ext = ".jpg" // fallback if no extension
+	}
+
+	// Sanitize name
+	cleanName := strings.ToLower(name)
+	cleanName = strings.ReplaceAll(cleanName, " ", "-")
+	cleanName = strings.ReplaceAll(cleanName, "_", "-") // normalize underscores too
+	cleanName = strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
+			return r
+		}
+		return -1
+	}, cleanName)
+
+	// Generate timestamp
+	timestamp := time.Now().Format("20060102_150405")
+
+	// Final filename
+	return fmt.Sprintf("%s_%s_%s%s", timestamp, categoryID, cleanName, ext)
+}
 
 // parseMenuItemForm parses the multipart form and returns a populated MenuItem and form values.
 func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*data.MenuItem, map[string]string, map[string]string, error) {
@@ -65,16 +92,7 @@ func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*d
 		}
 		if file != nil {
 			defer file.Close()
-			fileName := fmt.Sprintf("%s.%s.%s.%s.%s.%s_%s_%s_%s",
-				time.Now().Format("2006"),
-				time.Now().Format("01"),
-				time.Now().Format("02"),
-				time.Now().Format("15"),
-				time.Now().Format("04"),
-				time.Now().Format("05"),
-				categoryIDStr,
-				name,
-				header.Filename)
+			fileName := generateFileName(categoryIDStr, name, header.Filename)
 			imagePath := "./ui/static/img/uploads/" + fileName
 			dst, err := os.Create(imagePath)
 			if err != nil {
