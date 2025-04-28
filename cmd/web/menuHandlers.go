@@ -14,17 +14,15 @@ import (
 	"time"
 )
 
-func generateFileName(categoryID, name, originalFilename string) string {
-	// Get extension
+func generateFileName(categoryID int, name, originalFilename string) string {
 	ext := filepath.Ext(originalFilename)
 	if ext == "" {
-		ext = ".jpg" // fallback if no extension
+		ext = ".jpg"
 	}
 
-	// Sanitize name
 	cleanName := strings.ToLower(name)
 	cleanName = strings.ReplaceAll(cleanName, " ", "-")
-	cleanName = strings.ReplaceAll(cleanName, "_", "-") // normalize underscores too
+	cleanName = strings.ReplaceAll(cleanName, "_", "-")
 	cleanName = strings.Map(func(r rune) rune {
 		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
 			return r
@@ -32,11 +30,8 @@ func generateFileName(categoryID, name, originalFilename string) string {
 		return -1
 	}, cleanName)
 
-	// Generate timestamp
 	timestamp := time.Now().Format("20060102_150405")
-
-	// Final filename
-	return fmt.Sprintf("%s_%s_%s%s", timestamp, categoryID, cleanName, ext)
+	return fmt.Sprintf("%s_%s_%s%s", timestamp, strconv.Itoa(categoryID), cleanName, ext)
 }
 
 // parseMenuItemForm parses the multipart form and returns a populated MenuItem and form values.
@@ -92,7 +87,7 @@ func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*d
 		}
 		if file != nil {
 			defer file.Close()
-			fileName := generateFileName(categoryIDStr, name, header.Filename)
+			fileName := generateFileName(categoryID, name, header.Filename)
 			imagePath := "./ui/static/img/uploads/" + fileName
 			dst, err := os.Create(imagePath)
 			if err != nil {
@@ -233,16 +228,16 @@ func (app *application) deleteMenuItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	MenuItemIDStr := r.FormValue("id")
-	if MenuItemIDStr == "" {
+	menuItemIDStr := r.FormValue("id")
+	if menuItemIDStr == "" {
 		app.logger.Error("missing ID", "url", r.URL.Path, "method", r.Method)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	MenuItemID, err := strconv.ParseInt(MenuItemIDStr, 10, 64)
+	MenuItemID, err := strconv.ParseInt(menuItemIDStr, 10, 64)
 	if err != nil {
-		app.logger.Error("invalid ID format", "id", MenuItemIDStr, "error", err)
+		app.logger.Error("invalid ID format", "id", menuItemIDStr, "error", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -258,8 +253,13 @@ func (app *application) deleteMenuItem(w http.ResponseWriter, r *http.Request) {
 
 // GET handler to display the form to edit a menu item
 func (app *application) editMenuItem(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		app.logger.Error("failed to parse form", "error", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	idStr := r.FormValue("id")
-	id, err := strconv.Atoi(idStr)
+	// Check if ID is present in the form data
 
 	if idStr == "" {
 		app.logger.Error("Menu item ID is missing in form data")
@@ -267,9 +267,11 @@ func (app *application) editMenuItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	id, err := strconv.Atoi(idStr)
+
 	if err != nil {
-		app.logger.Error("Invalid menu item ID", "value", idStr, "error", err)
-		http.Error(w, "Invalid menu item ID", http.StatusBadRequest)
+		app.logger.Error("Missing menu item ID", "value", idStr, "error", err)
+		http.Error(w, "Where is", http.StatusBadRequest)
 		return
 	}
 
@@ -302,7 +304,7 @@ func (app *application) editMenuItem(w http.ResponseWriter, r *http.Request) {
 
 // POST handler to process the form submission for editing a menu item
 func (app *application) updateMenuItem(w http.ResponseWriter, r *http.Request) {
-	menuItem, formData, formErrors, err := app.parseMenuItemForm(r, false)
+	menuItem, formData, formErrors, err := app.parseMenuItemForm(r, true)
 	if err != nil {
 		app.logger.Error("Error parsing form", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

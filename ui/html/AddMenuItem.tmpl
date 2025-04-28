@@ -8,8 +8,8 @@
       <!-- Add Category Form -->
       <form action="/category/add" method="POST">
         <div class="input-field">
-          <input type="text" id="name" name="name" required>
-          <label for="name">New Category</label>
+          <input type="text" id="category_name" name="name" required>
+          <label for="category_name">New Category</label>
         </div>
         <button type="submit" class="btn green">Add</button>
       </form>
@@ -37,22 +37,10 @@
         <form action="{{ if .MenuItem }}/menu/update{{ else }}/menu/add/new{{ end }}" method="POST" enctype="multipart/form-data">
           {{ if .MenuItem }}
             <input type="hidden" name="id" value="{{ .MenuItem.ID }}">
-          {{ end }}
-      
+          {{ end }}     
           {{ if .FormErrors.global }}
             <div class="error">{{ .FormErrors.global }}</div>
           {{ end }}
-          {{ if .MenuItem }}
-            <input type="hidden" name="id" value="{{ .MenuItem.ID }}">
-          {{ end }}
-      
-          {{ if .FormErrors.global }}
-            <div class="error">{{ .FormErrors.global }}</div>
-          {{ end }}
-          {{ if .MenuItem }}
-            <input type="hidden" name="id" value="{{ .MenuItem.ID }}">
-          {{ end }}
-      
           <div class="input-field">
             <input type="text" name="name" id="name" value="{{ if .MenuItem }}{{ .MenuItem.Name }}{{ end }}" class="{{if .FormErrors.name}} invalid-input {{end}}">
             <label for="name" class=" active">Name</label>
@@ -91,7 +79,7 @@
 
           <div class="input-field">
             <input type="file" name="image" id="image" accept="image/*">
-            <label for="image_url" class="active">Image URL</label>
+            <label for="image" class="active">Image URL</label>
           </div>
       
           <div class="right-align">

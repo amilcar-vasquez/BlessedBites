@@ -20,7 +20,7 @@ func (app *application) addCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract form fields
-	name := r.PostForm.Get("name")
+	name := r.PostForm.Get("category_name")
 
 	// Create an instance of category
 	category := &data.Category{
