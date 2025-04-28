@@ -3,14 +3,27 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 )
+
+func (app *application) mountStatic(mux *http.ServeMux, routePrefix, dirPath string) {
+	wd, err := os.Getwd()
+	if err != nil {
+		app.logger.Error("failed to get working directory", "error", err)
+		return
+	}
+	staticDir := filepath.Join(wd, dirPath)
+	fileServer := http.FileServer(http.Dir(staticDir))
+	mux.Handle(routePrefix, http.StripPrefix(routePrefix, noCacheMiddleware(fileServer)))
+}
 
 func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
-	//create handlers for all the routes
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("GET /static/", http.StripPrefix("/static", noCacheMiddleware(fileServer)))
-	mux.Handle("GET /ui/static/", http.StripPrefix("/ui/static", noCacheMiddleware(fileServer)))
+
+	app.mountStatic(mux, "/static/", "ui/static")
+	app.mountStatic(mux, "/ui/static/", "ui/static")
+
 	mux.HandleFunc("GET /{$}", app.home)
 	mux.HandleFunc("GET /signup", app.signupForm)
 	mux.HandleFunc("POST /signup/new", app.signupHandler)
