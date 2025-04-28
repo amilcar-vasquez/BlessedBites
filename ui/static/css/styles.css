@@ -19,6 +19,7 @@ body {
   padding: 0;
 }
 
+
 nav {
   background-color: var(--burgundy);
   border-radius: 0 0 20px 20px;
@@ -153,3 +154,39 @@ nav .brand-logo {
   border: 1px solid var(--burgundy);
 }
 
+/* Make the row use flexbox and ensure all items align */
+.row.equal-height {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Ensure that each column has equal height */
+.row.equal-height > .col {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure card takes up all available space in the column */
+.card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Push the button to the bottom of the card */
+.card-content {
+  flex-grow: 1;
+}
+
+/* Style for card button */
+.card-btn {
+  margin-top: auto;  /* Push it to the bottom */
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Optional: You can tweak the padding for the card content for more spacing */
+.card-content p {
+  margin-bottom: 1rem;
+}
