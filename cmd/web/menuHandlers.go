@@ -12,6 +12,94 @@ import (
 	"time"
 )
 
+// parseMenuItemForm parses the multipart form and returns a populated MenuItem and form values.
+func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*data.MenuItem, map[string]string, map[string]string, error) {
+	var formErrors = make(map[string]string)
+	var formData = make(map[string]string)
+
+	// Parse form
+	if isMultipart {
+		err := r.ParseMultipartForm(10 << 20)
+		if err != nil {
+			return nil, formData, formErrors, fmt.Errorf("parsing multipart form: %w", err)
+		}
+	} else {
+		err := r.ParseForm()
+		if err != nil {
+			return nil, formData, formErrors, fmt.Errorf("parsing form: %w", err)
+		}
+	}
+
+	// Extract fields
+	idStr := r.FormValue("id") // only for updates
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+	priceStr := r.FormValue("price")
+	categoryIDStr := r.FormValue("category_id")
+
+	// Save raw form values
+	formData["id"] = idStr
+	formData["name"] = name
+	formData["description"] = description
+	formData["price"] = priceStr
+	formData["category_id"] = categoryIDStr
+
+	// Handle price
+	price, err := strconv.ParseFloat(priceStr, 64)
+	if err != nil {
+		formErrors["price"] = "Invalid price format"
+	}
+
+	// Handle category ID
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		formErrors["category_id"] = "Invalid category ID"
+	}
+
+	// Handle file upload if multipart
+	var imageURL string
+	if isMultipart {
+		file, header, err := r.FormFile("image")
+		if err != nil && err != http.ErrMissingFile {
+			return nil, formData, formErrors, fmt.Errorf("retrieving uploaded file: %w", err)
+		}
+		if file != nil {
+			defer file.Close()
+			fileName := fmt.Sprintf("%s.%s.%s.%s.%s.%s_%s_%s_%s",
+				time.Now().Format("2006"),
+				time.Now().Format("01"),
+				time.Now().Format("02"),
+				time.Now().Format("15"),
+				time.Now().Format("04"),
+				time.Now().Format("05"),
+				categoryIDStr,
+				name,
+				header.Filename)
+			imagePath := "./ui/static/img/uploads/" + fileName
+			dst, err := os.Create(imagePath)
+			if err != nil {
+				return nil, formData, formErrors, fmt.Errorf("saving uploaded file: %w", err)
+			}
+			defer dst.Close()
+			if _, err := io.Copy(dst, file); err != nil {
+				return nil, formData, formErrors, fmt.Errorf("copying uploaded file: %w", err)
+			}
+			imageURL = imagePath
+		}
+	}
+
+	// Build the menu item
+	menuItem := &data.MenuItem{
+		Name:        name,
+		Description: description,
+		Price:       price,
+		CategoryID:  categoryID,
+		ImageURL:    imageURL,
+	}
+
+	return menuItem, formData, formErrors, nil
+}
+
 // GET handler to display the form to add a new menu item
 func (app *application) addMenuItemForm(w http.ResponseWriter, r *http.Request) {
 
@@ -40,115 +128,41 @@ func (app *application) addMenuItemForm(w http.ResponseWriter, r *http.Request) 
 
 // POST handler to process the form submission for adding a new menu item
 func (app *application) addMenuItemHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse form data
-	err := r.ParseMultipartForm(10 << 20)
+	menuItem, formData, formErrors, err := app.parseMenuItemForm(r, true)
 	if err != nil {
-		app.logger.Error("Error parsing multipart form data", "error", err)
+		app.logger.Error("Error parsing form", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	// Extract form fields
-	name := r.FormValue("name")
-	description := r.FormValue("description")
-	priceStr := r.FormValue("price")
-	categoryIDStr := r.FormValue("category_id")
-
-	// handle file upload
-	file, header, err := r.FormFile("image")
-	if err != nil && err != http.ErrMissingFile {
-		app.logger.Error("Error retrieving file from form", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	if file != nil {
-		defer file.Close()
-	}
-	// Save the file to a specific location
-	var imageURL string
-	if file != nil {
-		fileName := fmt.Sprintf("%s.%s.%s.%s.%s.%s_%s_%s_%s",
-			time.Now().Format("2006"),
-			time.Now().Format("01"),
-			time.Now().Format("02"),
-			time.Now().Format("15"),
-			time.Now().Format("04"),
-			time.Now().Format("05"),
-			categoryIDStr,
-			name,
-			header.Filename)
-		imageURL = "./ui/static/img/uploads/" + fileName
-		dst, err := os.Create(imageURL)
-		if err != nil {
-			app.logger.Error("Error creating file", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		defer dst.Close()
-		_, err = io.Copy(dst, file)
-		if err != nil {
-			app.logger.Error("Error saving file", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-	}
-
-	// Convert price and category ID to appropriate types
-	price, err := strconv.ParseFloat(priceStr, 64)
-	if err != nil {
-		app.logger.Error("Error converting price to float", "error", err)
-		http.Error(w, "Invalid Price", http.StatusBadRequest)
-		return
-	}
-	categoryID, err := strconv.Atoi(categoryIDStr)
-	if err != nil {
-		app.logger.Error("Error converting category ID to int", "error", err)
-		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
-		return
-	}
-
-	// Create an instance of MenuItem
-	menuItem := &data.MenuItem{
-		Name:        name,
-		Description: description,
-		Price:       price,
-		CategoryID:  categoryID,
-		ImageURL:    imageURL,
-	}
-
-	// Validate the menu item data
 	v := validator.NewValidator()
 	data.ValidateMenuItem(v, menuItem)
-	if !v.ValidData() {
+	for k, vErr := range v.Errors {
+		formErrors[k] = vErr
+	}
+
+	if len(formErrors) > 0 {
 		data := NewTemplateData()
 		data.Title = "Add Menu Item"
 		data.HeaderText = "Add Menu Item"
-		data.FormErrors = v.Errors
-		data.FormData = map[string]string{
-			"name":        name,
-			"description": description,
-			"price":       priceStr,
-			"category_id": categoryIDStr,
-		}
-		// Re-render the form with validation errors
-		err := app.render(w, http.StatusUnprocessableEntity, "AddMenuItem.tmpl", data)
+		data.FormErrors = formErrors
+		data.FormData = formData
+
+		err = app.render(w, http.StatusUnprocessableEntity, "AddMenuItem.tmpl", data)
 		if err != nil {
 			app.logger.Error("Error rendering template with errors", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
 		return
 	}
-	// Insert the menu item into the database
+
 	err = app.MenuItem.Insert(menuItem)
 	if err != nil {
-		app.logger.Error("Error inserting menu item into database", "error", err)
+		app.logger.Error("Error inserting menu item", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	// Redirect to the menu items list page
-	http.Redirect(w, r, "/menu", http.StatusSeeOther)
 
+	http.Redirect(w, r, "/menu", http.StatusSeeOther)
 }
 
 // GET handler to display the list of menu items
@@ -270,84 +284,50 @@ func (app *application) editMenuItem(w http.ResponseWriter, r *http.Request) {
 
 // POST handler to process the form submission for editing a menu item
 func (app *application) updateMenuItem(w http.ResponseWriter, r *http.Request) {
-	// Parse form data
-	err := r.ParseForm()
+	menuItem, formData, formErrors, err := app.parseMenuItemForm(r, false)
 	if err != nil {
-		app.logger.Error("Error parsing form data", "error", err)
+		app.logger.Error("Error parsing form", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	// Extract form fields
-	idStr := r.PostForm.Get("id")
-	name := r.PostForm.Get("name")
-	description := r.PostForm.Get("description")
-	priceStr := r.PostForm.Get("price")
-
-	categoryIDStr := r.PostForm.Get("category_id")
-	app.logger.Info("Received price string", "price", priceStr)
-
-	// Convert price and category ID to appropriate types
-	price, err := strconv.ParseFloat(priceStr, 64)
-	if err != nil {
-		app.logger.Error("Error converting price to float", "error", err)
-		http.Error(w, "Invalid Price", http.StatusBadRequest)
-		return
-	}
-
-	categoryID, err := strconv.Atoi(categoryIDStr)
-	if err != nil {
-		app.logger.Error("Error converting category ID to int", "error", err)
-		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
-		return
-	}
-
+	// Get ID separately
+	idStr := formData["id"]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.logger.Error("Error converting menu item ID to int", "error", err)
-		http.Error(w, "Invalid Menu Item ID", http.StatusBadRequest)
+		app.logger.Error("Invalid menu item ID", "value", idStr, "error", err)
+		http.Error(w, "Invalid menu item ID", http.StatusBadRequest)
 		return
 	}
-
-	// Create an instance of MenuItem
-	menuItem := &data.MenuItem{
-		ID:          int64(id),
-		Name:        name,
-		Description: description,
-		Price:       price,
-		CategoryID:  categoryID,
-	}
+	menuItem.ID = int64(id)
 
 	v := validator.NewValidator()
 	data.ValidateMenuItem(v, menuItem)
-	if !v.ValidData() {
+	for k, vErr := range v.Errors {
+		formErrors[k] = vErr
+	}
+
+	if len(formErrors) > 0 {
 		data := NewTemplateData()
-		data.Title = "Update Menu Item"
-		data.HeaderText = "Update Menu Item"
-		data.FormErrors = v.Errors
-		data.FormData = map[string]string{
-			"name":        name,
-			"description": description,
-			"price":       priceStr,
-			"category_id": categoryIDStr,
-			"id":          idStr,
-		}
+		data.Title = "Edit Menu Item"
+		data.HeaderText = "Edit Menu Item"
+		data.FormErrors = formErrors
+		data.FormData = formData
+		data.MenuItem = menuItem
 
 		err = app.render(w, http.StatusUnprocessableEntity, "AddMenuItem.tmpl", data)
 		if err != nil {
 			app.logger.Error("Error rendering template with errors", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
 		}
 		return
 	}
-	// Update the menu item in the database
+
 	err = app.MenuItem.Update(menuItem)
 	if err != nil {
-		app.logger.Error("Error updating menu item in database", "error", err)
+		app.logger.Error("Error updating menu item", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	// Redirect to the menu items list page
+
 	http.Redirect(w, r, "/menu", http.StatusSeeOther)
 }

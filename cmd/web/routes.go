@@ -10,6 +10,7 @@ func (app *application) routes() http.Handler {
 	//create handlers for all the routes
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("GET /static/", http.StripPrefix("/static", noCacheMiddleware(fileServer)))
+	mux.Handle("GET /ui/static/", http.StripPrefix("/ui/static", noCacheMiddleware(fileServer)))
 	mux.HandleFunc("GET /{$}", app.home)
 	mux.HandleFunc("GET /signup", app.signupForm)
 	mux.HandleFunc("POST /signup/new", app.signupHandler)
