@@ -2,10 +2,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
 	"github.com/amilcar-vasquez/blessed-bites/internal/validator"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 )
 
 // GET handler to display the form to add a new menu item
@@ -37,18 +41,58 @@ func (app *application) addMenuItemForm(w http.ResponseWriter, r *http.Request) 
 // POST handler to process the form submission for adding a new menu item
 func (app *application) addMenuItemHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse form data
-	err := r.ParseForm()
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		app.logger.Error("Error parsing form data", "error", err)
+		app.logger.Error("Error parsing multipart form data", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
 	// Extract form fields
-	name := r.PostForm.Get("name")
-	description := r.PostForm.Get("description")
-	priceStr := r.PostForm.Get("price")
-	categoryIDStr := r.PostForm.Get("category_id")
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+	priceStr := r.FormValue("price")
+	categoryIDStr := r.FormValue("category_id")
+
+	// handle file upload
+	file, header, err := r.FormFile("image")
+	if err != nil && err != http.ErrMissingFile {
+		app.logger.Error("Error retrieving file from form", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if file != nil {
+		defer file.Close()
+	}
+	// Save the file to a specific location
+	var imageURL string
+	if file != nil {
+		fileName := fmt.Sprintf("%s.%s.%s.%s.%s.%s_%s_%s_%s",
+			time.Now().Format("2006"),
+			time.Now().Format("01"),
+			time.Now().Format("02"),
+			time.Now().Format("15"),
+			time.Now().Format("04"),
+			time.Now().Format("05"),
+			categoryIDStr,
+			name,
+			header.Filename)
+		imageURL = "./ui/static/img/uploads/" + fileName
+		dst, err := os.Create(imageURL)
+		if err != nil {
+			app.logger.Error("Error creating file", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		defer dst.Close()
+		_, err = io.Copy(dst, file)
+		if err != nil {
+			app.logger.Error("Error saving file", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+	}
 
 	// Convert price and category ID to appropriate types
 	price, err := strconv.ParseFloat(priceStr, 64)
@@ -70,6 +114,7 @@ func (app *application) addMenuItemHandler(w http.ResponseWriter, r *http.Reques
 		Description: description,
 		Price:       price,
 		CategoryID:  categoryID,
+		ImageURL:    imageURL,
 	}
 
 	// Validate the menu item data

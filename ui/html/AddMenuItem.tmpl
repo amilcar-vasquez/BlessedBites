@@ -34,7 +34,21 @@
       <div class="container" style="margin-top: 3rem;">
         <h4>{{ .HeaderText }}</h4>
       
-        <form action="{{ if .MenuItem }}/menu/update{{ else }}/menu/add/new{{ end }}" method="POST">
+        <form action="{{ if .MenuItem }}/menu/update{{ else }}/menu/add/new{{ end }}" method="POST" enctype="multipart/form-data">
+          {{ if .MenuItem }}
+            <input type="hidden" name="id" value="{{ .MenuItem.ID }}">
+          {{ end }}
+      
+          {{ if .FormErrors.global }}
+            <div class="error">{{ .FormErrors.global }}</div>
+          {{ end }}
+          {{ if .MenuItem }}
+            <input type="hidden" name="id" value="{{ .MenuItem.ID }}">
+          {{ end }}
+      
+          {{ if .FormErrors.global }}
+            <div class="error">{{ .FormErrors.global }}</div>
+          {{ end }}
           {{ if .MenuItem }}
             <input type="hidden" name="id" value="{{ .MenuItem.ID }}">
           {{ end }}
@@ -73,6 +87,11 @@
             {{ with .FormErrors.category_id }}
             <div class="error">{{ . }}</div>
             {{ end }}
+          </div>
+
+          <div class="input-field">
+            <input type="file" name="image" id="image" accept="image/*">
+            <label for="image_url" class="active">Image URL</label>
           </div>
       
           <div class="right-align">
