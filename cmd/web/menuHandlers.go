@@ -137,6 +137,7 @@ func (app *application) addMenuItemForm(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+
 }
 
 // POST handler to process the form submission for adding a new menu item

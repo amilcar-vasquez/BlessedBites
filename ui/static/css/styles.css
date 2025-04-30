@@ -145,13 +145,21 @@ nav .brand-logo {
   border-color: var(--mustard)
 }
 
+.input-field-mustard:focus:not([readonly]) {
+  color: var(--mustard);
+  padding: 0.5rem;
+  border: none;
+  border-bottom: 1px solid var(--mustard);
+}
+
 .error{
   color: var(--burgundy);
   font-size: 0.9rem;
 }
 
 .invalid-input{
-  border: 1px solid var(--burgundy);
+  border:none;
+  border-bottom: 1px solid var(--burgundy);
 }
 
 /* Make the row use flexbox and ensure all items align */

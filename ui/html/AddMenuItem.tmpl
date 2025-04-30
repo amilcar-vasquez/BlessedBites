@@ -42,7 +42,7 @@
             <div class="error">{{ .FormErrors.global }}</div>
           {{ end }}
           <div class="input-field">
-            <input type="text" name="name" id="name" value="{{ if .MenuItem }}{{ .MenuItem.Name }}{{ end }}" class="{{if .FormErrors.name}} invalid-input {{end}}">
+            <input type="text" name="name" id="name" value="{{ if .FormData.name }}{{ .FormData.name }}{{ else if .MenuItem }}{{ .MenuItem.Name }}{{ end }}"class="{{if .FormErrors.description}} invalid-input {{else}} materialize-textarea {{end}}">
             <label for="name" class=" active">Name</label>
             {{ with .FormErrors.name }}
               <div class="error">{{ . }}</div>
@@ -50,7 +50,7 @@
           </div>
       
           <div class="input-field">
-            <textarea name="description" id="description" class="{{if .FormErrors.description}} invalid-input {{else}} materialize-textarea {{end}}">{{ if .MenuItem }}{{ .MenuItem.Description }}{{ end }}</textarea>
+            <textarea name="description" id="description" class="{{if .FormErrors.description}} invalid-input {{else}} materialize-textarea {{end}}">{{ if .FormData.description }}{{ .FormData.description }}{{ else if .MenuItem }}{{ .MenuItem.Description }}{{ end }}</textarea>
             <label for="description" class="active">Description</label>
             {{ with .FormErrors.description }}
               <div class="error">{{ . }}</div>
@@ -58,7 +58,7 @@
           </div>
       
           <div class="input-field">
-            <input type="number" name="price" id="price" value="{{ if .MenuItem }}{{ .MenuItem.Price }}{{ end }}" step="0.01" class="{{if .FormErrors.price}} invalid-input {{end}}">
+            <input type="number" name="price" id="price" value="{{ if .FormData.price }}{{ .FormData.price }}{{ else if .MenuItem }}{{ .MenuItem.Price }}{{ end }}" step="0.01" class="{{if .FormErrors.price}} invalid-input {{end}}">
             <label for="price" class="active">Price (BZD)</label>
             {{ with .FormErrors.price }}
               <div class="error">{{ . }}</div>
