@@ -68,7 +68,7 @@
           <div class="input-field">
             <select name="category_id" id="category_id" class="{{if .FormErrors.category_id}} invalid-input {{end}}">
               {{ range .Categories }}
-                <option value="{{ .ID }}" {{ if $.MenuItem }}{{ if eq .ID $.MenuItem.CategoryID }}selected{{ end }}{{ end }}>{{ .Name }}</option>
+              <option value="{{ .ID }}" {{ if $.FormData.category_id }}{{ if eq (printf "%v" .ID) $.FormData.category_id }}selected{{ end }}{{ else if $.MenuItem }}{{ if eq .ID $.MenuItem.CategoryID }}selected{{ end }}{{ end }}>{{ .Name }}</option>           
               {{ end }}
             </select>
             <label for="category_id">Category</label>
