@@ -161,6 +161,13 @@ func (app *application) addMenuItemHandler(w http.ResponseWriter, r *http.Reques
 		data.HeaderText = "Add Menu Item"
 		data.FormErrors = formErrors
 		data.FormData = formData
+		categories, err := app.Category.GetAll()
+		if err != nil {
+			app.logger.Error("Error retrieving categories from database", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		data.Categories = categories
 
 		err = app.render(w, http.StatusUnprocessableEntity, "AddMenuItem.tmpl", data)
 		if err != nil {
