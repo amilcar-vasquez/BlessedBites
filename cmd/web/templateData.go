@@ -13,6 +13,7 @@ type TemplateData struct {
 	Categories      []*data.Category
 	CategoryMap     map[int]string
 	RandomMenuItems []*data.MenuItem
+	Users           []*data.User
 
 	FormErrors map[string]string
 	FormData   map[string]string

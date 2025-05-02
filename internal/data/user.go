@@ -55,3 +55,61 @@ func (u *UserModel) Insert(user *User) error {
 	).Scan(&user.ID, &user.CreatedAt)
 
 }
+
+// GetByID retrieves a user by ID
+func (u *UserModel) GetByID(id int64) (*User, error) {
+	query := `SELECT id, email, full_name, phone_no, password_hash, role, created_at FROM users WHERE id=$1`
+	row := u.DB.QueryRow(query, id)
+
+	var user User
+	err := row.Scan(&user.ID, &user.Email, &user.FullName, &user.PhoneNo, &user.Password, &user.Role, &user.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// delete user by id
+func (u *UserModel) Delete(id int64) error {
+	query := `DELETE FROM users WHERE id=$1`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := u.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserModel) GetByEmail(email string) (*User, error) {
+	query := `SELECT id, email, full_name, phone_no, password_hash, role, created_at FROM users WHERE email=$1`
+	row := u.DB.QueryRow(query, email)
+
+	var user User
+	err := row.Scan(&user.ID, &user.Email, &user.FullName, &user.PhoneNo, &user.Password, &user.Role, &user.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// GetAll retrieves all users from the database
+func (u *UserModel) GetAll() ([]*User, error) {
+	query := `SELECT id, email, full_name, phone_no, password_hash, role, created_at FROM users`
+	rows, err := u.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*User
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Email, &user.FullName, &user.PhoneNo, &user.Password, &user.Role, &user.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+	return users, nil
+}

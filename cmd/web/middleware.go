@@ -30,3 +30,15 @@ func noCacheMiddleware(h http.Handler) http.Handler {
 		h.ServeHTTP(w, r)
 	})
 }
+
+func (app *application) requireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, _ := app.sessionStore.Get(r, "session")
+		userID := session.Values["userID"]
+		if userID == nil {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}

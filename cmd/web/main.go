@@ -5,15 +5,16 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"github.com/amilcar-vasquez/blessed-bites/internal/data"
+	"github.com/gorilla/sessions"
+	_ "github.com/lib/pq"
 	"html/template"
 	"log/slog"
 	"os"
 	"time"
-
-	"github.com/amilcar-vasquez/blessed-bites/internal/data"
-
-	_ "github.com/lib/pq"
 )
+
+var sessionStore = sessions.NewCookieStore([]byte("super-secret-key"))
 
 type application struct {
 	addr            *string
@@ -21,6 +22,7 @@ type application struct {
 	Order           *data.OrderModel
 	Category        *data.CategoryModel
 	User            *data.UserModel
+	sessionStore    *sessions.CookieStore
 	Analytics       *data.AnalyticsModel
 	Recommendations *data.RecommendationModel
 	logger          *slog.Logger
@@ -58,6 +60,7 @@ func main() {
 		Order:           &data.OrderModel{DB: db},
 		Category:        &data.CategoryModel{DB: db},
 		User:            &data.UserModel{DB: db},
+		sessionStore:    sessionStore,
 		Analytics:       &data.AnalyticsModel{DB: db},
 		Recommendations: &data.RecommendationModel{DB: db},
 		templateCache:   templateCache,

@@ -1,0 +1,37 @@
+{{define "content"}}
+<div class="container" style="margin-top: 3rem;">
+    <h4>User List</h4>
+
+    {{ if .Users }}
+    <table class="highlight">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .Users }}
+            <tr>
+                <td>{{ .FullName }}</td>
+                <td>{{ .Email }}</td>
+                <td>{{ .PhoneNo }}</td>
+                <td>{{ .Role }}</td>    
+                <td>
+                    <form action="/users/delete" method="POST" style="display:inline;">
+                        <input type="hidden" name="user_id" value="{{.ID}}">
+                        <button class="btn-small burgundy" type="submit" onclick="return confirm('Delete this user?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+    {{ else }}
+    <p>No users available.</p>
+    {{ end }}
+</div>
+{{ end }}
