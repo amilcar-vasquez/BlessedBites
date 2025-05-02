@@ -69,6 +69,26 @@ func (u *UserModel) GetByID(id int64) (*User, error) {
 	return &user, nil
 }
 
+// Update updates a user in the database
+func (u *UserModel) Update(user *User) error {
+	query := `UPDATE users 
+			  SET email = $1, full_name = $2, phone_no = $3, password_hash = $4, role = $5 
+			  WHERE id = $6`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := u.DB.ExecContext(
+		ctx,
+		query,
+		user.Email,
+		user.FullName,
+		user.PhoneNo,
+		user.Password,
+		user.Role,
+		user.ID,
+	)
+	return err
+}
+
 // delete user by id
 func (u *UserModel) Delete(id int64) error {
 	query := `DELETE FROM users WHERE id=$1`

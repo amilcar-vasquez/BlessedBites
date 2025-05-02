@@ -14,6 +14,7 @@ type TemplateData struct {
 	CategoryMap     map[int]string
 	RandomMenuItems []*data.MenuItem
 	Users           []*data.User
+	User            *data.User
 
 	FormErrors map[string]string
 	FormData   map[string]string

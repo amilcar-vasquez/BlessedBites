@@ -2,35 +2,51 @@
 
 {{ define "content" }}
 <div class="container" style="margin-top: 3rem;">
-  <h4>Sign Up</h4>
-  <form action="/signup/new" method="POST" class="col s12">
+  <h4>{{if .User}} Update User Info {{else}} Sign Up {{end}}</h4>
+  <form action="{{ if .User }}/user/update{{ else }}/signup/new{{end}}" method="POST" class="col s12">
+    {{ if .User }}
+      <input type="hidden" name="user_id" value="{{.User.ID}}">
+    {{ end }}
+    {{ if .FormErrors.global }}
+        <div class="error">{{.FormErrors.global}}</div>
+    {{ end }}
     <div class="input-field">
-        <input id="fullname" name="fullname" type="text" value="{{index .FormData "fullname"}}">
+       <input id="fullname" name="fullname" type="text" value="{{if .FormData.fullname}}{{.FormData.fullname}}{{else if .User}}{{.User.FullName}}{{end}}">
       <label for="fullname">Full Name</label>
     </div>
     {{with .FormErrors.fullname}}
         <div class="error">{{.}}</div>
     {{end}}
     <div class="input-field">
-      <input id="email" name="email" type="email" value=""{{index .FormData "email"}}>
+      <input id="email" name="email" type="email" value="{{if .FormData.email}}{{index .FormData.email}}{{else if .User}}{{.User.Email}}{{end}}">
       <label for="email">Email</label>
     </div>
     {{with .FormErrors.email}}
         <div class="error">{{.}}</div>
     {{end}}
     <div class="input-field">
-      <input id="phoneNo" name="phoneNo" type="text" value="{{index .FormData "phoneNo"}}">
+      <input id="phoneNo" name="phoneNo" type="text" value="{{if .FormData.phoneNo}}{{index .FormData.phoneNo}}{{else if .User}}{{.User.PhoneNo}}{{end}}">
       <label for="phoneNo">Phone Number</label>
     </div>
     <div class="input-field">
-      <input id="password" name="password" type="password" value="{{index .FormData "password"}}">
+      <input id="password" name="password" type="password" value="{{if .FormData.password}}{{index .FormData.password}}{{else if .User}}{{.User.Password}}{{end}}">
       <label for="password">Password</label>
     </div>
+    {{if .User}}
+    <div class="input-field">
+      <select id="role" name="role">
+        <option value="" disabled selected>Choose role</option>
+        <option value="admin" {{if eq .FormData.role "admin"}}selected{{end}}>admin</option>
+        <option value="user" {{if eq .FormData.role "user"}}selected{{end}}>user</option>
+      </select>
+      <label for="role">Role</label>
+    </div>
+    {{end}}
     {{with .FormErrors.password}}
         <div class="error">{{.}}</div>
     {{end}}
     <button class="btn waves-effect waves-light burgundy darken-3" type="submit">
-      Create Account
+      {{ if .User }}Update User{{ else }}Create{{ end }} Account
     </button>
   </form>
 </div>

@@ -9,6 +9,55 @@ import (
 	"strconv"
 )
 
+// parseForm parses the form data from the request both for add and update
+func parseUserForm(r *http.Request) (*data.User, map[string]string, map[string]string, error) {
+	var formErrors = make(map[string]string)
+	var formData = make(map[string]string)
+
+	//parse form
+	err := r.ParseForm()
+	if err != nil {
+		formErrors["form"] = "Error parsing form data"
+		return nil, formErrors, formData, err
+	}
+
+	// Extract form fields
+	idStr := r.PostForm.Get("user_id") // user ID for update
+	fullname := r.PostForm.Get("fullname")
+	email := r.PostForm.Get("email")
+	phoneNo := r.PostForm.Get("phoneNo")
+	password := r.PostForm.Get("password")
+
+	//save raw form values
+	formData["user_id"] = idStr
+	formData["fullname"] = fullname
+	formData["email"] = email
+	formData["phoneNo"] = phoneNo
+	formData["password"] = password
+
+	// Convert user ID to int64
+	var userID int64
+	if idStr != "" {
+		userID, err = strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			formErrors["user_id"] = "Invalid user ID format"
+			return nil, formErrors, formData, err
+		}
+	}
+
+	// Create an instance of user
+	user := &data.User{
+		ID:       userID,
+		FullName: fullname,
+		Email:    email,
+		PhoneNo:  phoneNo,
+		Password: password,
+		Role:     "user", // default for now, can be changed later
+	}
+
+	return user, formErrors, formData, nil
+}
+
 // GET /signup handler to render the signup form
 func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 	// Create a new template data instance
@@ -25,51 +74,36 @@ func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse form data
-	err := r.ParseForm()
+	// Parse form data using parseUserForm
+	user, formErrors, formData, err := parseUserForm(r)
 	if err != nil {
 		app.logger.Error("Error parsing form data", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	// Extract form fields
-	email := r.PostForm.Get("email")
-	fullname := r.PostForm.Get("fullname")
-	phoneNo := r.PostForm.Get("phoneNo")
-	password := r.PostForm.Get("password")
-
 	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		app.logger.Error("Error hashing password", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-
-	// Create an instance of user
-	user := &data.User{
-		Email:    email,
-		FullName: fullname,
-		PhoneNo:  phoneNo,
-		Password: string(hashedPassword),
-		Role:     "user", // default for now, dynamic later
-	}
-
+	user.Password = string(hashedPassword)
 	// Validate the user data
 	v := validator.NewValidator()
 	data.ValidateUser(v, user)
-	if !v.ValidData() {
+	for k, vErr := range v.Errors {
+		formErrors[k] = vErr
+	}
+
+	// Check for validation errors
+	if len(formErrors) > 0 {
 		data := NewTemplateData()
 		data.Title = "Sign Up"
 		data.HeaderText = "Sign Up"
-		data.FormErrors = v.Errors
-		data.FormData = map[string]string{
-			"email":    email,
-			"fullname": fullname,
-			"phoneNo":  phoneNo,
-			"password": password,
-		}
+		data.FormErrors = formErrors
+		data.FormData = formData
 		// Re-render the form with validation errors
 		err := app.render(w, http.StatusUnprocessableEntity, "signup.tmpl", data)
 		if err != nil {
@@ -86,7 +120,8 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	//redirect to the thank you page
+
+	// Redirect to the thank you page
 	http.Redirect(w, r, "/signup-thanks", http.StatusSeeOther)
 }
 
@@ -97,12 +132,103 @@ func (app *application) signupThanks(w http.ResponseWriter, r *http.Request) {
 	data.Title = "Thank You"
 	data.HeaderText = "Thank You for Signing Up"
 	// Render the thank you template
-	err := app.render(w, http.StatusOK, "signup-thanks.tmpl", data)
+	err := app.render(w, http.StatusOK, "signupThanks.tmpl", data)
 	if err != nil {
 		app.logger.Error("Error rendering template", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+}
+
+// handler to render the update user form
+func (app *application) updateUserForm(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		app.logger.Error("failed to parse form", "error", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	idStr := r.FormValue("user_id")
+	// Check if ID is present in the form data
+	if idStr == "" {
+		app.logger.Error("User ID is missing in form data")
+		http.Error(w, "Missing user ID", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		app.logger.Error("Invalid user ID", "value", idStr, "error", err)
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	user, err := app.User.GetByID(int64(id))
+	if err != nil {
+		app.logger.Error("User not found", "error", err)
+		http.Error(w, "User Not Found", http.StatusNotFound)
+		return
+	}
+
+	data := NewTemplateData()
+	data.Title = "Update User"
+	data.HeaderText = "Update User"
+	data.User = user
+
+	err = app.render(w, http.StatusOK, "signup.tmpl", data)
+	if err != nil {
+		app.logger.Error("Error rendering template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// handler to update a user
+func (app *application) updateUser(w http.ResponseWriter, r *http.Request) {
+	user, formErrors, formData, err := parseUserForm(r)
+	if err != nil {
+		app.logger.Error("Error parsing form", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Get ID separately
+	idStr := formData["user_id"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		app.logger.Error("Invalid user ID", "value", idStr, "error", err)
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+	user.ID = int64(id)
+
+	v := validator.NewValidator()
+	data.ValidateUser(v, user)
+	for k, vErr := range v.Errors {
+		formErrors[k] = vErr
+	}
+
+	if len(formErrors) > 0 {
+		data := NewTemplateData()
+		data.Title = "Edit User"
+		data.HeaderText = "Edit User"
+		data.FormErrors = formErrors
+		data.FormData = formData
+		data.User = user
+
+		err = app.render(w, http.StatusUnprocessableEntity, "editUser.tmpl", data)
+		if err != nil {
+			app.logger.Error("Error rendering template with errors", "error", err)
+		}
+		return
+	}
+
+	err = app.User.Update(user)
+	if err != nil {
+		app.logger.Error("Error updating user", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/user", http.StatusSeeOther)
 }
 
 // handler to delete a user
