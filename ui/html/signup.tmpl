@@ -36,8 +36,8 @@
     <div class="input-field">
       <select id="role" name="role">
         <option value="" disabled selected>Choose role</option>
-        <option value="admin" {{if eq .FormData.role "admin"}}selected{{end}}>admin</option>
-        <option value="user" {{if eq .FormData.role "user"}}selected{{end}}>user</option>
+        <option value="admin" {{if eq .User.Role "admin"}}selected{{end}}>admin</option>
+        <option value="user" {{if eq .User.Role "user"}}selected{{end}}>user</option>
       </select>
       <label for="role">Role</label>
     </div>
@@ -49,5 +49,10 @@
       {{ if .User }}Update User{{ else }}Create{{ end }} Account
     </button>
   </form>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        M.FormSelect.init(document.querySelectorAll('select'));
+    });
+    </script>
 </div>
 {{ end }}

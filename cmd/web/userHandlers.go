@@ -2,23 +2,33 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
 	"github.com/amilcar-vasquez/blessed-bites/internal/validator"
 	"golang.org/x/crypto/bcrypt"
-	"strconv"
 )
 
 // parseForm parses the form data from the request both for add and update
-func parseUserForm(r *http.Request) (*data.User, map[string]string, map[string]string, error) {
+func parseUserForm(r *http.Request, isUpdate bool) (*data.User, map[string]string, map[string]string, error) {
 	var formErrors = make(map[string]string)
 	var formData = make(map[string]string)
+	var role string
 
 	//parse form
 	err := r.ParseForm()
 	if err != nil {
 		formErrors["form"] = "Error parsing form data"
 		return nil, formErrors, formData, err
+	}
+
+	if isUpdate {
+		role = r.PostForm.Get("role")
+		if role == "" {
+			role = "user" // default role
+		}
+	} else {
+		role = "user" // default role for new users
 	}
 
 	// Extract form fields
@@ -52,7 +62,7 @@ func parseUserForm(r *http.Request) (*data.User, map[string]string, map[string]s
 		Email:    email,
 		PhoneNo:  phoneNo,
 		Password: password,
-		Role:     "user", // default for now, can be changed later
+		Role:     role,
 	}
 
 	return user, formErrors, formData, nil
@@ -75,7 +85,7 @@ func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse form data using parseUserForm
-	user, formErrors, formData, err := parseUserForm(r)
+	user, formErrors, formData, err := parseUserForm(r, false)
 	if err != nil {
 		app.logger.Error("Error parsing form data", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -183,7 +193,7 @@ func (app *application) updateUserForm(w http.ResponseWriter, r *http.Request) {
 
 // handler to update a user
 func (app *application) updateUser(w http.ResponseWriter, r *http.Request) {
-	user, formErrors, formData, err := parseUserForm(r)
+	user, formErrors, formData, err := parseUserForm(r, true)
 	if err != nil {
 		app.logger.Error("Error parsing form", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -208,13 +218,13 @@ func (app *application) updateUser(w http.ResponseWriter, r *http.Request) {
 
 	if len(formErrors) > 0 {
 		data := NewTemplateData()
-		data.Title = "Edit User"
-		data.HeaderText = "Edit User"
+		data.Title = "Update User"
+		data.HeaderText = "Update User"
 		data.FormErrors = formErrors
 		data.FormData = formData
 		data.User = user
 
-		err = app.render(w, http.StatusUnprocessableEntity, "editUser.tmpl", data)
+		err = app.render(w, http.StatusUnprocessableEntity, "signup.tmpl", data)
 		if err != nil {
 			app.logger.Error("Error rendering template with errors", "error", err)
 		}
@@ -228,7 +238,7 @@ func (app *application) updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/user", http.StatusSeeOther)
+	http.Redirect(w, r, "/users", http.StatusSeeOther)
 }
 
 // handler to delete a user

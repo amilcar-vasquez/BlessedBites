@@ -29,8 +29,8 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /signup/new", app.signupHandler)
 	mux.HandleFunc("GET /signup-thanks", app.signupThanks)
 	mux.HandleFunc("GET /users", app.requireAuth(app.userPageHandler))
-	mux.HandleFunc("POST /user/update", app.requireAuth(app.updateUserForm))
-	mux.HandleFunc("POST /users/update", app.updateUser)
+	mux.HandleFunc("POST /user/update/form", app.requireAuth(app.updateUserForm)) //display the same signup form but with update values
+	mux.HandleFunc("POST /user/update", app.updateUser)
 	mux.HandleFunc("POST /users/delete", app.deleteUser)
 	mux.HandleFunc("GET /login", app.loginForm)
 	mux.HandleFunc("POST /login", app.loginHandler)
