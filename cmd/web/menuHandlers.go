@@ -343,7 +343,7 @@ func (app *application) updateMenuItem(w http.ResponseWriter, r *http.Request) {
 		data.FormData = formData
 		data.MenuItem = menuItem
 
-		err = app.render(w, http.StatusUnprocessableEntity, "AddMenuItem.tmpl", data)
+		err := app.render(w, http.StatusUnprocessableEntity, "AddMenuItem.tmpl", data)
 		if err != nil {
 			app.logger.Error("Error rendering template with errors", "error", err)
 		}

@@ -2,13 +2,20 @@
 <div class="container" style="margin-top: 3rem;">
   <h4>Login</h4>
   <form action="/login" method="POST" class="col s12">
+    {{ .CSRFField  }}
     <div class="input-field">
-      <input id="email" name="email" type="email" required>
+      <input id="email" name="email" type="email" value="{{if .FormData.email}}{{index .FormData.email}}{{else if .User}}{{.User.Email}}{{end}}" class="{{ if .FormErrors.password }}invalid{{ end }}">
       <label for="email">Email</label>
+      {{with .FormErrors.email}}
+        <div class="error">{{.}}</div>
+      {{end}}
     </div>
     <div class="input-field">
-      <input id="password" name="password" type="password" required>
+      <input id="password" name="password" type="password" class="{{ if .FormErrors.password }}invalid{{ end }}">
       <label for="password">Password</label>
+      {{ with .FormErrors.password }}
+        <div class="error">{{.}}</div>
+      {{ end }}
     </div>
     <button class="btn waves-effect waves-light burgundy darken-3" type="submit">Login</button>
   </form>

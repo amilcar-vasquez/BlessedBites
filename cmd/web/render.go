@@ -15,6 +15,7 @@ var bufferPool = sync.Pool{
 }
 
 func (app *application) render(w http.ResponseWriter, status int, page string, data *TemplateData) error {
+
 	buf := bufferPool.Get().(*bytes.Buffer)
 	buf.Reset()
 	defer bufferPool.Put(buf)

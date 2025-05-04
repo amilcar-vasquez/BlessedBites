@@ -1,12 +1,11 @@
 package main
 
 import (
-	"net/http"
-	"strconv"
-
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
 	"github.com/amilcar-vasquez/blessed-bites/internal/validator"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"strconv"
 )
 
 // parseForm parses the form data from the request both for add and update
@@ -272,57 +271,6 @@ func (app *application) deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 	// Redirect to the user list page
 	http.Redirect(w, r, "/user", http.StatusSeeOther)
-}
-
-// handler for rendering the login form
-func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
-	// Create a new template data instance
-	data := NewTemplateData()
-	data.Title = "Login"
-	data.HeaderText = "Login"
-	// Render the login form template
-	err := app.render(w, http.StatusOK, "login.tmpl", data)
-	if err != nil {
-		app.logger.Error("Error rendering template", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Invalid form", http.StatusBadRequest)
-		return
-	}
-	email := r.Form.Get("email")
-	password := r.Form.Get("password")
-
-	user, err := app.User.GetByEmail(email)
-	if err != nil {
-		http.Error(w, "Email not found", http.StatusUnauthorized)
-		return
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	// Store user ID in session
-	session, _ := app.sessionStore.Get(r, "session")
-	session.Values["userID"] = user.ID
-	session.Save(r, w)
-
-	http.Redirect(w, r, "/menu", http.StatusSeeOther)
-}
-
-func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := app.sessionStore.Get(r, "session")
-	delete(session.Values, "userID")
-	session.Save(r, w)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // handler to render the user page

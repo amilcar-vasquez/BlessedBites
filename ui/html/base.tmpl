@@ -20,12 +20,22 @@
         <nav>
             <div class="nav-wrapper">
                 <a href="/" class="brand-logo center">Blessed Bites</a>
-                <a href="/menu" class="btn-mustard">Manage Menu</a>
-                <a href="/users" class="btn-mustard">Manage Users</a>
+                {{ if and .IsAuthenticated (eq .CurrentUserRole "admin") }}
+                    <a href="/menu" class="btn-mustard">Manage Menu</a>
+                    <a href="/users" class="btn-mustard">Manage Users</a>
+                {{ end }}
 
                 <ul class="right">
-                    <li><a href="/signup" class="btn waves-effect burgundy darken-2">Sign Up</a></li>
-                    <li><a href="/login" class="btn-flat white-text">Log In</a></li>
+                    <li><a href="/signup" class="btn waves-effect mustard darken-2">Sign Up</a></li>
+                    <li>
+                        {{ if .IsAuthenticated }}
+                            <form method="POST" action="/logout" style="display:inline;">
+                                <button type="submit" class="btn waves-effect mustard darken-2">Log Out</button>
+                            </form>
+                        {{ else }}
+                            <a href="/login" class="btn waves-effect mustard darken-2">Log In</a>
+                        {{ end }}
+                    </li>
                 </ul>
             </div>
            

@@ -7,6 +7,7 @@
   
       <!-- Add Category Form -->
       <form action="/category/add" method="POST">
+        {{ .CSRFField  }}
         <div class="input-field">
           <input type="text" id="category_name" name="name" required>
           <label for="category_name">New Category</label>
@@ -35,6 +36,7 @@
         <h4>{{ .HeaderText }}</h4>
       
         <form action="{{ if .MenuItem }}/menu/update{{ else }}/menu/add/new{{ end }}" method="POST" enctype="multipart/form-data">
+          {{ .CSRFField  }}
           {{ if .MenuItem }}
             <input type="hidden" name="id" value="{{ .MenuItem.ID }}">
           {{ end }}     

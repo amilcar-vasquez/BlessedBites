@@ -1,6 +1,8 @@
+// file: cmd/web/middleware.go
 package main
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -31,6 +33,7 @@ func noCacheMiddleware(h http.Handler) http.Handler {
 	})
 }
 
+// requireAuth is a middleware that checks if the user is authenticated.
 func (app *application) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, _ := app.sessionStore.Get(r, "session")
@@ -41,4 +44,21 @@ func (app *application) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 		next.ServeHTTP(w, r)
 	}
+}
+
+// IsAuthenticated checks if the user is authenticated by checking the session.
+func (app *application) IsAuthenticated(r *http.Request) bool {
+	session, _ := app.sessionStore.Get(r, "session-name")
+	_, ok := session.Values["userID"]
+	return ok
+}
+
+// CurrentUserID retrieves the current user's ID from the session.
+func (app *application) CurrentUserID(r *http.Request) (int64, error) {
+	session, _ := app.sessionStore.Get(r, "session-name")
+	id, ok := session.Values["userID"].(int64)
+	if !ok {
+		return 0, fmt.Errorf("user ID not found in session")
+	}
+	return id, nil
 }

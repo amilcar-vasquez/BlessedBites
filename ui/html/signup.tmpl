@@ -4,6 +4,7 @@
 <div class="container" style="margin-top: 3rem;">
   <h4>{{if .User}} Update User Info {{else}} Sign Up {{end}}</h4>
   <form action="{{ if .User }}/user/update{{ else }}/signup/new{{end}}" method="POST" class="col s12">
+    {{ .CSRFField  }}
     {{ if .User }}
       <input type="hidden" name="user_id" value="{{.User.ID}}">
     {{ end }}

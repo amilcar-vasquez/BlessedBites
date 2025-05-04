@@ -133,3 +133,8 @@ func (u *UserModel) GetAll() ([]*User, error) {
 	}
 	return users, nil
 }
+
+func ValidateLogin(v *validator.Validator, users *User) {
+	v.Check(validator.NotBlank(users.Email), "email", "Email must be provided")
+	v.Check(validator.NotBlank(users.Password), "password", "Password must be provided")
+}
