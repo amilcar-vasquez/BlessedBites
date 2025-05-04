@@ -117,7 +117,7 @@ func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*d
 func (app *application) addMenuItemForm(w http.ResponseWriter, r *http.Request) {
 
 	// Create a new template data instance
-	data := NewTemplateData()
+	data := app.addDefaultData(NewTemplateData(), r)
 	data.Title = "Add Menu Item"
 	data.HeaderText = "Add Menu Item"
 
@@ -156,7 +156,7 @@ func (app *application) addMenuItemHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	if len(formErrors) > 0 {
-		data := NewTemplateData()
+		data := app.addDefaultData(NewTemplateData(), r)
 		data.Title = "Add Menu Item"
 		data.HeaderText = "Add Menu Item"
 		data.FormErrors = formErrors
@@ -212,7 +212,7 @@ func (app *application) menuPageHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Create a new template data instance
-	data := NewTemplateData()
+	data := app.addDefaultData(NewTemplateData(), r)
 	data.Title = "Menu Items"
 	data.HeaderText = "Menu Items"
 	data.MenuItems = menuItems
@@ -297,7 +297,7 @@ func (app *application) editMenuItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := NewTemplateData()
+	data := app.addDefaultData(NewTemplateData(), r)
 	data.Title = "Edit Menu Item"
 	data.HeaderText = "Edit Menu Item"
 	data.MenuItem = menuItem
@@ -336,7 +336,7 @@ func (app *application) updateMenuItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(formErrors) > 0 {
-		data := NewTemplateData()
+		data := app.addDefaultData(NewTemplateData(), r)
 		data.Title = "Edit Menu Item"
 		data.HeaderText = "Edit Menu Item"
 		data.FormErrors = formErrors

@@ -27,7 +27,7 @@ func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//if not logged in, render the login form
-	data := NewTemplateData()
+	data := app.addDefaultData(NewTemplateData(), r)
 
 	data.CSRFField = csrf.TemplateField(r)
 	session, _ = app.sessionStore.Get(r, "signup-data")
@@ -82,7 +82,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	data.ValidateLogin(v, userData)
 
 	if !v.ValidData() {
-		data := NewTemplateData()
+		data := app.addDefaultData(NewTemplateData(), r)
 		data.CSRFField = template.HTML(csrf.TemplateField(r))
 
 		data.FormErrors = v.Errors
@@ -105,7 +105,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := app.User.GetByEmail(email)
 
 	if err != nil {
-		data := NewTemplateData()
+		data := app.addDefaultData(NewTemplateData(), r)
 		data.CSRFField = template.HTML(csrf.TemplateField(r))
 		bcrypt.CompareHashAndPassword(dummyHash, []byte(password)) // mitigate timing attack
 		data.AlertMessage = "Invalid email or password."
@@ -131,7 +131,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			data := NewTemplateData()
+			data := app.addDefaultData(NewTemplateData(), r)
 			data.CSRFField = template.HTML(csrf.TemplateField(r))
 			data.AlertMessage = "Invalid email or password"
 			data.AlertType = "danger"
@@ -151,9 +151,22 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to retrieve session", http.StatusInternalServerError)
 		return
 	}
-	session.Values["userID"] = user.ID
-	session.Values["userRole"] = user.Role // <- store the role
-	session.Options.MaxAge = 3600          // Set session expiration to 1 hour
+
+	session.Values["authenticated"] = true
+	session.Values["authenticatedUserID"] = user.ID // <- store the user ID
+	session.Values["userRole"] = user.Role          // <- store the role
+	session.Options.MaxAge = 3600                   // Set session expiration to 1 hour
+
+	//also set these values in the template data
+	data := app.addDefaultData(NewTemplateData(), r)
+	data.CSRFField = csrf.TemplateField(r)
+	data.IsAuthenticated = true
+	data.CurrentUserID = user.ID
+	data.CurrentUserRole = user.Role
+	data.AlertMessage = "Login successful"
+	data.AlertType = "alert-success"
+
+	// Save the session
 	err = session.Save(r, w)
 	if err != nil {
 		http.Error(w, "Failed to save session", http.StatusInternalServerError)
@@ -170,8 +183,20 @@ func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to retrieve session", http.StatusInternalServerError)
 		return
 	}
-	// Clear the session values
-	session.Options.MaxAge = -1 // delete the session
+
+	// Log the logout
+	if id, ok := session.Values["authenticatedUserID"]; ok {
+		app.logger.Info("User logged out", "userID", id)
+	}
+
+	// Invalidate session
+	session.Options.MaxAge = -1
+
+	// Optional: set a flash message before clearing
+	// If you're not using flash messages, you can skip this
+	flashSession, _ := app.sessionStore.New(r, "flash")
+	flashSession.Values["alertMessage"] = "You have been logged out successfully."
+	flashSession.Values["alertType"] = "alert-success"
 
 	err = session.Save(r, w)
 	if err != nil {
@@ -180,6 +205,12 @@ func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Redirect the user to the login page
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	err = flashSession.Save(r, w)
+	if err != nil {
+		app.logger.Error("failed to save flash message", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

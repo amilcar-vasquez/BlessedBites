@@ -70,7 +70,7 @@ func parseUserForm(r *http.Request, isUpdate bool) (*data.User, map[string]strin
 // GET /signup handler to render the signup form
 func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 	// Create a new template data instance
-	data := NewTemplateData()
+	data := app.addDefaultData(NewTemplateData(), r)
 	data.Title = "Sign Up"
 	data.HeaderText = "Sign Up"
 	// Render the signup form template
@@ -108,7 +108,7 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check for validation errors
 	if len(formErrors) > 0 {
-		data := NewTemplateData()
+		data := app.addDefaultData(NewTemplateData(), r)
 		data.Title = "Sign Up"
 		data.HeaderText = "Sign Up"
 		data.FormErrors = formErrors
@@ -137,7 +137,7 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 // handler for signup thanks page
 func (app *application) signupThanks(w http.ResponseWriter, r *http.Request) {
 	// Create a new template data instance
-	data := NewTemplateData()
+	data := app.addDefaultData(NewTemplateData(), r)
 	data.Title = "Thank You"
 	data.HeaderText = "Thank You for Signing Up"
 	// Render the thank you template
@@ -178,7 +178,7 @@ func (app *application) updateUserForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := NewTemplateData()
+	data := app.addDefaultData(NewTemplateData(), r)
 	data.Title = "Update User"
 	data.HeaderText = "Update User"
 	data.User = user
@@ -216,7 +216,7 @@ func (app *application) updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(formErrors) > 0 {
-		data := NewTemplateData()
+		data := app.addDefaultData(NewTemplateData(), r)
 		data.Title = "Update User"
 		data.HeaderText = "Update User"
 		data.FormErrors = formErrors
@@ -282,7 +282,7 @@ func (app *application) userPageHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	// Create a new template data instance
-	data := NewTemplateData()
+	data := app.addDefaultData(NewTemplateData(), r)
 	data.Title = "User Page"
 	data.HeaderText = "User Page"
 	data.Users = users

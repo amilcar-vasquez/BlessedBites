@@ -30,6 +30,7 @@
                     <li>
                         {{ if .IsAuthenticated }}
                             <form method="POST" action="/logout" style="display:inline;">
+                                {{ .CSRFField  }}
                                 <button type="submit" class="btn waves-effect mustard darken-2">Log Out</button>
                             </form>
                         {{ else }}

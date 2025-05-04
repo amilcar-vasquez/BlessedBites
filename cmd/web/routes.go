@@ -34,7 +34,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /users/delete", app.deleteUser)
 	mux.HandleFunc("GET /login", app.loginForm)
 	mux.HandleFunc("POST /login", app.loginHandler)
-	mux.HandleFunc("GET /logout", app.logoutHandler)
+	mux.HandleFunc("POST /logout", app.logoutHandler)
 	mux.HandleFunc("GET /menu/add", app.requireAuth(app.addMenuItemForm))
 	mux.HandleFunc("POST /menu/add/new", app.addMenuItemHandler)
 	mux.HandleFunc("GET /menu", app.menuPageHandler)

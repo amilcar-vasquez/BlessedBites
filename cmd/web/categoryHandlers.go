@@ -31,7 +31,7 @@ func (app *application) addCategory(w http.ResponseWriter, r *http.Request) {
 	v := validator.NewValidator()
 	data.ValidateCategory(v, category)
 	if !v.ValidData() {
-		data := NewTemplateData()
+		data := app.addDefaultData(NewTemplateData(), r)
 		data.Title = "Add Category"
 		data.HeaderText = "Add Category"
 		data.FormErrors = v.Errors

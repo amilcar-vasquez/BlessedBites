@@ -3,6 +3,7 @@ package main
 
 import (
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
+	"github.com/gorilla/csrf"
 	"html/template"
 	"net/http"
 )
@@ -39,6 +40,7 @@ func NewTemplateData() *TemplateData {
 }
 
 func (app *application) addDefaultData(td *TemplateData, r *http.Request) *TemplateData {
+	td.CSRFField = csrf.TemplateField(r)
 	session, _ := app.sessionStore.Get(r, "session")
 
 	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
