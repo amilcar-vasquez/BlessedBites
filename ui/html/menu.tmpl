@@ -30,10 +30,12 @@
         </td>
         <td>
           <form action="/menu/edit" method="POST" style="display:inline;">
+            {{ $.CSRFField  }}
             <input type="hidden" name="id" value="{{.ID}}">
             <button class="btn-small mustard" type="submit">Update</button>
           </form>
           <form action="/menu/delete" method="POST" style="display:inline;">
+            {{ $.CSRFField  }}
             <input type="hidden" name="id" value="{{.ID}}">
             <button class="btn-small burgundy" type="submit" onclick="return confirm('Delete this item?');">Delete</button>
           </form>

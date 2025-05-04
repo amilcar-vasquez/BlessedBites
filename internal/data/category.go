@@ -35,8 +35,9 @@ func (c *CategoryModel) Insert(category *Category) error {
 
 // ValidateCategory validates the fields of a category
 func ValidateCategory(v *validator.Validator, category *Category) {
-	v.Check(validator.NotBlank(category.Name), "name", "Name is required")
-	v.Check(validator.MaxLength(category.Name, 100), "name", "Name must be less than 100 characters")
+	v.Check(validator.NotBlank(category.Name), "category_name", "A category name is required")
+	v.Check(validator.MaxLength(category.Name, 50), "category_name", "category name must be less than 50 characters")
+	v.Check(validator.MinLength(category.Name, 3), "category_name", "category name must be at least 3 characters")
 }
 
 // GetAll retrieves all categories from the database

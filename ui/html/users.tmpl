@@ -22,10 +22,12 @@
                 <td>{{ .Role }}</td>    
                 <td>
                     <form action="/user/update/form" method="POST" style="display:inline;">
+                        {{ $.CSRFField  }}
                         <input type="hidden" name="user_id" value="{{.ID}}">
                         <button class="btn-small mustard" type="submit">Update</button>
                       </form>
                     <form action="/users/delete" method="POST" style="display:inline;">
+                        {{ $.CSRFField  }}
                         <input type="hidden" name="user_id" value="{{.ID}}">
                         <button class="btn-small burgundy" type="submit" onclick="return confirm('Delete this user?');">Delete</button>
                     </form>

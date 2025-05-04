@@ -1,16 +1,19 @@
-// filepath: cmd/web/main.go
+// file: cmd/web/categoryHandlers.go
 package main
 
 import (
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
 	"github.com/amilcar-vasquez/blessed-bites/internal/validator"
+	"github.com/gorilla/csrf"
 	"net/http"
 	"strconv"
 )
 
 // POST handler to process the form submission for adding a new category
-
 func (app *application) addCategory(w http.ResponseWriter, r *http.Request) {
+	// Create a new template data instance
+
+	app.logger.Info("Category form handler triggered")
 	// Parse form data
 	err := r.ParseForm()
 	if err != nil {
@@ -31,16 +34,18 @@ func (app *application) addCategory(w http.ResponseWriter, r *http.Request) {
 	v := validator.NewValidator()
 	data.ValidateCategory(v, category)
 	if !v.ValidData() {
+		app.logger.Error("Validation failed", "errors", v.Errors)
 		data := app.addDefaultData(NewTemplateData(), r)
 		data.Title = "Add Category"
 		data.HeaderText = "Add Category"
 		data.FormErrors = v.Errors
 		data.FormData = map[string]string{
-			"name": name,
+			"category_name": name,
 		}
-		err := app.render(w, http.StatusUnprocessableEntity, "AddCategory.tmpl", data)
+		data.CSRFField = csrf.TemplateField(r)
+		err = app.render(w, http.StatusUnprocessableEntity, "AddMenuItem.tmpl", data)
 		if err != nil {
-			app.logger.Error("Error rendering template", "error", err)
+			app.logger.Error("Error rendering template with validation errors", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
@@ -65,7 +70,7 @@ func (app *application) deleteCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	categoryIDStr := r.FormValue("id")
+	categoryIDStr := r.FormValue("category_id")
 	if categoryIDStr == "" {
 		app.logger.Error("missing category ID", "url", r.URL.Path, "method", r.Method)
 		http.Error(w, "Bad Request", http.StatusBadRequest)

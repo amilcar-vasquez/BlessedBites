@@ -29,13 +29,13 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /signup/new", app.signupHandler)
 	mux.HandleFunc("GET /signup-thanks", app.signupThanks)
 	mux.HandleFunc("GET /users", app.userPageHandler)
-	mux.HandleFunc("POST /user/update/form", app.requireAuth(app.updateUserForm)) //display the same signup form but with update values
+	mux.HandleFunc("POST /user/update/form", app.updateUserForm) //display the same signup form but with update values
 	mux.HandleFunc("POST /user/update", app.updateUser)
 	mux.HandleFunc("POST /users/delete", app.deleteUser)
 	mux.HandleFunc("GET /login", app.loginForm)
 	mux.HandleFunc("POST /login", app.loginHandler)
 	mux.HandleFunc("POST /logout", app.logoutHandler)
-	mux.HandleFunc("GET /menu/add", app.requireAuth(app.addMenuItemForm))
+	mux.HandleFunc("GET /menu/add", app.addMenuItemForm)
 	mux.HandleFunc("POST /menu/add/new", app.addMenuItemHandler)
 	mux.HandleFunc("GET /menu", app.menuPageHandler)
 	mux.HandleFunc("POST /menu/delete", app.deleteMenuItem)

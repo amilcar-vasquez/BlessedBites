@@ -142,6 +142,7 @@ func (app *application) addMenuItemForm(w http.ResponseWriter, r *http.Request) 
 
 // POST handler to process the form submission for adding a new menu item
 func (app *application) addMenuItemHandler(w http.ResponseWriter, r *http.Request) {
+	app.logger.Info("Menu form handler triggered")
 	menuItem, formData, formErrors, err := app.parseMenuItemForm(r, true)
 	if err != nil {
 		app.logger.Error("Error parsing form", "error", err)
@@ -230,6 +231,7 @@ func (app *application) menuPageHandler(w http.ResponseWriter, r *http.Request) 
 
 // delete handler
 func (app *application) deleteMenuItem(w http.ResponseWriter, r *http.Request) {
+
 	if err := r.ParseForm(); err != nil {
 		app.logger.Error("failed to parse form", "error", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
