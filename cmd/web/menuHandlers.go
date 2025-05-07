@@ -361,3 +361,37 @@ func (app *application) updateMenuItem(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/menu", http.StatusSeeOther)
 }
+
+func (app *application) searchMenuHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	menuItems, err := app.MenuItem.Search(query)
+	if err != nil {
+		app.logger.Error("Search query failed", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	categories, err := app.Category.GetAll()
+	if err != nil {
+		app.logger.Error("Error retrieving categories", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := app.addDefaultData(NewTemplateData(), r)
+	data.Title = "Search Results"
+	data.HeaderText = fmt.Sprintf("Results for: %s", query)
+	data.MenuItems = menuItems
+	data.Categories = categories
+
+	err = app.render(w, http.StatusOK, "home.tmpl", data) // Reuse menu template
+	if err != nil {
+		app.logger.Error("Error rendering search results", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}

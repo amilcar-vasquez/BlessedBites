@@ -28,6 +28,10 @@
 
     <!-- Menu Items Grid -->
     <div class="col s12 m8 l9">
+        <form action="/search" method="GET" class="search-form">
+            <input type="text" name="q" placeholder="Search menu..." required>
+            <button type="submit">🔍</button>
+          </form>          
         <div class="row equal-height">
             <!-- Repeatable Card Layout -->
             {{range .MenuItems}}

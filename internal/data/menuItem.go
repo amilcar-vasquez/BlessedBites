@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"time"
+	"strings"
 
 	"github.com/amilcar-vasquez/blessed-bites/internal/validator"
 )
@@ -135,4 +136,36 @@ func (m *MenuItemModel) Get(id int64) (*MenuItem, error) {
 		return nil, err
 	}
 	return item, nil
+}
+
+func (m *MenuItemModel) Search(query string) ([]*MenuItem, error) {
+	query = "%" + strings.ToLower(query) + "%"
+
+	stmt := `
+		SELECT id, name, description, price, category_id, image_url
+		FROM menu_items
+		WHERE LOWER(name) LIKE $1 OR LOWER(description) LIKE $2
+		ORDER BY name
+	`
+
+	rows, err := m.DB.Query(stmt, query, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []*MenuItem
+	for rows.Next() {
+		var item MenuItem
+		err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.Price, &item.CategoryID, &item.ImageURL)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, &item)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
