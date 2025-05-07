@@ -44,7 +44,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /category/add", app.addCategory)
 	mux.HandleFunc("POST /category/delete", app.deleteCategory)
 	mux.HandleFunc("/search", app.searchMenuHandler)
-
+	mux.HandleFunc("/search.json", app.searchMenuJSONHandler)
 
 	return app.loggingMiddleware(mux)
 }

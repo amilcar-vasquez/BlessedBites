@@ -4,8 +4,8 @@ package data
 import (
 	"context"
 	"database/sql"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/amilcar-vasquez/blessed-bites/internal/validator"
 )

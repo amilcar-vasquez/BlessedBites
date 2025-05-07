@@ -29,13 +29,17 @@
     <!-- Menu Items Grid -->
     <div class="col s12 m8 l9">
         <form action="/search" method="GET" class="search-form">
-            <input type="text" name="q" placeholder="Search menu..." required>
-            <button type="submit">🔍</button>
-          </form>          
-        <div class="row equal-height">
-            <!-- Repeatable Card Layout -->
+            <div class="search-box-wrapper">
+              <input type="text" id="searchBox" name="q" placeholder="Search menu..." autocomplete="off">
+              <button type="submit" class="material-icon-button">
+                <i class="material-icons">search</i>
+              </button>
+            </div>
+          </form>
+        <div id="results"></div>        
+        <div id="menuCards" class="row equal-height">
             {{range .MenuItems}}
-                <div class="col s12 m6 l4">
+                <div class="col s12 m6 l4 menu-card">
                     <div class="card">
                         <div class="card-image">
                             <img class="responsive-img" src="{{.ImageURL}}" alt="{{.Name}}">
@@ -52,6 +56,7 @@
                 </div>
             {{end}}
         </div>
+        
     </div>
 </div>
 </div>

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
 	"math/rand"
 	"net/http"
@@ -73,5 +74,28 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.logger.Error("failed to render template", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
+	}
+}
+
+func (app *application) searchMenuJSONHandler(w http.ResponseWriter, r *http.Request) {
+
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		http.Error(w, "Missing search query", http.StatusBadRequest)
+		return
+	}
+
+	menuItems, err := app.MenuItem.Search(query)
+	if err != nil {
+		app.logger.Error("failed to search menu items", "error", err)
+		http.Error(w, "Failed to search menu items", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(menuItems)
+	if err != nil {
+		app.logger.Error("failed to encode JSON response", "error", err)
+		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
 	}
 }

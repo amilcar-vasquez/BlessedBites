@@ -58,6 +58,7 @@ func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*d
 	description := r.FormValue("description")
 	priceStr := r.FormValue("price")
 	categoryIDStr := r.FormValue("category_id")
+	
 
 	// Save raw form values
 	formData["id"] = idStr
