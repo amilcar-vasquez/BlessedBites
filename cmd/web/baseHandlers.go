@@ -62,7 +62,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Prepare the data
-	data := app.addDefaultData(NewTemplateData(), r) // <- THIS LINE IS KEY
+	data := app.addDefaultData(NewTemplateData(), w, r) // <- THIS LINE IS KEY
 	data.Title = "Welcome to Blessed Bites"
 	data.HeaderText = "Welcome to Blessed Bites"
 	data.Categories = categories

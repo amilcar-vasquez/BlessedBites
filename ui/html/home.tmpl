@@ -26,12 +26,13 @@
             </div>
           </div>          
         <div class="order-sidebar">
-            <h5>Order Summary</h5>
+            <h6>Your Order</h6>
             {{ if .AlertMessage }}
-        <div class="card-panel {{.AlertType}}">
+        <div class="flash-message {{.AlertType}}">
             {{.AlertMessage}}
+            <button class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
         </div>
-            {{ end }}
+        {{ end }}
             <ul id="orderList"></ul>
             <p id="orderTotal">Total: $0.00</p>
             <form id="orderForm" action="/orders" method="POST">

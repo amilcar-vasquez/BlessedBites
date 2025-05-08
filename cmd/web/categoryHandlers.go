@@ -35,7 +35,7 @@ func (app *application) addCategory(w http.ResponseWriter, r *http.Request) {
 	data.ValidateCategory(v, category)
 	if !v.ValidData() {
 		app.logger.Error("Validation failed", "errors", v.Errors)
-		data := app.addDefaultData(NewTemplateData(), r)
+		data := app.addDefaultData(NewTemplateData(), w, r)
 		data.Title = "Add Category"
 		data.HeaderText = "Add Category"
 		data.FormErrors = v.Errors

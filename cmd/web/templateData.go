@@ -39,7 +39,7 @@ func NewTemplateData() *TemplateData {
 	}
 }
 
-func (app *application) addDefaultData(td *TemplateData, r *http.Request) *TemplateData {
+func (app *application) addDefaultData(td *TemplateData, w http.ResponseWriter, r *http.Request) *TemplateData {
 	td.CSRFField = csrf.TemplateField(r)
 	session, _ := app.sessionStore.Get(r, "session")
 
@@ -60,7 +60,17 @@ func (app *application) addDefaultData(td *TemplateData, r *http.Request) *Templ
 
 	if flashes := session.Flashes("success"); len(flashes) > 0 {
 		td.AlertMessage = flashes[0].(string)
-		td.AlertType = "green lighten-4 green-text text-darken-4"
+		td.AlertType = "success" // NEW: Custom class instead of Materialize colors
+	}
+	if flashes := session.Flashes("error"); len(flashes) > 0 {
+		td.AlertMessage = flashes[0].(string)
+		td.AlertType = "error" // You can customize more types this way
+	}
+	if err := session.Save(r, w); err != nil {
+		app.logger.Error("Error saving session", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return nil
 	}
 	return td
+	
 }

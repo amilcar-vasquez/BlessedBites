@@ -215,6 +215,53 @@ nav .brand-logo {
   font-size: 0.9rem;
 }
 
+.flash-message {
+  background-color: var(--mustard);
+  color: white;
+  border-left: 6px solid var(--burgundy);
+  padding: 1rem 1.5rem;
+  margin: 1rem auto;
+  border-radius: var(--card-radius);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  position: relative;
+}
+
+.flash-message::before {
+  content: "⚡";
+  font-size: 1.3rem;
+  margin-right: 0.5rem;
+}
+
+.flash-message.success {
+  background-color: #d4edda; /* Optional: for type-specific variation */
+  color: var(--text-dark);
+}
+
+.flash-message.error {
+  background-color: var(--burgundy);
+  color: white;
+}
+
+.flash-message.warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.flash-message .close-btn {
+  position: absolute;
+  top: 0.7rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: inherit;
+  cursor: pointer;
+}
+
+
 .invalid-input{
   border:none;
   border-bottom: 1px solid var(--burgundy);

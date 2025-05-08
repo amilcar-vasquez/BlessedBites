@@ -123,7 +123,7 @@ func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*d
 func (app *application) addMenuItemForm(w http.ResponseWriter, r *http.Request) {
 
 	// Create a new template data instance
-	data := app.addDefaultData(NewTemplateData(), r)
+	data := app.addDefaultData(NewTemplateData(), w, r)
 	data.Title = "Add Menu Item"
 	data.HeaderText = "Add Menu Item"
 
@@ -163,7 +163,7 @@ func (app *application) addMenuItemHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	if len(formErrors) > 0 {
-		data := app.addDefaultData(NewTemplateData(), r)
+		data := app.addDefaultData(NewTemplateData(), w, r)
 		data.Title = "Add Menu Item"
 		data.HeaderText = "Add Menu Item"
 		data.FormErrors = formErrors
@@ -219,7 +219,7 @@ func (app *application) menuPageHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Create a new template data instance
-	data := app.addDefaultData(NewTemplateData(), r)
+	data := app.addDefaultData(NewTemplateData(), w, r)
 	data.Title = "Menu Items"
 	data.HeaderText = "Menu Items"
 	data.MenuItems = menuItems
@@ -305,7 +305,7 @@ func (app *application) editMenuItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := app.addDefaultData(NewTemplateData(), r)
+	data := app.addDefaultData(NewTemplateData(), w, r)
 	data.Title = "Edit Menu Item"
 	data.HeaderText = "Edit Menu Item"
 	data.MenuItem = menuItem
@@ -344,7 +344,7 @@ func (app *application) updateMenuItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(formErrors) > 0 {
-		data := app.addDefaultData(NewTemplateData(), r)
+		data := app.addDefaultData(NewTemplateData(), w, r)
 		data.Title = "Edit Menu Item"
 		data.HeaderText = "Edit Menu Item"
 		data.FormErrors = formErrors
@@ -389,7 +389,7 @@ func (app *application) searchMenuHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	data := app.addDefaultData(NewTemplateData(), r)
+	data := app.addDefaultData(NewTemplateData(), w, r)
 	data.Title = "Search Results"
 	data.HeaderText = fmt.Sprintf("Results for: %s", query)
 	data.MenuItems = menuItems
@@ -438,7 +438,7 @@ func (app *application) viewMenuByCategory(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Render the page
-	data := app.addDefaultData(NewTemplateData(), r)
+	data := app.addDefaultData(NewTemplateData(), w, r)
 	data.MenuItems = menuItems
 	data.Title = category.Name + " - Menu"
 	data.Categories = categories

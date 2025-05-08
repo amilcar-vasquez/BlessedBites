@@ -27,7 +27,7 @@ func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//if not logged in, render the login form
-	data := app.addDefaultData(NewTemplateData(), r)
+	data := app.addDefaultData(NewTemplateData(), w, r)
 
 	data.CSRFField = csrf.TemplateField(r)
 	session, _ = app.sessionStore.Get(r, "signup-data")
@@ -82,7 +82,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	data.ValidateLogin(v, userData)
 
 	if !v.ValidData() {
-		data := app.addDefaultData(NewTemplateData(), r)
+		data := app.addDefaultData(NewTemplateData(), w, r)
 		data.CSRFField = template.HTML(csrf.TemplateField(r))
 
 		data.FormErrors = v.Errors
@@ -105,7 +105,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := app.User.GetByEmail(email)
 
 	if err != nil {
-		data := app.addDefaultData(NewTemplateData(), r)
+		data := app.addDefaultData(NewTemplateData(), w, r)
 		data.CSRFField = template.HTML(csrf.TemplateField(r))
 		bcrypt.CompareHashAndPassword(dummyHash, []byte(password)) // mitigate timing attack
 		data.AlertMessage = "Invalid email or password."
@@ -131,7 +131,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			data := app.addDefaultData(NewTemplateData(), r)
+			data := app.addDefaultData(NewTemplateData(), w, r)
 			data.CSRFField = template.HTML(csrf.TemplateField(r))
 			data.AlertMessage = "Invalid email or password"
 			data.AlertType = "danger"
@@ -158,7 +158,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	session.Options.MaxAge = 3600                   // Set session expiration to 1 hour
 
 	//also set these values in the template data
-	data := app.addDefaultData(NewTemplateData(), r)
+	data := app.addDefaultData(NewTemplateData(), w, r)
 	data.CSRFField = csrf.TemplateField(r)
 	data.IsAuthenticated = true
 	data.CurrentUserID = user.ID
