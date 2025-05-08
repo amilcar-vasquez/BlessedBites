@@ -102,6 +102,11 @@ func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*d
 		}
 	}
 
+	//grab exisiting image URL if no new file is uploaded
+	if imageURL == "" {
+		imageURL = r.FormValue("existing_image_url")
+	}
+
 	// Build the menu item
 	menuItem := &data.MenuItem{
 		Name:        name,
@@ -394,5 +399,53 @@ func (app *application) searchMenuHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		app.logger.Error("Error rendering search results", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (app *application) viewMenuByCategory(w http.ResponseWriter, r *http.Request) {
+
+	
+	// Extract category ID from URL path
+	idStr := strings.TrimPrefix(r.URL.Path, "/menu/category/")
+	categoryID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Fetch category
+	category, err := app.Category.GetByID(categoryID)
+	if err != nil {
+		app.logger.Error("Failed to get category", "error", err)
+		http.NotFound(w, r)
+		return
+	}
+
+	// Fetch all menu items for this category
+	menuItems, err := app.MenuItem.GetByCategoryID(categoryID)
+	if err != nil {
+		app.logger.Error("Failed to get menu items by category", "error", err)
+		http.Error(w, "Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch all categories
+	categories, err := app.Category.GetAll()
+	if err != nil {
+		app.logger.Error("Failed to get categories", "error", err)
+		http.Error(w, "Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Render the page
+	data := app.addDefaultData(NewTemplateData(), r)
+	data.MenuItems = menuItems
+	data.Title = category.Name + " - Menu"
+	data.Categories = categories
+
+	err = app.render(w, http.StatusOK, "home.tmpl", data)
+	if err != nil {
+		app.logger.Error("Template rendering error", "error", err)
+		http.Error(w, "Server Error", http.StatusInternalServerError)
 	}
 }

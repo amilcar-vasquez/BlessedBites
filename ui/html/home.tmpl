@@ -10,14 +10,13 @@
     <!-- Sidebar -->
     <div class="col s12 m4 l3">
         <div class="category-sidebar">
-            <h5>Categories</h5>
-
+            <h6>I'm looking for:</h6>
             {{range .Categories}}
             <div class="category-item">
-                <span>{{.Name}}</span>
+                <a href="/menu/category/{{.ID}}">{{.Name}}</a>
             </div>
-
             {{end}}
+            <a href="/">Anything delicous</a>
         </div>
         <div class="order-sidebar">
             <h5>Order Summary</h5>
@@ -42,7 +41,7 @@
                 <div class="col s12 m6 l4 menu-card">
                     <div class="card">
                         <div class="card-image">
-                            <img class="responsive-img" src="{{.ImageURL}}" alt="{{.Name}}">
+                            <img class="responsive-img" src="/{{.ImageURL}}" alt="{{.Name}}">
                         </div>
                         <div class="card-content">
                             <span class="card-title">{{.Name}}</span>

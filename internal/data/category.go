@@ -63,6 +63,21 @@ func (c *CategoryModel) GetAll() ([]*Category, error) {
 	return categories, nil
 }
 
+func (c *CategoryModel) GetByID(id int64) (*Category, error) {
+	query := `SELECT id, name FROM categories WHERE id = $1`
+
+	category := &Category{}
+	err := c.DB.QueryRow(query, id).Scan(&category.ID, &category.Name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // Not found
+		}
+		return nil, err
+	}
+	return category, nil
+}
+
+
 // Delete deletes a category from the database
 func (c *CategoryModel) Delete(id int64) error {
 	query := `DELETE FROM categories WHERE id = $1`

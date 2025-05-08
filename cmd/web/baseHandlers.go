@@ -99,3 +99,4 @@ func (app *application) searchMenuJSONHandler(w http.ResponseWriter, r *http.Req
 		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
 	}
 }
+

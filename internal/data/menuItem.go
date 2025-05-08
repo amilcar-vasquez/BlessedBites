@@ -169,3 +169,29 @@ func (m *MenuItemModel) Search(query string) ([]*MenuItem, error) {
 
 	return items, nil
 }
+
+func (m *MenuItemModel) GetByCategoryID(categoryID int64) ([]*MenuItem, error) {
+	query := `
+		SELECT id, name, description, price, image_url, category_id
+		FROM menu_items
+		WHERE category_id = $1
+		ORDER BY name ASC
+	`
+
+	rows, err := m.DB.Query(query, categoryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []*MenuItem
+	for rows.Next() {
+		var item MenuItem
+		err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.Price, &item.ImageURL, &item.CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, &item)
+	}
+	return items, nil
+}
