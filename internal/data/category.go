@@ -77,7 +77,6 @@ func (c *CategoryModel) GetByID(id int64) (*Category, error) {
 	return category, nil
 }
 
-
 // Delete deletes a category from the database
 func (c *CategoryModel) Delete(id int64) error {
 	query := `DELETE FROM categories WHERE id = $1`

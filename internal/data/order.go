@@ -1,4 +1,4 @@
-//file: internal/data/order.go
+// file: internal/data/order.go
 package data
 
 import (
@@ -7,11 +7,11 @@ import (
 )
 
 type Order struct {
-	ID         int
-	UserID     int
-	TotalCost  float64
-	CreatedAt  time.Time
-	Status     string
+	ID            int
+	UserID        int
+	TotalCost     float64
+	CreatedAt     time.Time
+	Status        string
 	PaymentMethod sql.NullString
 }
 

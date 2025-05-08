@@ -55,7 +55,6 @@ func (app *application) addDefaultData(td *TemplateData, w http.ResponseWriter, 
 		td.CurrentUserID = userID
 	}
 
-
 	//add logic for supporting flash messages
 
 	if flashes := session.Flashes("success"); len(flashes) > 0 {
@@ -72,5 +71,5 @@ func (app *application) addDefaultData(td *TemplateData, w http.ResponseWriter, 
 		return nil
 	}
 	return td
-	
+
 }

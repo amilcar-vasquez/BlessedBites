@@ -58,7 +58,6 @@ func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*d
 	description := r.FormValue("description")
 	priceStr := r.FormValue("price")
 	categoryIDStr := r.FormValue("category_id")
-	
 
 	// Save raw form values
 	formData["id"] = idStr
@@ -404,7 +403,6 @@ func (app *application) searchMenuHandler(w http.ResponseWriter, r *http.Request
 
 func (app *application) viewMenuByCategory(w http.ResponseWriter, r *http.Request) {
 
-	
 	// Extract category ID from URL path
 	idStr := strings.TrimPrefix(r.URL.Path, "/menu/category/")
 	categoryID, err := strconv.ParseInt(idStr, 10, 64)

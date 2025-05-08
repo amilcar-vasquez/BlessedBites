@@ -69,7 +69,6 @@ func main() {
 		Recommendations: &data.RecommendationModel{DB: db},
 		templateCache:   templateCache,
 	}
-	
 
 	err = app.serve()
 	if err != nil {
