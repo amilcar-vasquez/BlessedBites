@@ -9,6 +9,11 @@
 <div class="row" style="margin-top: 2rem;">
     <!-- Sidebar -->
     <div class="col s12 m4 l3">
+            {{ if .IsAuthenticated }}
+            <p>Logged in with user ID: {{ .CurrentUserID }} </p>
+            {{ else }}
+            Logging in makes it easier to order!
+            {{ end }}
         <div class="category-sidebar">
             <h6 class="sidebar-title">I'm looking for:</h6>
             {{range .Categories}}
@@ -22,8 +27,19 @@
           </div>          
         <div class="order-sidebar">
             <h5>Order Summary</h5>
-            <p>No items in your order.</p>
-            <a href="#" class="btn mustard">Place Order</a>
+            {{ if .AlertMessage }}
+        <div class="card-panel {{.AlertType}}">
+            {{.AlertMessage}}
+        </div>
+            {{ end }}
+            <ul id="orderList"></ul>
+            <p id="orderTotal">Total: $0.00</p>
+            <form id="orderForm" action="/orders" method="POST">
+                {{ $.CSRFField  }}
+                <!-- Hidden fields for order data -->
+                <input type="hidden" name="orderData" id="orderData">
+                <button type="submit" class="btn mustard">Place Order</button>
+            </form>
         </div>
     </div>
 
@@ -51,7 +67,7 @@
                             <p><strong>${{printf "%.2f" .Price}}</strong></p>
                         </div>
                         <div class="card-btn">
-                            <a href="#">Add to Order</a>
+                            <a href="#" class="btn-add-order" data-id="{{.ID}}" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}">Add to Order</a>
                         </div>
                     </div>
                 </div>
@@ -59,7 +75,6 @@
         </div>
         
     </div>
-</div>
 </div>
 
 {{end}}

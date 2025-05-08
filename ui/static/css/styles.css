@@ -187,13 +187,20 @@ nav .brand-logo {
   color: #fff;
 }
 
-
 .order-sidebar {
   color: var(--light-bg);
   background-color: var(--burgundy);
   padding: 1rem;
   border-radius: var(--card-radius);
   border-color: var(--mustard)
+}
+
+.order-sidebar ul {
+  list-style: none;
+  padding-left: 0;
+}
+.order-sidebar li {
+  margin-bottom: 0.5rem;
 }
 
 .input-field-mustard:focus:not([readonly]) {

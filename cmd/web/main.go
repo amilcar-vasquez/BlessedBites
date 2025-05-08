@@ -18,8 +18,10 @@ var sessionStore = sessions.NewCookieStore([]byte("super-secret-key"))
 
 type application struct {
 	addr            *string
+	DB              *sql.DB // <- Add this line
 	MenuItem        *data.MenuItemModel
 	Order           *data.OrderModel
+	OrderItem       *data.OrderItemModel
 	Category        *data.CategoryModel
 	User            *data.UserModel
 	sessionStore    *sessions.CookieStore
@@ -55,9 +57,11 @@ func main() {
 
 	app := &application{
 		addr:            addr,
+		DB:              db, // <- Pass db here
 		logger:          logger,
 		MenuItem:        &data.MenuItemModel{DB: db},
 		Order:           &data.OrderModel{DB: db},
+		OrderItem:       &data.OrderItemModel{DB: db},
 		Category:        &data.CategoryModel{DB: db},
 		User:            &data.UserModel{DB: db},
 		sessionStore:    sessionStore,
@@ -65,6 +69,7 @@ func main() {
 		Recommendations: &data.RecommendationModel{DB: db},
 		templateCache:   templateCache,
 	}
+	
 
 	err = app.serve()
 	if err != nil {

@@ -55,13 +55,12 @@ func (app *application) addDefaultData(td *TemplateData, r *http.Request) *Templ
 		td.CurrentUserID = userID
 	}
 
-	// Handle flash messages (optional but common)
-	if flash, ok := session.Values["flash"].(string); ok {
-		td.AlertMessage = flash
-		td.AlertType = "alert-success"
-		delete(session.Values, "flash")
-		_ = session.Save(r, nil)
-	}
 
+	//add logic for supporting flash messages
+
+	if flashes := session.Flashes("success"); len(flashes) > 0 {
+		td.AlertMessage = flashes[0].(string)
+		td.AlertType = "green lighten-4 green-text text-darken-4"
+	}
 	return td
 }

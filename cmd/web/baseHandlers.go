@@ -100,3 +100,26 @@ func (app *application) searchMenuJSONHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
+func (app *application) contextGetUser(r *http.Request) *data.User {
+	session, err := app.sessionStore.Get(r, "session")
+	if err != nil {
+		return nil
+	}
+
+	authenticated, ok := session.Values["authenticated"].(bool)
+	if !ok || !authenticated {
+		return nil
+	}
+
+	userID, ok := session.Values["authenticatedUserID"].(int64)
+	if !ok || userID == 0 {
+		return nil
+	}
+
+	user, err := app.User.GetByID(userID)
+	if err != nil {
+		return nil
+	}
+
+	return user
+}

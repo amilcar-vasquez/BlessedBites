@@ -65,3 +65,42 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+
+document.querySelectorAll('.btn-add-order').forEach(button => {
+    button.addEventListener('click', function (e) {
+        e.preventDefault();
+        const menuItemID = parseInt(button.dataset.id);
+        const itemName = button.dataset.name;
+        const itemPrice = parseFloat(button.dataset.price);
+
+        // Prompt user for quantity
+        const itemAmount = parseInt(prompt(`Enter quantity for ${itemName}:`, "1"), 10);
+        if (isNaN(itemAmount) || itemAmount <= 0) {
+            alert("Invalid quantity. Please enter a positive number.");
+            return;
+        }
+
+        // Create or update the current order object
+        let orderData = JSON.parse(document.getElementById('orderData').value || '[]');
+        orderData.push({ id: menuItemID, name: itemName, price: itemPrice, qty: itemAmount });
+        document.getElementById('orderData').value = JSON.stringify(orderData);
+
+        // Update the order summary display
+        renderOrder(orderData);
+    });
+});
+
+function renderOrder(orderData) {
+    const orderList = document.getElementById('orderList');
+    const orderTotal = document.getElementById('orderTotal');
+    orderList.innerHTML = '';
+    let total = 0;
+    orderData.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}`;
+        orderList.appendChild(li);
+        total += item.price * item.qty;
+    });
+    orderTotal.textContent = `Total: $${total.toFixed(2)}`;
+}
