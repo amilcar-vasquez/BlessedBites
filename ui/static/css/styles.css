@@ -132,10 +132,61 @@ nav .brand-logo {
 }
 
 /* Category Sidebar */
+/* Sidebar Container */
 .category-sidebar {
   background-color: white;
-  padding: 1rem;
+  padding: 1.5rem;
+  border-radius: var(--card-radius);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  max-width: 280px;
+  margin-bottom: 2rem;
 }
+
+/* Sidebar Title */
+.sidebar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--burgundy);
+  margin-bottom: 1rem;
+}
+
+/* Category Item */
+.category-item {
+  margin: 0.5rem 0;
+}
+
+.category-item a {
+  display: block;
+  padding: 0.6rem 1rem;
+  background-color: var(--light-bg);
+  color: var(--burgundy);
+  border-radius: var(--btn-radius);
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.category-item a:hover {
+  background-color: var(--mustard);
+  color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Special link for 'Anything delicious' */
+.category-item.special a {
+  background-color: var(--burgundy);
+  color: white;
+  text-align: center;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+.category-item.special a:hover {
+  background-color: #4a0217;
+  color: #fff;
+}
+
 
 .order-sidebar {
   color: var(--light-bg);

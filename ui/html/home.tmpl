@@ -10,14 +10,16 @@
     <!-- Sidebar -->
     <div class="col s12 m4 l3">
         <div class="category-sidebar">
-            <h6>I'm looking for:</h6>
+            <h6 class="sidebar-title">I'm looking for:</h6>
             {{range .Categories}}
             <div class="category-item">
-                <a href="/menu/category/{{.ID}}">{{.Name}}</a>
+              <a href="/menu/category/{{.ID}}">{{.Name}}</a>
             </div>
             {{end}}
-            <a href="/">Anything delicous</a>
-        </div>
+            <div class="category-item special">
+              <a href="/">Anything delicious</a>
+            </div>
+          </div>          
         <div class="order-sidebar">
             <h5>Order Summary</h5>
             <p>No items in your order.</p>
