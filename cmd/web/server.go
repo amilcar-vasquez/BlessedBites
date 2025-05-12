@@ -12,7 +12,7 @@ func (app *application) serve() error {
 	csrfKey := []byte("ZQnXOK/iAwl+wMHKrQxS1VEw+9KAZUq=")
 	csrfMiddleware := csrf.Protect(
 		csrfKey,
-		csrf.Secure(false),
+		csrf.Secure(true),
 		csrf.SameSite(csrf.SameSiteDefaultMode),
 		csrf.HttpOnly(false),
 		csrf.Path("/"),
