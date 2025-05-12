@@ -37,8 +37,15 @@ func noCacheMiddleware(h http.Handler) http.Handler {
 func (app *application) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, _ := app.sessionStore.Get(r, "session")
-		userID := session.Values["userID"]
-		if userID == nil {
+		auth, ok := session.Values["authenticated"].(bool)
+		if !ok || !auth {
+			// Set a flash message
+			flashSession, _ := app.sessionStore.Get(r, "flash")
+			flashSession.Values["alertMessage"] = "This is an admin-only area. Please log in first."
+			flashSession.Values["alertType"] = "alert-warning"
+			flashSession.Save(r, w)
+
+			// Redirect to login page
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}

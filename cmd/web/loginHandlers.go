@@ -46,12 +46,25 @@ func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("CSRF token:", csrf.Token(r))
 
+	flashSession, _ := app.sessionStore.Get(r, "flash")
+	if msg, ok := flashSession.Values["alertMessage"].(string); ok {
+		data.AlertMessage = msg
+		if typ, ok := flashSession.Values["alertType"].(string); ok {
+			data.AlertType = typ
+		} else {
+			data.AlertType = "alert-info"
+		}
+		flashSession.Options.MaxAge = -1 // clear flash
+		flashSession.Save(r, w)
+	}
+
 	err = app.render(w, http.StatusOK, "login.tmpl", data)
 	if err != nil {
 		app.logger.Error("failed to render login page", "template", "signin.tmpl", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+
 }
 
 // handler for processing the login form
