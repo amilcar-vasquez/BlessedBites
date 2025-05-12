@@ -9,11 +9,13 @@
 <div class="row" style="margin-top: 2rem;">
     <!-- Sidebar -->
     <div class="col s12 m4 l3">
-            {{ if .IsAuthenticated }}
-            <p>Logged in with user ID: {{ .CurrentUserID }} </p>
-            {{ else }}
-            Logging in makes it easier to order!
-            {{ end }}
+            <div class="auth-message">
+                {{ if .IsAuthenticated }}
+                <p>Welcome {{ .CurrentUserID }} </p>
+                {{ else }}
+                Logging in makes it easier to order!
+                {{ end }}
+            </div>
         <div class="category-sidebar">
             <h6 class="sidebar-title">I'm looking for:</h6>
             {{range .Categories}}

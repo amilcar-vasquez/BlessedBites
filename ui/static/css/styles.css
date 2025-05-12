@@ -261,6 +261,19 @@ nav .brand-logo {
   cursor: pointer;
 }
 
+.auth-message {
+  background-color: var(--mustard);
+  color: white;
+  border-left: 6px solid var(--burgundy);
+  padding: .1rem;
+  margin: 1rem auto;
+  border-radius: var(--card-radius);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+}
+
 
 .invalid-input{
   border:none;

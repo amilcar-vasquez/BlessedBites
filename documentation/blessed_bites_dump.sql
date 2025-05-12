@@ -361,6 +361,7 @@ COPY public.categories (id, name) FROM stdin;
 1	Fast Food
 2	Lunch Special
 3	Drinks
+4	Breakfast
 \.
 
 
@@ -369,11 +370,11 @@ COPY public.categories (id, name) FROM stdin;
 --
 
 COPY public.menu_items (id, name, description, price, category_id, order_count, is_active, image_url, created_at) FROM stdin;
-3	Tacos	test	2.00	2	0	t		2025-04-10 16:31:51.546828
-1	Burritos	Dutch cheese and Chicken Burritos	3.50	1	0	t		2025-04-10 13:15:39.070104
-4	Salbutes	Fried corn delicacy topped with chicken and pico de gallo	0.33	1	0	t		2025-04-10 17:25:40.632362
-9	Breakfast Burritos	testing again	4.50	1	0	t		2025-04-11 08:20:26.837369
-10	Escabeche	Onion Soup that rocks	12.00	2	0	t		2025-04-11 08:22:02.356135
+10	Escabeche	Onion Soup that rocks	13.00	2	0	t	./ui/static/img/uploads/20250428_110940_2_escabeche.jpg	2025-04-11 08:22:02.356135
+22	Beef Soup	Get that protein up with our beef soup special	13.00	2	0	t	./ui/static/img/uploads/20250428_111129_2_beef-soup.jpg	2025-04-28 11:11:29.116869
+23	Beef Tostadas	Tostadas, the beef kind of way! Beef lover's paradise	1.50	1	0	t	./ui/static/img/uploads/20250428_111222_1_beef-tostadas.jpg	2025-04-28 11:12:22.290286
+24	Boil up	That goodness that is nutritious and yummy!	15.00	2	0	t	./ui/static/img/uploads/20250508_092912_2_boil-up.jpg	2025-04-28 11:13:09.203901
+25	Fried tacos	It's not just fried tacos, it's creaminess added!	12.00	1	0	t	./ui/static/img/uploads/20250508_092926_1_fried-tacos.jpg	2025-04-28 11:14:33.289235
 \.
 
 
@@ -382,6 +383,44 @@ COPY public.menu_items (id, name, description, price, category_id, order_count, 
 --
 
 COPY public.order_items (id, order_id, menu_item_id, quantity, item_price) FROM stdin;
+1	1	24	0	15.00
+2	2	24	0	15.00
+3	3	24	2	15.00
+4	4	24	7	15.00
+5	5	25	2	12.00
+6	6	23	5	1.50
+7	7	24	1	15.00
+8	7	25	5	12.00
+9	8	22	2	13.00
+10	9	24	5	15.00
+11	9	25	2	12.00
+12	9	23	3	1.50
+13	10	24	3	15.00
+14	11	25	12	12.00
+15	12	22	2	13.00
+16	13	24	3	15.00
+17	13	25	2	12.00
+18	14	24	2	15.00
+19	14	25	3	12.00
+20	15	24	1	15.00
+21	15	23	1	1.50
+22	15	25	1	12.00
+23	16	24	1	15.00
+24	16	25	1	12.00
+25	17	22	1	13.00
+26	17	10	1	13.00
+27	18	25	1	12.00
+28	18	24	1	15.00
+29	19	25	1	12.00
+30	20	24	1	15.00
+31	20	23	1	1.50
+32	20	25	1	12.00
+33	21	25	7	12.00
+34	21	24	1	15.00
+35	22	25	1	12.00
+36	22	24	1	15.00
+37	23	25	1	12.00
+38	23	24	1	15.00
 \.
 
 
@@ -390,6 +429,29 @@ COPY public.order_items (id, order_id, menu_item_id, quantity, item_price) FROM 
 --
 
 COPY public.orders (id, user_id, total_cost, created_at, status, payment_method) FROM stdin;
+1	5	0.00	2025-05-08 13:22:26.261567	pending	\N
+2	5	0.00	2025-05-08 13:29:28.108126	pending	\N
+3	5	30.00	2025-05-08 13:33:22.101052	pending	\N
+4	5	105.00	2025-05-08 13:35:47.658949	pending	\N
+5	5	24.00	2025-05-08 13:48:59.176151	pending	\N
+6	5	7.50	2025-05-08 14:20:23.457522	pending	\N
+7	5	75.00	2025-05-08 14:24:11.062028	pending	\N
+8	5	26.00	2025-05-08 14:28:06.338564	pending	\N
+9	5	103.50	2025-05-08 15:17:34.413178	pending	\N
+10	5	45.00	2025-05-08 15:38:01.626601	pending	\N
+11	5	144.00	2025-05-08 15:38:18.569652	pending	\N
+12	5	26.00	2025-05-08 15:38:39.874415	pending	\N
+13	5	69.00	2025-05-08 15:44:21.161546	pending	\N
+14	5	66.00	2025-05-08 16:19:26.715438	pending	\N
+15	5	28.50	2025-05-08 16:25:32.268085	pending	\N
+16	5	27.00	2025-05-08 16:26:17.905074	pending	\N
+17	5	26.00	2025-05-08 16:30:32.920616	pending	\N
+18	5	27.00	2025-05-08 16:35:39.200895	pending	\N
+19	5	12.00	2025-05-08 16:37:38.439864	pending	\N
+20	5	28.50	2025-05-08 16:45:32.526279	pending	\N
+21	5	99.00	2025-05-08 16:46:33.033769	pending	\N
+22	5	27.00	2025-05-09 13:26:13.068397	pending	\N
+23	5	27.00	2025-05-09 13:31:41.54274	pending	\N
 \.
 
 
@@ -415,7 +477,10 @@ COPY public.schema_migrations (version, dirty) FROM stdin;
 --
 
 COPY public.users (id, email, full_name, phone_no, password_hash, role, created_at) FROM stdin;
-1	2022156707@ub.edu.bz	Amilcar Vasquez	6082424	Firme.2424	user	2025-04-08 23:22:07.710769
+5	2022156707@ub.edu.bz	Amilcar	6082424	$2a$10$0O4itWrJ7bPUHthgZg7u7.XShh8MxZTuCl5DCZXQVo/Dc0Kr7ZCCe	admin	2025-05-02 12:44:42.201872
+6	ingris@blessedbites.bz	Ingris	6741874	$2a$10$0QlVBfKqr13MKkKuMozPd.bgG7oFlgH//Gz5TyavuNslVavJ23q8i	admin	2025-05-02 17:40:53.461998
+7	belizeno@gmail.com	noAdminAmilcar	6082424	$2a$10$o5iZQY7dTS7AuqhLq0R4eOzvrYKVc9FEAUDZ3fN.EhKRbjX3Rb6Fa	user	2025-05-03 23:47:32.728312
+9	alessia@vns.edu.bz	Alessia Vasquez	6082424	$2a$10$Y/gFSR5bZtPR3oisFdyH8eFdy/7ek/XsUS8lf5FVtNzbdCilx3g6C	user	2025-05-12 08:40:34.628321
 \.
 
 
@@ -430,28 +495,28 @@ SELECT pg_catalog.setval('public.analytics_events_id_seq', 1, false);
 -- Name: categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: blessed_bites
 --
 
-SELECT pg_catalog.setval('public.categories_id_seq', 3, true);
+SELECT pg_catalog.setval('public.categories_id_seq', 5, true);
 
 
 --
 -- Name: menu_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: blessed_bites
 --
 
-SELECT pg_catalog.setval('public.menu_items_id_seq', 10, true);
+SELECT pg_catalog.setval('public.menu_items_id_seq', 28, true);
 
 
 --
 -- Name: order_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: blessed_bites
 --
 
-SELECT pg_catalog.setval('public.order_items_id_seq', 1, false);
+SELECT pg_catalog.setval('public.order_items_id_seq', 38, true);
 
 
 --
 -- Name: orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: blessed_bites
 --
 
-SELECT pg_catalog.setval('public.orders_id_seq', 1, false);
+SELECT pg_catalog.setval('public.orders_id_seq', 23, true);
 
 
 --
@@ -465,7 +530,7 @@ SELECT pg_catalog.setval('public.recommendations_id_seq', 1, false);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: blessed_bites
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 2, true);
+SELECT pg_catalog.setval('public.users_id_seq', 9, true);
 
 
 --

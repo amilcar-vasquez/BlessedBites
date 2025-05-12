@@ -69,3 +69,13 @@ func (app *application) CurrentUserID(r *http.Request) (int64, error) {
 	}
 	return id, nil
 }
+
+// CurrentUser retrieves the current user full name from the session.
+func (app *application) CurrentUserFullName(r *http.Request) (string, error) {
+	session, _ := app.sessionStore.Get(r, "session-name")
+	fullName, ok := session.Values["fullName"].(string)
+	if !ok {
+		return "", fmt.Errorf("user full name not found in session")
+	}
+	return fullName, nil
+}

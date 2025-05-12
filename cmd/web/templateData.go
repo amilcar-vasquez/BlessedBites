@@ -9,21 +9,22 @@ import (
 )
 
 type TemplateData struct {
-	Title           string
-	HeaderText      string
-	MenuItems       []*data.MenuItem
-	MenuItem        *data.MenuItem
-	Categories      []*data.Category
-	CategoryMap     map[int]string
-	RandomMenuItems []*data.MenuItem
-	Users           []*data.User
-	User            *data.User
-	IsAuthenticated bool
-	CurrentUserID   int64
-	CurrentUserRole string
-	AlertMessage    string // To hold general messages like "Invalid credentials"
-	AlertType       string // e.g., "alert-danger", "alert-success"
-	CSRFField       template.HTML
+	Title               string
+	HeaderText          string
+	MenuItems           []*data.MenuItem
+	MenuItem            *data.MenuItem
+	Categories          []*data.Category
+	CategoryMap         map[int]string
+	RandomMenuItems     []*data.MenuItem
+	Users               []*data.User
+	User                *data.User
+	IsAuthenticated     bool
+	CurrentUserID       int64
+	CurrentUserRole     string
+	CurrentUserFullName string
+	AlertMessage        string // To hold general messages like "Invalid credentials"
+	AlertType           string // e.g., "alert-danger", "alert-success"
+	CSRFField           template.HTML
 
 	FormErrors map[string]string
 	FormData   map[string]string
@@ -53,6 +54,10 @@ func (app *application) addDefaultData(td *TemplateData, w http.ResponseWriter, 
 
 	if userID, ok := session.Values["authenticatedUserID"].(int64); ok {
 		td.CurrentUserID = userID
+	}
+
+	if fullName, ok := session.Values["fullName"].(string); ok {
+		td.CurrentUserFullName = fullName
 	}
 
 	//add logic for supporting flash messages
