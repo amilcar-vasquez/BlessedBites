@@ -11,7 +11,7 @@
     <div class="col s12 m4 l3">
             <div class="auth-message">
                 {{ if .IsAuthenticated }}
-                <p>Welcome {{ .CurrentUserID }} </p>
+                <p>Welcome {{ .CurrentUserFullName }}! </p>
                 {{ else }}
                 Logging in makes it easier to order!
                 {{ end }}

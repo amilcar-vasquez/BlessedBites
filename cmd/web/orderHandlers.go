@@ -70,24 +70,59 @@ func orderTotal(items []WhatsAppOrderItem) float64 {
 }
 
 func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if user is logged in
 	user := app.contextGetUser(r)
 	if user == nil {
 		http.Error(w, "User must be logged in to place an order.", http.StatusUnauthorized)
 		return
 	}
 
+	// Parse form data
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Invalid form data", http.StatusBadRequest)
 		return
 	}
 
+	// Get order data from the form
 	orderDataStr := r.FormValue("orderData")
-	var items []OrderItemInput
-	if err := json.Unmarshal([]byte(orderDataStr), &items); err != nil {
-		http.Error(w, "Invalid order data", http.StatusBadRequest)
+
+if orderDataStr == "" || orderDataStr == "[]" {
+	session, err := app.sessionStore.Get(r, "session")
+	if err != nil {
+		http.Error(w, "Session error", http.StatusInternalServerError)
 		return
 	}
+	session.AddFlash("Please add items to your order before proceeding.", "error")
+	if err := session.Save(r, w); err != nil {
+		http.Error(w, "Session save error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return
+}
+
+	// Check if the items slice is empty
+	var items []OrderItemInput
+if err := json.Unmarshal([]byte(orderDataStr), &items); err != nil {
+	http.Error(w, "Invalid order data", http.StatusBadRequest)
+	return
+}
+
+if len(items) == 0 {
+	session, err := app.sessionStore.Get(r, "session")
+	if err != nil {
+		http.Error(w, "Session error", http.StatusInternalServerError)
+		return
+	}
+	session.AddFlash("Please add some yumminess to your order before proceeding.", "error")
+	if err := session.Save(r, w); err != nil {
+		http.Error(w, "Session save error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return
+}
 
 	// Start transaction
 	tx, err := app.Order.DB.Begin()

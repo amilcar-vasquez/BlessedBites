@@ -91,14 +91,7 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		app.logger.Error("Error hashing password", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	user.Password = string(hashedPassword)
+	
 	// Validate the user data
 	v := validator.NewValidator()
 	data.ValidateUser(v, user)
@@ -121,6 +114,15 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		app.logger.Error("Error hashing password", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	user.Password = string(hashedPassword)
 
 	// Insert the user into the database
 	err = app.User.Insert(user)

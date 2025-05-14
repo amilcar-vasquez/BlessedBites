@@ -69,6 +69,7 @@ func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
 
 // handler for processing the login form
 func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if the user is already logged in
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -80,6 +81,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check CSRF token
 	email := strings.TrimSpace(r.Form.Get("email"))
 	password := r.Form.Get("password")
 
@@ -115,6 +117,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return // Stop processing
 	}
 
+	// Check if the user exists in the database
 	user, err := app.User.GetByEmail(email)
 
 	if err != nil {
@@ -140,6 +143,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: user.CreatedAt,
 	}
 
+	// Check if the password is correct
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 
 	if err != nil {
@@ -157,7 +161,8 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	// Store user ID and role in session
+	
+	// Store user information in the session
 	session, err := app.sessionStore.Get(r, "session")
 	if err != nil {
 		app.logger.Error("Failed to get session", "error", err)
