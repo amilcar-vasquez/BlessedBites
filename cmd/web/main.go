@@ -17,23 +17,24 @@ import (
 var sessionStore = sessions.NewCookieStore([]byte("super-secret-key"))
 
 type application struct {
-	addr            *string
-	DB              *sql.DB // <- Add this line
-	MenuItem        *data.MenuItemModel
-	Order           *data.OrderModel
-	OrderItem       *data.OrderItemModel
-	Category        *data.CategoryModel
-	User            *data.UserModel
-	sessionStore    *sessions.CookieStore
-	Analytics       *data.AnalyticsModel
-	Recommendations *data.RecommendationModel
-	logger          *slog.Logger
-	templateCache   map[string]*template.Template
+	addr           *string
+	DB             *sql.DB // <- Add this line
+	MenuItem       *data.MenuItemModel
+	Order          *data.OrderModel
+	OrderItem      *data.OrderItemModel
+	Category       *data.CategoryModel
+	User           *data.UserModel
+	sessionStore   *sessions.CookieStore
+	Analytics      *data.AnalyticsModel
+	Rating         *data.RatingModel
+	Recommendation *data.RecommendationModel
+	logger         *slog.Logger
+	templateCache  map[string]*template.Template
 }
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
-	dsn := flag.String("dsn", "postgres://blessed_bites:Matthew.5:6@localhost/blessed_bites?sslmode=disable", "Postgres connection string")
+	dsn := flag.String("dsn", "postgresql://postgres.cevlocotfnrbwdbthjyp:Ecclesiastes.3:1-7@aws-0-us-west-1.pooler.supabase.com:6543/postgres", "Postgres connection string")
 
 	flag.Parse()
 
@@ -56,18 +57,19 @@ func main() {
 	}
 
 	app := &application{
-		addr:            addr,
-		DB:              db, // <- Pass db here
-		logger:          logger,
-		MenuItem:        &data.MenuItemModel{DB: db},
-		Order:           &data.OrderModel{DB: db},
-		OrderItem:       &data.OrderItemModel{DB: db},
-		Category:        &data.CategoryModel{DB: db},
-		User:            &data.UserModel{DB: db},
-		sessionStore:    sessionStore,
-		Analytics:       &data.AnalyticsModel{DB: db},
-		Recommendations: &data.RecommendationModel{DB: db},
-		templateCache:   templateCache,
+		addr:           addr,
+		DB:             db, // <- Pass db here
+		logger:         logger,
+		MenuItem:       &data.MenuItemModel{DB: db},
+		Order:          &data.OrderModel{DB: db},
+		OrderItem:      &data.OrderItemModel{DB: db},
+		Category:       &data.CategoryModel{DB: db},
+		User:           &data.UserModel{DB: db},
+		sessionStore:   sessionStore,
+		Rating:         &data.RatingModel{DB: db},
+		Analytics:      &data.AnalyticsModel{DB: db},
+		Recommendation: &data.RecommendationModel{DB: db},
+		templateCache:  templateCache,
 	}
 
 	err = app.serve()

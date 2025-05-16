@@ -59,3 +59,8 @@ var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](
 func IsEmail(value string) bool {
 	return EmailRX.MatchString(value)
 }
+
+// validate rating to include only 1-5
+func IsValidRating(value int) bool {
+	return value >= 1 && value <= 5
+}

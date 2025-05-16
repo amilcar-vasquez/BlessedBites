@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/csrf"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // POST handler to process the form submission for adding a new category
@@ -91,4 +92,51 @@ func (app *application) deleteCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/menu/add", http.StatusSeeOther)
+}
+
+func (app *application) viewMenuByCategory(w http.ResponseWriter, r *http.Request) {
+
+	// Extract category ID from URL path
+	idStr := strings.TrimPrefix(r.URL.Path, "/menu/category/")
+	categoryID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Fetch category
+	category, err := app.Category.GetByID(categoryID)
+	if err != nil {
+		app.logger.Error("Failed to get category", "error", err)
+		http.NotFound(w, r)
+		return
+	}
+
+	// Fetch all menu items for this category
+	menuItems, err := app.MenuItem.GetByCategoryID(categoryID)
+	if err != nil {
+		app.logger.Error("Failed to get menu items by category", "error", err)
+		http.Error(w, "Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch all categories
+	categories, err := app.Category.GetAll()
+	if err != nil {
+		app.logger.Error("Failed to get categories", "error", err)
+		http.Error(w, "Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Render the page
+	data := app.addDefaultData(NewTemplateData(), w, r)
+	data.MenuItems = menuItems
+	data.Title = category.Name + " - Menu"
+	data.Categories = categories
+
+	err = app.render(w, http.StatusOK, "home.tmpl", data)
+	if err != nil {
+		app.logger.Error("Template rendering error", "error", err)
+		http.Error(w, "Server Error", http.StatusInternalServerError)
+	}
 }

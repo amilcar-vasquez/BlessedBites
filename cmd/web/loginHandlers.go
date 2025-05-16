@@ -161,7 +161,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	
+
 	// Store user information in the session
 	session, err := app.sessionStore.Get(r, "session")
 	if err != nil {

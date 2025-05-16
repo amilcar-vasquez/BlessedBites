@@ -65,7 +65,7 @@
                             <img class="responsive-img" src="/{{.ImageURL}}" alt="{{.Name}}">
                         </div>
                         <div class="card-content">
-                            <span class="card-title">{{.Name}}</span>
+                            <span class="card-title">{{.Name}} {{ if .Popular }}<span class="thumb-badge"><i class="material-icons">thumb_up</i></span>{{ end }}</span>
                             <p>{{.Description}}</p>
                             <p><strong>${{printf "%.2f" .Price}}</strong></p>
                         </div>

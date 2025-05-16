@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+	"sort"
 )
 
 // BaseHandler renders the common elements
@@ -60,6 +61,31 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		}
 		RandomMenuItems = shuffled[:limit]
 	}
+
+	// Inject popularity flags BEFORE rendering
+	popularIDs, err := app.Recommendation.GetPopularItemIDs(3)
+	if err != nil {
+		app.logger.Error("Error retrieving popular items", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	popularSet := make(map[int]struct{})
+	for _, id := range popularIDs {
+		popularSet[id] = struct{}{}
+	}
+	for i := range menuItems {
+		if _, found := popularSet[int(menuItems[i].ID)]; found {
+			menuItems[i].Popular = true
+		}
+	}
+
+	// Reorder menuItems so that popular items appear first
+sort.SliceStable(menuItems, func(i, j int) bool {
+	if menuItems[i].Popular && !menuItems[j].Popular {
+		return true // i comes before j
+	}
+	return false
+})
 
 	// Prepare the data
 	data := app.addDefaultData(NewTemplateData(), w, r) // <- THIS LINE IS KEY

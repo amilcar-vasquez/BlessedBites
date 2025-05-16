@@ -15,7 +15,13 @@ func (app *application) loggingMiddleware(next http.Handler) http.Handler {
 			uri    = r.URL.RequestURI()
 		)
 
-		app.logger.Info("received request", "ip", ip, "protocol", proto, "method", method, "uri", uri)
+		app.logger.Info(
+			"received request",
+			"ip", ip,
+			"protocol", proto,
+			"method", method,
+			"uri", uri,
+		)
 		next.ServeHTTP(w, r)
 		app.logger.Info("Request processed")
 	})

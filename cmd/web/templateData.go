@@ -18,6 +18,8 @@ type TemplateData struct {
 	RandomMenuItems     []*data.MenuItem
 	Users               []*data.User
 	User                *data.User
+	Rating              []*data.Rating
+	Recommendation      *data.Recommendation
 	IsAuthenticated     bool
 	CurrentUserID       int64
 	CurrentUserRole     string

@@ -21,6 +21,7 @@ type MenuItem struct {
 	IsActive    bool      `json:"is_active"`
 	ImageURL    string    `json:"image_url"`
 	CreatedAt   time.Time `json:"created_at"`
+	Popular     bool      `json:"popular"`
 }
 
 // MenuModel struct to hold the database connection pool
@@ -194,4 +195,43 @@ func (m *MenuItemModel) GetByCategoryID(categoryID int64) ([]*MenuItem, error) {
 		items = append(items, &item)
 	}
 	return items, nil
+}
+
+// increment order count
+func (m *MenuItemModel) IncrementOrderCount(id int64) error {
+	query := `UPDATE menu_items SET order_count = order_count + 1 WHERE id = $1`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := m.DB.ExecContext(ctx, query, id)
+	return err
+}
+
+// update the top 3 most popular menu items
+func (m *MenuItemModel) UpdatePopularItems() error {
+	query := `
+		UPDATE menu_items
+		SET popular = FALSE;
+
+		UPDATE menu_items
+		SET popular = TRUE
+		WHERE id IN (
+			SELECT id
+			FROM menu_items
+			GROUP BY id
+			ORDER BY order_count DESC
+			LIMIT 3
+		)
+	`
+	//use transaction to ensure consistency
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(context.Background(), query)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
 }

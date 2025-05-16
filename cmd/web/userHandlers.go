@@ -91,7 +91,6 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	// Validate the user data
 	v := validator.NewValidator()
 	data.ValidateUser(v, user)

@@ -111,7 +111,7 @@ nav .brand-logo {
 }
 
 .card-title {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 1000;
   color: var(--burgundy);
 }
@@ -316,6 +316,41 @@ nav .brand-logo {
 .card-content p {
   margin-bottom: 1rem;
 }
+
+/* Badge */
+.thumb-badge {
+  background-color: var(--burgundy);
+  border-radius: .5rem;
+  order: -1; /* Bumps it to the top of the row */
+  border: 2px solid var(--burgundy);
+  color: var(--light-bg);
+  font-size: 1.1rem;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+  animation: thumb-badge-jump 0.5s cubic-bezier(.25,1.5,.5,1) 1;
+ 
+}
+
+@keyframes thumb-badge-jump {
+  0%   { transform: translateY(0);}
+  30%  { transform: translateY(-0.2rem);}
+  100% { transform: translateY(0);}
+}
+
+
+.thumb-badge .material-icons {
+  font-size: inherit;
+   /* Animation */
+  animation: thumb-badge-jump 1s cubic-bezier(.25,1.5,.5,1) 1;
+}
+
+.img-popular img{
+  width: 20%;
+  height: auto;
+  border-radius: var(--card-radius);
+}
+
 
 .search-form {
   display: flex;

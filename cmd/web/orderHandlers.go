@@ -87,42 +87,42 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 	// Get order data from the form
 	orderDataStr := r.FormValue("orderData")
 
-if orderDataStr == "" || orderDataStr == "[]" {
-	session, err := app.sessionStore.Get(r, "session")
-	if err != nil {
-		http.Error(w, "Session error", http.StatusInternalServerError)
+	if orderDataStr == "" || orderDataStr == "[]" {
+		session, err := app.sessionStore.Get(r, "session")
+		if err != nil {
+			http.Error(w, "Session error", http.StatusInternalServerError)
+			return
+		}
+		session.AddFlash("Please add items to your order before proceeding.", "error")
+		if err := session.Save(r, w); err != nil {
+			http.Error(w, "Session save error", http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	session.AddFlash("Please add items to your order before proceeding.", "error")
-	if err := session.Save(r, w); err != nil {
-		http.Error(w, "Session save error", http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-	return
-}
 
 	// Check if the items slice is empty
 	var items []OrderItemInput
-if err := json.Unmarshal([]byte(orderDataStr), &items); err != nil {
-	http.Error(w, "Invalid order data", http.StatusBadRequest)
-	return
-}
+	if err := json.Unmarshal([]byte(orderDataStr), &items); err != nil {
+		http.Error(w, "Invalid order data", http.StatusBadRequest)
+		return
+	}
 
-if len(items) == 0 {
-	session, err := app.sessionStore.Get(r, "session")
-	if err != nil {
-		http.Error(w, "Session error", http.StatusInternalServerError)
+	if len(items) == 0 {
+		session, err := app.sessionStore.Get(r, "session")
+		if err != nil {
+			http.Error(w, "Session error", http.StatusInternalServerError)
+			return
+		}
+		session.AddFlash("Please add some yumminess to your order before proceeding.", "error")
+		if err := session.Save(r, w); err != nil {
+			http.Error(w, "Session save error", http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	session.AddFlash("Please add some yumminess to your order before proceeding.", "error")
-	if err := session.Save(r, w); err != nil {
-		http.Error(w, "Session save error", http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-	return
-}
 
 	// Start transaction
 	tx, err := app.Order.DB.Begin()
@@ -177,11 +177,28 @@ if len(items) == 0 {
 		}
 	}
 
+	//increment order count
+	for _, item := range fullItems {
+		err := app.MenuItem.IncrementOrderCount(int64(item.MenuItemID))
+		if err != nil {
+			http.Error(w, "Failed to increment order count", http.StatusInternalServerError)
+			return
+		}
+	}
+
 	// Commit transaction
 	if err := tx.Commit(); err != nil {
 		http.Error(w, "Could not finalize order", http.StatusInternalServerError)
 		return
 	}
+
+	// Update popular items
+	go func() {
+		err := app.MenuItem.UpdatePopularItems()
+		if err != nil {
+			app.logger.Error("Failed to update popular items", "error", err)
+		}
+	}()
 
 	// 🔔 Send WhatsApp notification
 	go func(orderID int, messageItems []WhatsAppOrderItem) {
