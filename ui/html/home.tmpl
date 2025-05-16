@@ -1,10 +1,6 @@
 {{define "content"}}
 <!-- Top Buttons for Related Foods -->
-<div class="top-buttons">
-    {{range .RandomMenuItems}}
-        <a class="btn">{{.Name}}</a>
-    {{end}}
-</div>
+
 
 <div class="row" style="margin-top: 2rem;">
     <!-- Sidebar -->
@@ -48,6 +44,18 @@
 
     <!-- Menu Items Grid -->
     <div class="col s12 m8 l9">
+        {{ if .IsAuthenticated }}
+<div class="top-buttons">
+    {{range .TopUserMenuItems }}
+        <a class="btn">{{.Name}}</a>
+    {{end}}
+    {{ if not .TopUserMenuItems }}
+    <div class="top-buttons-message">
+        <p>No favorites for {{ .CurrentUserFullName }}. Order up to populate your favorite yummies</p>
+    </div>
+    {{ end }}
+</div>
+{{ end }}
         <form action="/search" method="GET" class="search-form">
             <div class="search-box-wrapper">
               <input type="text" id="searchBox" name="q" placeholder="Search menu..." autocomplete="off">

@@ -5,8 +5,8 @@ import (
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
 	"math/rand"
 	"net/http"
-	"time"
 	"sort"
+	"time"
 )
 
 // BaseHandler renders the common elements
@@ -25,7 +25,27 @@ func (app *application) base(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// helper function to get top user items:
+func (app *application) getTopUserMenuItems(userID int, limit int) []*data.MenuItem {
+	topItems := []*data.MenuItem{}
+	topIDs, err := app.Recommendation.GetTopRecommendationsByUser(userID, limit)
+	if err != nil {
+		app.logger.Error("Failed to get user recommendations", "error", err)
+		return topItems
+	}
+	for _, id := range topIDs {
+		item, err := app.MenuItem.Get(int64(id))
+		if err != nil {
+			app.logger.Error("Failed to fetch menu item", "error", err, "id", id)
+			continue
+		}
+		topItems = append(topItems, item)
+	}
+	return topItems
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
+
 	//random menu item
 	rand.Seed(time.Now().UnixNano())
 
@@ -80,12 +100,21 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Reorder menuItems so that popular items appear first
-sort.SliceStable(menuItems, func(i, j int) bool {
-	if menuItems[i].Popular && !menuItems[j].Popular {
-		return true // i comes before j
+	sort.SliceStable(menuItems, func(i, j int) bool {
+		if menuItems[i].Popular && !menuItems[j].Popular {
+			return true // i comes before j
+		}
+		return false
+	})
+
+	//call the getTopUserMenuItems function to get the top user menu items
+	var TopUserMenuItems []*data.MenuItem
+	user := app.contextGetUser(r)
+	if user == nil {
+		app.logger.Info("User not found in session")
+	} else {
+		TopUserMenuItems = app.getTopUserMenuItems(int(user.ID), 3)
 	}
-	return false
-})
 
 	// Prepare the data
 	data := app.addDefaultData(NewTemplateData(), w, r) // <- THIS LINE IS KEY
@@ -94,6 +123,7 @@ sort.SliceStable(menuItems, func(i, j int) bool {
 	data.Categories = categories
 	data.MenuItems = menuItems
 	data.RandomMenuItems = RandomMenuItems
+	data.TopUserMenuItems = TopUserMenuItems
 
 	err = app.render(w, http.StatusOK, "home.tmpl", data)
 	if err != nil {

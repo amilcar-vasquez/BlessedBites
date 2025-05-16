@@ -366,8 +366,8 @@ nav .brand-logo {
 
 .search-box-wrapper input[type="text"] {
   width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 1rem;
-  border: 2px solid var(--mustard);
+  padding: 0.33rem;
+  border: 1px solid var(--mustard);
   border-radius: var(--btn-radius);
   font-size: 1rem;
   font-family: 'Poppins', sans-serif;
@@ -394,5 +394,21 @@ nav .brand-logo {
 
 .search-box-wrapper input:focus {
   outline: none;
-  border-color: var(--burgundy);
+  border-color: var(--burgundy) !important;
+  box-shadow: none !important;
+}
+
+/* Override Materialize's green bottom border */
+.search-box-wrapper input:focus:not([readonly]) {
+  border-bottom: 1px solid var(--burgundy) !important;
+  box-shadow: none !important;
+}
+
+.top-buttons-message {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  background-color: #e8fbe8; /* very light green */
+  border-radius: 18px;
 }

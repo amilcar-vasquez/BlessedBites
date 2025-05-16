@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/lib/pq"
 	"time"
 )
 
@@ -113,6 +112,34 @@ func (r RecommendationModel) RecommendUserItem(userID int) error {
 	return nil
 }
 
+// GetTopRecommendationsByUser returns top N recommended items for a user, ordered by score
+func (r RecommendationModel) GetTopRecommendationsByUser(userID, limit int) ([]int, error) {
+	query := `
+	SELECT menu_item_id
+	FROM order_items
+	JOIN orders ON order_items.order_id = orders.id
+	WHERE orders.user_id = $1
+	GROUP BY menu_item_id
+	ORDER BY COUNT(*) DESC
+	LIMIT $2`
+
+	rows, err := r.DB.Query(query, userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("fetching top recommendations: %w", err)
+	}
+	defer rows.Close()
+
+	var itemIDs []int
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		itemIDs = append(itemIDs, id)
+	}
+	return itemIDs, nil
+}
+
 // recommends a menu item based on general popularity
 func (r RecommendationModel) RecommendPopularItem() ([]Recommendation, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -150,10 +177,11 @@ func (r RecommendationModel) GetPopularItemIDs(limit int) ([]int, error) {
 	defer cancel()
 
 	query := `
-	SELECT menu_item_id
-	FROM order_items
-	GROUP BY menu_item_id
-	ORDER BY COUNT(*) DESC
+	SELECT oi.menu_item_id
+	FROM order_items oi
+	JOIN menu_items mi ON oi.menu_item_id = mi.id
+	GROUP BY oi.menu_item_id
+	ORDER BY SUM(order_count) DESC, oi.menu_item_id ASC
 	LIMIT $1
 	`
 

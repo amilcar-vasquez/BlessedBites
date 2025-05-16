@@ -16,6 +16,7 @@ type TemplateData struct {
 	Categories          []*data.Category
 	CategoryMap         map[int]string
 	RandomMenuItems     []*data.MenuItem
+	TopUserMenuItems    []*data.MenuItem
 	Users               []*data.User
 	User                *data.User
 	Rating              []*data.Rating
@@ -27,9 +28,8 @@ type TemplateData struct {
 	AlertMessage        string // To hold general messages like "Invalid credentials"
 	AlertType           string // e.g., "alert-danger", "alert-success"
 	CSRFField           template.HTML
-
-	FormErrors map[string]string
-	FormData   map[string]string
+	FormErrors          map[string]string
+	FormData            map[string]string
 }
 
 // factory function to initialize a new templateData struct
