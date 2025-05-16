@@ -17,7 +17,19 @@ body {
   color: var(--text-dark);
   margin: 0;
   padding: 0;
-}
+  position: relative;
+  background-color: #fdfdfd;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: url('/static/img/paper.png') repeat;
+    opacity: 0.6;
+    pointer-events: none;
+  }
 
 
 nav {
@@ -88,6 +100,12 @@ nav .brand-logo {
 .card {
   border-radius: var(--card-radius);
   overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .card-btn {
@@ -111,8 +129,8 @@ nav .brand-logo {
 }
 
 .card-title {
-  font-size: 1.2rem;
-  font-weight: 1000;
+  font-size: 1.4rem;
+  font-weight: 700;
   color: var(--burgundy);
 }
 
@@ -301,8 +319,9 @@ nav .brand-logo {
 }
 
 /* Push the button to the bottom of the card */
-.card-content {
-  flex-grow: 1;
+.card-content p {
+  font-size: 0.95rem;
+  line-height: 1.3;
 }
 
 /* Style for card button */
@@ -411,4 +430,34 @@ nav .brand-logo {
   justify-content: center;
   background-color: #e8fbe8; /* very light green */
   border-radius: 18px;
+}
+
+
+@media (max-width: 768px) {
+  .order-sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 0;
+    z-index: 1000;
+  }
+}
+
+@keyframes fly-to-cart {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.2) translate(300px, -300px); /* Adjust direction/offset */
+    opacity: 0;
+  }
+}
+
+.fly-anim {
+  animation: fly-to-cart 0.7s ease-in-out forwards;
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
 }

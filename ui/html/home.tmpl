@@ -45,8 +45,12 @@
     <!-- Menu Items Grid -->
     <div class="col s12 m8 l9">
         {{ if .IsAuthenticated }}
+         {{ if .TopUserMenuItems }}
+        <div class="top-buttons-message"><p>Your Favorites</p></div>
+    {{ end }}
 <div class="top-buttons">
     {{range .TopUserMenuItems }}
+    
         <a class="btn">{{.Name}}</a>
     {{end}}
     {{ if not .TopUserMenuItems }}
@@ -77,8 +81,8 @@
                             <p>{{.Description}}</p>
                             <p><strong>${{printf "%.2f" .Price}}</strong></p>
                         </div>
-                        <div class="card-btn">
-                            <a href="#" class="btn-add-order" data-id="{{.ID}}" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}">Add to Order</a>
+                        <div class="card-btn darken">
+                            <a href="#" class="waves-effect btn-add-order " data-id="{{.ID}}" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}">Add to Order</a>
                         </div>
                     </div>
                 </div>

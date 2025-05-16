@@ -34,8 +34,8 @@ type application struct {
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
-	dsn := flag.String("dsn", "postgresql://postgres.cevlocotfnrbwdbthjyp:Ecclesiastes.3:1-7@aws-0-us-west-1.pooler.supabase.com:6543/postgres", "Postgres connection string")
-
+	dsn := flag.String("dsn", os.Getenv("DB_DSN"), "Postgres connection string")
+	
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))

@@ -104,3 +104,20 @@ function renderOrder(orderData) {
     });
     orderTotal.textContent = `Total: $${total.toFixed(2)}`;
 }
+
+function flyToCart(elem) {
+    const clone = elem.cloneNode(true);
+    const rect = elem.getBoundingClientRect();
+    clone.style.position = 'fixed';
+    clone.style.left = `${rect.left}px`;
+    clone.style.top = `${rect.top}px`;
+    clone.classList.add('fly-anim');
+    document.body.appendChild(clone);
+
+    setTimeout(() => {
+        clone.remove();
+    }, 700);
+}
+
+// Example usage:
+// flyToCart(document.querySelector('.dish-image'));
