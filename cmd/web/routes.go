@@ -49,6 +49,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /orders", app.createOrderHandler)
 	mux.HandleFunc("POST /ratings", app.createRatingHandler)
 	mux.HandleFunc("GET /ratings/{menu_item_id}", app.getAverageRatingHandler)
+	mux.HandleFunc("POST /menu/active", app.requireAuth(app.setActiveStatus))
 
 	return app.loggingMiddleware(mux)
 }

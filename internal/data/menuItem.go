@@ -85,6 +85,30 @@ func (m *MenuItemModel) GetAll() ([]*MenuItem, error) {
 	return items, nil
 }
 
+// GetAllActive retrieves only active menu items from the database
+func (m *MenuItemModel) GetAllActive() ([]*MenuItem, error) {
+	query := `SELECT id, name, description, price, category_id, order_count, is_active, image_url, created_at 
+			  FROM menu_items 
+			  WHERE is_active = true 
+			  ORDER BY created_at DESC`
+	rows, err := m.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []*MenuItem
+	for rows.Next() {
+		item := &MenuItem{}
+		err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.Price, &item.CategoryID, &item.OrderCount, &item.IsActive, &item.ImageURL, &item.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
 // Delete deletes a menu item from the database
 func (m *MenuItemModel) Delete(id int64) error {
 	query := `DELETE FROM menu_items WHERE id = $1`
@@ -234,4 +258,13 @@ func (m *MenuItemModel) UpdatePopularItems() error {
 		return err
 	}
 	return tx.Commit()
+}
+
+// unified set active status for menu items
+func (m *MenuItemModel) SetActiveState(id int64, isActive bool) error {
+	query := `UPDATE menu_items SET is_active = $1 WHERE id = $2`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := m.DB.ExecContext(ctx, query, isActive, id)
+	return err
 }

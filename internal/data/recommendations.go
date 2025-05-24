@@ -80,7 +80,7 @@ func (r RecommendationModel) RecommendUserItem(userID int) error {
 	// Step 2: Aggregate item frequency
 	freqMap := make(map[int]int) // key: menuItemID, value: total quantity
 	itemQuery := `SELECT menu_item_id, quantity FROM order_items WHERE order_id = ANY($1)`
-	itemRows, err := r.DB.QueryContext(ctx, itemQuery, pq.Array(orderIDs))
+	itemRows, err := r.DB.QueryContext(ctx, itemQuery, orderIDs)
 	if err != nil {
 		return fmt.Errorf("fetching order items: %w", err)
 	}

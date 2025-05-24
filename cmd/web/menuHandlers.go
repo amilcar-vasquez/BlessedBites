@@ -367,6 +367,47 @@ func (app *application) updateMenuItem(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/menu", http.StatusSeeOther)
 }
 
+// POST handler to set active status
+func (app *application) setActiveStatus(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		app.logger.Error("failed to parse form", "error", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	menuItemIDStr := r.FormValue("id")
+	if menuItemIDStr == "" {
+		app.logger.Error("missing ID", "url", r.URL.Path, "method", r.Method)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	MenuItemID, err := strconv.ParseInt(menuItemIDStr, 10, 64)
+	if err != nil {
+		app.logger.Error("invalid ID format", "id", menuItemIDStr, "error", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	activeStatusStr := r.FormValue("active_status")
+	activeStatus, err := strconv.ParseBool(activeStatusStr)
+	if err != nil {
+		app.logger.Error("invalid active status format", "status", activeStatusStr, "error", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	err = app.MenuItem.SetActiveState(MenuItemID, activeStatus)
+	if err != nil {
+		app.logger.Error("failed to set active status", "error", err, "id", MenuItemID)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/menu", http.StatusSeeOther)
+
+}
+
 func (app *application) searchMenuHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {

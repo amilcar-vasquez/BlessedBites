@@ -58,7 +58,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch menu items
-	menuItems, err := app.MenuItem.GetAll()
+	menuItems, err := app.MenuItem.GetAllActive()
 
 	if err != nil {
 		app.logger.Error("failed to retrieve menu items", "error", err)

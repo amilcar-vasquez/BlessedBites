@@ -5,6 +5,8 @@
 :root {
   --burgundy: #6b041f;
   --mustard: #e49629;
+  --olive: #4a6b04;
+  --grayed-out: #b0b0b0;
   --light-bg: #f4f4f4;
   --text-dark: #424242;
   --card-radius: 16px;
@@ -26,7 +28,6 @@ body {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background: url('/static/img/paper.png') repeat;
     opacity: 0.6;
     pointer-events: none;
   }
@@ -94,6 +95,23 @@ nav .brand-logo {
   background-color: var(--mustard);
   border-radius: var(--btn-radius);
   margin: 0.25rem;
+}
+
+.olive {
+  background-color: var(--olive);
+  border-radius: var(--btn-radius);
+  margin: 0.25rem;
+  color: white;
+}
+.grayed-out {
+  background-color: var(--grayed-out);
+  border-radius: var(--btn-radius);
+  margin: 0.25rem;
+  color: white;
+}
+
+.grayed-out-text {
+  color: var(--grayed-out);
 }
 
 /* Menu Cards */

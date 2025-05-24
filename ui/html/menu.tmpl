@@ -16,7 +16,7 @@
     </thead>
     <tbody>
       {{ range .MenuItems }}
-      <tr>
+      <tr class="{{ if not .IsActive }}grayed-out-text{{ end }}">
         <td>{{ .Name }}</td>
         <td>{{ .Description }}</td>
         <td>${{ printf "%.2f" .Price }}</td>
@@ -38,6 +38,17 @@
             {{ $.CSRFField  }}
             <input type="hidden" name="id" value="{{.ID}}">
             <button class="btn-small burgundy" type="submit" onclick="return confirm('Delete this item?');">Delete</button>
+          </form>
+          <form action="/menu/active" method="POST" style="display:inline;">
+            {{ $.CSRFField  }}
+            <input type="hidden" name="id" value="{{.ID}}">
+            {{ if .IsActive }}
+            <input type="hidden" name="active_status" value="false">
+            <button class="btn-small olive" type="submit">Make Unavailable</button>
+            {{ else }}
+            <input type="hidden" name="active_status" value="true">
+            <button class="btn-small grayed-out" type="submit">Make Available</button>
+            {{ end }}
           </form>
         </td>
       </tr>
