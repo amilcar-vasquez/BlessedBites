@@ -42,6 +42,38 @@ nav .brand-logo {
   color: var(--mustard);
 }
 
+nav .brand-logo img {
+  height: 66px;
+  width: auto;
+  padding: .1rem;  
+}
+
+.nav-logo {
+  height: 50px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* Align links and make them more refined */
+.nav-link {
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0 12px;
+  transition: color 0.3s ease;
+}
+
+.mustard-text {
+  color: var(--mustard) !important;
+}
+
+.nav-link:hover {
+  color: white !important;
+  background-color: var(--mustard);
+  border-radius: var(--btn-radius);
+  transition: all 0.3s ease;
+}
+
+
 .btn-mustard {
   display: inline-block;
   background-color: var(--mustard);

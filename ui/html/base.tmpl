@@ -18,32 +18,62 @@
     <div class="container">
         <!-- Navbar -->
         <nav>
-            <div class="nav-wrapper">
-                <a href="/" class="brand-logo center">Blessed Bites</a>
-                {{ if and .IsAuthenticated (eq .CurrentUserRole "admin") }}
-                    <a href="/menu" class="btn-mustard">Manage Menu</a>
-                    <a href="/users" class="btn-mustard">Manage Users</a>
-                {{ end }}
+  <div class="nav-wrapper container">
+    <a href="/" class="brand-logo">
+      <img src="/static/img/BlessedBitesIcon.png" alt="Logo" class="nav-logo"> Blessed Bites
+    </a>
 
-                <ul class="right">
-                    <li><a href="/signup" class="btn waves-effect mustard darken-2">Sign Up</a></li>
-                    <li>
-                        {{ if .IsAuthenticated }}
-                            <form method="POST" action="/logout" style="display:inline;">
-                                {{ .CSRFField  }}
-                                <button type="submit" class="btn waves-effect mustard darken-2">Log Out</button>
-                            </form>
-                        {{ else }}
-                            <a href="/login" class="btn waves-effect mustard darken-2">Log In</a>
-                        {{ end }}
-                    </li>
-                </ul>
-            </div>
-           
-        </nav>
-    
+    <a href="#" data-target="mobile-demo" class="sidenav-trigger">
+      <i class="material-icons">menu</i>
+    </a>
+
+    <ul class="right hide-on-med-and-down">
+      {{ if and .IsAuthenticated (eq .CurrentUserRole "admin") }}
+        <li><a href="/dashboard" class="btn-flat nav-link mustard-text">Dashboard</a></li>
+      {{ end }}
+      {{ if .IsAuthenticated }}
+        <li>
+          <form method="POST" action="/logout" style="display:inline;">
+            {{ .CSRFField }}
+            <button type="submit" class="btn mustard darken-2">Log Out</button>
+          </form>
+        </li>
+      {{ else }}
+        <li><a href="/login" class="btn mustard darken-2">Log In</a></li>
+        <li><a href="/signup" class="btn mustard darken-2">Sign Up</a></li>
+      {{ end }}
+    </ul>
+  </div>
+</nav>
+
+<!-- Mobile Nav -->
+<ul class="sidenav" id="mobile-demo">
+  {{ if and .IsAuthenticated (eq .CurrentUserRole "admin") }}
+    <li><a href="/dashboard">Dashboard</a></li>
+  {{ end }}
+  {{ if .IsAuthenticated }}
+    <li>
+      <form method="POST" action="/logout">
+        {{ .CSRFField }}
+        <button type="submit" class="btn mustard darken-2">Log Out</button>
+      </form>
+    </li>
+  {{ else }}
+    <li><a href="/login">Log In</a></li>
+    <li><a href="/signup">Sign Up</a></li>
+  {{ end }}
+</ul>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var elems = document.querySelectorAll('.sidenav');
+    var instances = M.Sidenav.init(elems);
+  });
+</script>
+
         {{ block "content" .}}
         {{ end }}
+    </div>
 
     <!-- Materialize JS and jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>

@@ -20,6 +20,7 @@ type TemplateData struct {
 	Users               []*data.User
 	User                *data.User
 	Rating              []*data.Rating
+	Last7DaysSales      []data.SalesRecord // Sales data for the last 7 days
 	Recommendation      *data.Recommendation
 	IsAuthenticated     bool
 	CurrentUserID       int64
@@ -30,6 +31,12 @@ type TemplateData struct {
 	CSRFField           template.HTML
 	FormErrors          map[string]string
 	FormData            map[string]string
+	TotalOrders         int
+	DailySales          []data.SalesRecord // Total sales for the day
+	Top5MenuItems       []*data.MenuItem   // Top 5 popular menu items
+	OrderItems          []*data.OrderItem  // Added from orderItem.go
+	ChartLabels         []string
+	ChartData           []float64
 }
 
 // factory function to initialize a new templateData struct

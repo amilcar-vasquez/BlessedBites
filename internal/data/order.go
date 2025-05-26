@@ -48,3 +48,14 @@ func (m OrderModel) GetByUser(userID int) ([]Order, error) {
 	}
 	return orders, nil
 }
+
+// Count returns the total number of orders in the database
+func (m OrderModel) Count() (int, error) {
+	query := `SELECT COUNT(*) FROM orders WHERE DATE(created_at) = CURRENT_DATE`
+	var count int
+	err := m.DB.QueryRow(query).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}

@@ -268,3 +268,30 @@ func (m *MenuItemModel) SetActiveState(id int64, isActive bool) error {
 	_, err := m.DB.ExecContext(ctx, query, isActive, id)
 	return err
 }
+
+// top 5 most popular menu items
+func (m *MenuItemModel) GetTopPopularItems() ([]*MenuItem, error) {
+	query := `
+		SELECT id, name, description, price, category_id, order_count, is_active, image_url, created_at
+		FROM menu_items
+		WHERE popular = TRUE
+		ORDER BY order_count DESC
+		LIMIT 5
+	`
+	rows, err := m.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []*MenuItem
+	for rows.Next() {
+		item := &MenuItem{}
+		err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.Price, &item.CategoryID, &item.OrderCount, &item.IsActive, &item.ImageURL, &item.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}

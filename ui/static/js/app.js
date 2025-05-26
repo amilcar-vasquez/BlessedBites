@@ -118,6 +118,5 @@ function flyToCart(elem) {
         clone.remove();
     }, 700);
 }
-
 // Example usage:
 // flyToCart(document.querySelector('.dish-image'));

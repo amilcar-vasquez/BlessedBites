@@ -2,9 +2,24 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
 	"path/filepath"
 )
+
+func (app *application) newTemplateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"json": jsonFunc, // assumes jsonFunc is declared elsewhere
+	}
+}
+
+func jsonFunc(v interface{}) (template.JS, error) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+	return template.JS(b), nil // use with care — safe if you're outputting to <script>
+}
 
 func NewTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}

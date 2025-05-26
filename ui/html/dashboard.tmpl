@@ -1,0 +1,74 @@
+{{define "content"}}
+<<!-- Top Buttons for Related Foods -->
+
+
+<div class="row" style="margin-top: 2rem;">
+    <!-- Sidebar -->
+    <div class="col s12 m4 l3">
+            <div class="auth-message">
+                {{ if .IsAuthenticated }}
+                <p>Welcome {{ .CurrentUserFullName }}! </p>
+                {{ else }}
+                Logging in makes it easier to order!
+                {{ end }}
+            </div>
+        <div class="category-sidebar">
+            <h6 class="sidebar-title">Manage:</h6>
+    
+            <div class="category-item special">
+              <a href="/menu">Menu Items</a>
+            </div>
+            <div class="category-item special">
+              <a href="/users">Staff and Customers</a>
+            </div>
+        </div>          
+    </div> 
+    
+    <!-- Dashboard Stats -->
+       <div class="col s12 m6">
+      <div class="card teal lighten-2 white-text">
+        <div class="card-content">
+          <span class="card-title">Daily Sales</span>
+          <table class="highlight white-text">
+        <thead>
+          <tr>
+            <th>Client Name</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .DailySales}}
+          <tr>
+            <td>{{.ClientName}}</td>
+            <td>${{printf "%.2f" .Amount}}</td>
+          </tr>
+          {{else}}
+          <tr><td colspan="2">No sales for today.</td></tr>
+          {{end}}
+        </tbody>
+      </table>
+        </div>
+      </div>
+    </div>
+
+
+      <div class="card orange lighten-2 white-text">
+        <div class="card-content">
+          <span class="card-title">Total Orders</span>
+          <h5>{{ .TotalOrders }}</h5>
+        </div>
+      </div>
+      
+    <div class="card blue lighten-2 white-text">
+      <div class="card-content">
+        <span class="card-title">Last 7 Days Sales</span>
+        <canvas id="salesChart" height="120"></canvas>
+      </div>
+    </div>
+   
+
+        
+    </div>
+</div>
+
+{{end}}
