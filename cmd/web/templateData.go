@@ -37,6 +37,7 @@ type TemplateData struct {
 	OrderItems          []*data.OrderItem  // Added from orderItem.go
 	ChartLabels         []string
 	ChartData           []float64
+	Token               string // For password reset
 }
 
 // factory function to initialize a new templateData struct

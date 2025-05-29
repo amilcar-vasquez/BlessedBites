@@ -36,6 +36,7 @@ func parseUserForm(r *http.Request, isUpdate bool) (*data.User, map[string]strin
 	email := r.PostForm.Get("email")
 	phoneNo := r.PostForm.Get("phoneNo")
 	password := r.PostForm.Get("password")
+	confirmPassword := r.PostForm.Get("confirmPassword")
 
 	//save raw form values
 	formData["user_id"] = idStr
@@ -43,6 +44,7 @@ func parseUserForm(r *http.Request, isUpdate bool) (*data.User, map[string]strin
 	formData["email"] = email
 	formData["phoneNo"] = phoneNo
 	formData["password"] = password
+	formData["confirmPassword"] = confirmPassword
 
 	// Convert user ID to int64
 	var userID int64
@@ -96,6 +98,11 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 	data.ValidateUser(v, user)
 	for k, vErr := range v.Errors {
 		formErrors[k] = vErr
+	}
+
+	//check that passwords match
+	if formData["password"] != formData["confirmPassword"] {
+		formErrors["password"] = "Passwords do not match"
 	}
 
 	// Check for validation errors

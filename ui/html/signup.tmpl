@@ -33,6 +33,14 @@
       <input id="password" name="password" type="password" value="{{if .FormData.password}}{{index .FormData.password}}{{else if .User}}{{.User.Password}}{{end}}">
       <label for="password">Password</label>
     </div>
+    <div class="input-field">
+      <input id="confirmPassword" name="confirmPassword" type="password" value="">
+      <label for="confirmPassword">Confirm Password</label>
+    </div>
+    {{with .FormErrors.confirmPassword}}
+      <div class="error">{{.}}</div>
+    {{end}}
+
     {{if .User}}
     <div class="input-field">
       <select id="role" name="role">

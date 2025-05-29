@@ -1,6 +1,6 @@
 {{ define "content" }}
 <div class="container" style="margin-top: 3rem;">
-  <h4>Login</h4>
+  <h4>Login</h4> <span><a href="/reset-password-request">Forgot Password?</a></span>
   <form action="/login" method="POST" class="col s12">
     {{ .CSRFField  }}
     <div class="input-field">
@@ -16,8 +16,9 @@
       {{ with .FormErrors.password }}
         <div class="error">{{.}}</div>
       {{ end }}
+       
+      <button class="btn waves-effect waves-light burgundy darken-3" type="submit">Login</button>
     </div>
-    <button class="btn waves-effect waves-light burgundy darken-3" type="submit">Login</button>
-  </form>
+    </form>
 </div>
 {{ end }}

@@ -51,6 +51,10 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /ratings/{menu_item_id}", app.getAverageRatingHandler)
 	mux.HandleFunc("POST /menu/active", app.requireAuth(app.setActiveStatus))
 	mux.HandleFunc("GET /dashboard", app.requireAuth(app.dashboard))
+	mux.HandleFunc("GET /reset-password-request", app.showPasswordResetRequestForm)
+	mux.HandleFunc("POST /reset-password-request", app.handlePasswordResetRequest)
+	mux.HandleFunc("GET /reset-password", app.showResetPasswordForm)
+	mux.HandleFunc("POST /reset-password", app.handleResetPasswordSubmission)
 
 	return app.loggingMiddleware(mux)
 }

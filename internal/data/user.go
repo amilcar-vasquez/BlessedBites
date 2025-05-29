@@ -3,11 +3,15 @@ package data
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
+	"errors"
 	"fmt"
-	"time"
-
 	"github.com/amilcar-vasquez/blessed-bites/internal/validator"
+	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 type User struct {
@@ -137,4 +141,135 @@ func (u *UserModel) GetAll() ([]*User, error) {
 func ValidateLogin(v *validator.Validator, users *User) {
 	v.Check(validator.NotBlank(users.Email), "email", "Email must be provided")
 	v.Check(validator.NotBlank(users.Password), "password", "Password must be provided")
+}
+
+// validate email
+func ValidateEmail(v *validator.Validator, email string) {
+	v.Check(validator.NotBlank(email), "email", "Email must be provided")
+	v.Check(validator.IsEmail(email), "email", "Email must be a valid email address")
+}
+
+// validate password
+func ValidatePassword(v *validator.Validator, password string) {
+	v.Check(validator.NotBlank(password), "password", "Password must be provided")
+	v.Check(validator.MinLength(password, 8), "password", "Password must be at least 8 characters long")
+	v.Check(validator.MaxLength(password, 100), "password", "Password must not exceed 100 characters")
+}
+
+// password reset token helper function
+func GenerateResetToken() (plain string, hash string, expiry time.Time, err error) {
+	bytes := make([]byte, 32)
+	_, err = rand.Read(bytes)
+	if err != nil {
+		return "", "", time.Time{}, err
+	}
+
+	plain = hex.EncodeToString(bytes)
+	hashBytes := sha256.Sum256([]byte(plain))
+	hash = hex.EncodeToString(hashBytes[:])
+	expiry = time.Now().UTC().Add(1 * time.Hour)
+	fmt.Printf("Debug: Now (UTC): %s | Expiry (UTC): %s\n", time.Now().UTC().Format(time.RFC3339), expiry.Format(time.RFC3339))
+
+	return plain, hash, expiry, nil
+}
+
+// Save reset token for a user
+func (u *UserModel) SetResetToken(email, tokenHash string, expiry time.Time) error {
+	query := `UPDATE users SET reset_token_hash = $1, reset_token_expiry = $2 WHERE email = $3`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := u.DB.ExecContext(ctx, query, tokenHash, expiry, email)
+	return err
+}
+
+// Verify token and get user
+func (u *UserModel) GetUserByResetToken(token string) (*User, error) {
+	tokenHash := sha256.Sum256([]byte(token))
+	hash := hex.EncodeToString(tokenHash[:])
+
+	query := `
+		SELECT id, email, full_name, phone_no, password_hash, role, created_at, reset_token_expiry
+		FROM users 
+		WHERE reset_token_hash = $1
+	`
+	row := u.DB.QueryRow(query, hash)
+
+	var user User
+	var expiry time.Time
+
+	err := row.Scan(&user.ID, &user.Email, &user.FullName, &user.PhoneNo,
+		&user.Password, &user.Role, &user.CreatedAt, &expiry)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("reset token not found")
+		}
+		return nil, fmt.Errorf("error querying user by reset token: %w", err)
+	}
+
+	now := time.Now().UTC()
+	if now.After(expiry) {
+		return nil, fmt.Errorf("reset token expired")
+	}
+
+	return &user, nil
+}
+
+// Clear reset token
+func (u *UserModel) ClearResetToken(userID int64) error {
+	query := `UPDATE users SET reset_token_hash = NULL, reset_token_expiry = NULL WHERE id = $1`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := u.DB.ExecContext(ctx, query, userID)
+	return err
+}
+
+// Check if user exists and generate token
+func (u *UserModel) InitiatePasswordReset(email string) (string, error) {
+	user, err := u.GetByEmail(email)
+	if err != nil {
+		return "", fmt.Errorf("email not found")
+	}
+
+	token, tokenHash, expiry, err := GenerateResetToken()
+	if err != nil {
+		return "", err
+	}
+
+	err = u.SetResetToken(user.Email, tokenHash, expiry)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+// Finalize password reset
+func (u *UserModel) FinalizePasswordReset(token, newPassword string) error {
+	// Log the received token for debugging
+	fmt.Printf("Debug: Received reset token: %s\n", token)
+
+	user, err := u.GetUserByResetToken(token)
+	if err != nil {
+		if err.Error() == "reset token expired" {
+			return fmt.Errorf("reset token has expired")
+		}
+		if err.Error() == "reset token not found" {
+			return fmt.Errorf("reset token is invalid")
+		}
+		return err
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("error hashing password: %w", err)
+	}
+
+	user.Password = string(hashedPassword)
+	if err := u.Update(user); err != nil {
+		return err
+	}
+
+	return u.ClearResetToken(user.ID)
 }

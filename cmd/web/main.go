@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"flag"
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
+	"github.com/amilcar-vasquez/blessed-bites/internal/mailer"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 	"html/template"
@@ -30,6 +31,7 @@ type application struct {
 	Recommendation *data.RecommendationModel
 	logger         *slog.Logger
 	templateCache  map[string]*template.Template
+	mailer         *mailer.Mailer // Add mailer field
 }
 
 func main() {
@@ -70,6 +72,13 @@ func main() {
 		Analytics:      &data.AnalyticsModel{DB: db},
 		Recommendation: &data.RecommendationModel{DB: db},
 		templateCache:  templateCache,
+		mailer: &mailer.Mailer{
+			Host:     os.Getenv("MAIL_HOST"),
+			Port:     587,
+			Username: os.Getenv("MAIL_USERNAME"),
+			Password: os.Getenv("MAIL_PASSWORD"),
+			From:     os.Getenv("MAIL_USERNAME"),
+		},
 	}
 
 	err = app.serve()
