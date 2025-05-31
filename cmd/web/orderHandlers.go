@@ -77,6 +77,24 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Check for admin to trigger POS (walk-in user) functionality
+	if user.Role == "admin" {
+		//call CreateWalkInCustomer function
+		fullName := r.FormValue("walkInFullName")
+		if fullName == "" {
+			http.Error(w, "Full name is required for walk-in customers.", http.StatusBadRequest)
+			return
+		}
+		walkInUser, err := app.User.CreateWalkInCustomer(fullName)
+		if err != nil {
+			http.Error(w, "Failed to create walk-in customer", http.StatusInternalServerError)
+			return
+		}
+		user = walkInUser // Use the walk-in user for the order
+		app.logger.Info("Walk-in customer created", "userID", user.ID, "fullName", fullName)
+
+	}
+
 	// Parse form data
 	err := r.ParseForm()
 	if err != nil {

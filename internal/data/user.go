@@ -273,3 +273,40 @@ func (u *UserModel) FinalizePasswordReset(token, newPassword string) error {
 
 	return u.ClearResetToken(user.ID)
 }
+
+func (u *UserModel) CreateWalkInCustomer(fullName string) (*User, error) {
+	// Generate a dummy but unique email
+	randomBytes := make([]byte, 4)
+	if _, err := rand.Read(randomBytes); err != nil {
+		return nil, fmt.Errorf("failed to generate random bytes: %w", err)
+	}
+	uniqueSuffix := hex.EncodeToString(randomBytes)
+	dummyEmail := fmt.Sprintf("walkin_%s@blessedbites.local", uniqueSuffix)
+
+	// Use a default strong password for walk-ins and hash it
+	defaultPassword := make([]byte, 12)
+	if _, err := rand.Read(defaultPassword); err != nil {
+		return nil, fmt.Errorf("failed to generate random password: %w", err)
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(defaultPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash default password: %w", err)
+	}
+
+	// Create the user object
+	user := &User{
+		Email:    dummyEmail,
+		FullName: fullName,
+		PhoneNo:  "", // optional or empty
+		Password: string(hashedPassword),
+		Role:     "customer", // you can change to "walkin" or "guest" if desired
+	}
+
+	// Insert user into the DB
+	err = u.Insert(user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert walk-in user: %w", err)
+	}
+
+	return user, nil
+}

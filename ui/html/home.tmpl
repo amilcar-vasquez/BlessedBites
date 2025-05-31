@@ -35,6 +35,15 @@
             <p id="orderTotal">Total: $0.00</p>
             <form id="orderForm" action="/orders" method="POST">
                 {{ $.CSRFField  }}
+                {{ $.CSRFField }}
+    
+    <!-- If admin, show input for walk-in customer name -->
+    {{ if eq .CurrentUserRole "admin" }}
+    <div class="input-field">
+        <input id="walkInFullName" name="walkInFullName" type="text" required>
+        <label for="walkInFullName" class="white-text">Customer Name</label>
+    </div>
+    {{ end }}
                 <!-- Hidden fields for order data -->
                 <input type="hidden" name="orderData" id="orderData">
                 <button type="submit" class="btn mustard">Place Order</button>
