@@ -26,6 +26,7 @@ type TemplateData struct {
 	CurrentUserID       int64
 	CurrentUserRole     string
 	CurrentUserFullName string
+	CurrentUserPhone    string
 	AlertMessage        string // To hold general messages like "Invalid credentials"
 	AlertType           string // e.g., "alert-danger", "alert-success"
 	CSRFField           template.HTML

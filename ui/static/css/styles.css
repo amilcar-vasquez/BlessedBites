@@ -34,22 +34,30 @@ body {
 
 
 nav {
-  background-color: var(--burgundy);
+  background: linear-gradient(to right, white 50%, var(--burgundy) 50%);
   border-radius: 0 0 20px 20px;
 }
 
 nav .brand-logo {
-  color: var(--mustard);
+  color: var(--burgundy);
+  font-size: 1.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
 nav .brand-logo img {
-  height: 66px;
+  height: 45px;
   width: auto;
   padding: .1rem;  
 }
 
+nav .brand-logo span {
+  display: inline-block;
+  vertical-align: bottom;
+}
+
 .nav-logo {
-  height: 50px;
+  height: 66px;
   vertical-align: middle;
   margin-right: 8px;
 }
@@ -491,6 +499,44 @@ nav .brand-logo img {
     width: 100%;
     border-radius: 0;
     z-index: 1000;
+  }
+
+  nav {
+    border-radius: 0 0 12px 12px;
+    padding: 0.5rem 0;
+    background: var(--burgundy);
+  }
+
+  nav .brand-logo {
+    font-size: 1.2rem;
+    padding-left: 0.5rem;
+    color: white;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    color: white !important;
+    background: none;
+    border-radius: 0;
+    text-align: left;
+  }
+
+  .nav-link:hover {
+    background-color: var(--mustard);
+    color: var(--burgundy) !important;
+  }
+
+  .top-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .nav-logo {
+    height: 40px;
+    margin-right: 4px;
   }
 }
 

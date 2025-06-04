@@ -101,6 +101,7 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check that passwords match
+
 	if formData["password"] != formData["confirmPassword"] {
 		formErrors["password"] = "Passwords do not match"
 	}

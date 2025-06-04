@@ -18,6 +18,13 @@ type OrderItemInput struct {
 	ItemPrice  float64 `json:"price"`
 }
 
+type OrderRequest struct {
+	Items    []OrderItemInput `json:"items"`
+	FullName string           `json:"full_name"`
+	PhoneNo  string           `json:"phone_no"`
+	// Maybe optional email field for account conversion later
+}
+
 type WhatsAppOrderItem struct {
 	Name     string
 	Quantity int
@@ -25,64 +32,120 @@ type WhatsAppOrderItem struct {
 }
 
 // create a function to call WhatsApp API and send the order details
-func sendWhatsAppMessage(orderID int, items []WhatsAppOrderItem) error {
-	message := fmt.Sprintf("🧾 New Order #%d\n", orderID)
+func sendWhatsAppMessages(customerPhone string, items []WhatsAppOrderItem, total float64, customerName string) {
+	client := twilio.NewRestClient()
+
+	//build itemized message strings
+	var itemLines string
 	for _, item := range items {
-		message += fmt.Sprintf("Item: %s\n", item.Name)
-		message += fmt.Sprintf("Quantity: %d\n", item.Quantity)
-		message += fmt.Sprintf("Subtotal: $%.2f\n", item.Subtotal)
-		message += "------------------------\n"
+		line := fmt.Sprintf("%s x%d - $%.2f", item.Name, item.Quantity, item.Subtotal)
+		itemLines += line + "\n"
 	}
-	message += fmt.Sprintf("\nTotal: $%.2f", orderTotal(items))
 
-	// Twilio credentials (recommended: store in environment variables)
-	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
-	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
-	from := "whatsapp:+14155238886" // Twilio sandbox number
-	to := os.Getenv("WHATSAPP_TO")  // e.g. "whatsapp:+5016082424"
+	// ===== 1. Send Freeform Message to Kitchen =====
+	kitchenMessage := fmt.Sprintf(
+		"New order from %s (%s):\n%sTotal: $%.2f",
+		customerName,
+		customerPhone,
+		itemLines,
+		total,
+	)
 
-	client := twilio.NewRestClientWithParams(twilio.ClientParams{
-		Username: accountSid,
-		Password: authToken,
-	})
+	kitchenParams := &openapi.CreateMessageParams{}
+	kitchenParams.SetTo(os.Getenv("WHATSAPP_TO")) // Store your kitchen WhatsApp number as env var
+	kitchenParams.SetFrom(os.Getenv("TWILIO_FROM_NUMBER"))
+	kitchenParams.SetBody(kitchenMessage)
 
-	params := &openapi.CreateMessageParams{}
-	params.SetTo(to)
-	params.SetFrom(from)
-	params.SetBody(message)
-
-	_, err := client.Api.CreateMessage(params)
+	_, err := client.Api.CreateMessage(kitchenParams)
 	if err != nil {
-		fmt.Println("Failed to send WhatsApp message:", err.Error())
-		return err
+		fmt.Printf("Failed to send kitchen message: %v", err.Error())
+	} else {
+		fmt.Println("Kitchen message sent successfully")
 	}
 
-	fmt.Println("✅ WhatsApp message sent!")
-	return nil
-}
+	/* ===== 2. Send Template Message to Customer =====
+	customerParams := &openapi.CreateMessageParams{}
+	customerParams.SetTo(customerPhone)
+	customerParams.SetFrom(from)
+	customerParams.SetMessagingServiceSid(os.Getenv("TWILIO_MSG_SID"))
+	customerParams.SetContentSid(os.Getenv("TWILIO_ORDER_TEMPLATE_SID")) // Store your template SID as env var
 
-func orderTotal(items []WhatsAppOrderItem) float64 {
-	var total float64
-	for _, item := range items {
-		total += item.Subtotal
-	}
-	return total
+	// Match the order of variables in your template
+	contentVars := fmt.Sprintf(`{
+		"1": "%s",
+		"2": "%s",
+		"3": "%s",
+		"4": "%s",
+		"5": "%s"
+	}`, quantityStr, subtotalStr, item, customerName, totalStr)
+
+	customerParams.SetContentVariables(contentVars)
+
+	_, err = client.Api.CreateMessage(customerParams)
+	if err != nil {
+		fmt.Printf("Failed to send customer message: %v", err.Error())
+	} else {
+		fmt.Println("Customer message sent successfully")
+	}*/
 }
 
 func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Request) {
-	// Check if user is logged in
-	user := app.contextGetUser(r)
-	if user == nil {
-		http.Error(w, "User must be logged in to place an order.", http.StatusUnauthorized)
-		return
+	var input OrderRequest
+	var items []OrderItemInput
+
+	contentType := r.Header.Get("Content-Type")
+	isJSON := contentType == "application/json"
+
+	// Parse JSON input (mobile/webapp)
+	if isJSON {
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			http.Error(w, "Invalid JSON input", http.StatusBadRequest)
+			return
+		}
+		items = input.Items
+	} else {
+		// Handle form submission (web form / admin POS)
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "Invalid form data", http.StatusBadRequest)
+			return
+		}
+
+		input.FullName = r.FormValue("guestUserName")
+		input.PhoneNo = r.FormValue("guestUserPhone")
+
+		orderDataStr := r.FormValue("orderData")
+		if orderDataStr == "" || orderDataStr == "[]" {
+			session, _ := app.sessionStore.Get(r, "session")
+			session.AddFlash("Please add items to your order before proceeding.", "error")
+			_ = session.Save(r, w)
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		if err := json.Unmarshal([]byte(orderDataStr), &items); err != nil {
+			http.Error(w, "Invalid order JSON data", http.StatusBadRequest)
+			return
+		}
 	}
 
-	// Check for admin to trigger POS (walk-in user) functionality
+	// Check for walk-in admin order
+	var user *data.User
+	existingUser, err := app.User.GetByPhone(input.PhoneNo)
+	if err == nil && existingUser != nil {
+		user = existingUser
+	} else {
+		user, err = app.User.CreateGuestUser(input.FullName, input.PhoneNo)
+		if err != nil {
+			http.Error(w, "Unable to create guest user", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Admin placing walk-in order?
 	if user.Role == "admin" {
-		//call CreateWalkInCustomer function
 		fullName := r.FormValue("walkInFullName")
 		if fullName == "" {
-			http.Error(w, "Full name is required for walk-in customers.", http.StatusBadRequest)
+			http.Error(w, "Full name required for walk-in", http.StatusBadRequest)
 			return
 		}
 		walkInUser, err := app.User.CreateWalkInCustomer(fullName)
@@ -90,153 +153,122 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 			http.Error(w, "Failed to create walk-in customer", http.StatusInternalServerError)
 			return
 		}
-		user = walkInUser // Use the walk-in user for the order
-		app.logger.Info("Walk-in customer created", "userID", user.ID, "fullName", fullName)
-
+		app.logger.Info("Walk-in customer created", "userID", walkInUser.ID, "fullName", fullName)
+		user = walkInUser
 	}
 
-	// Parse form data
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Invalid form data", http.StatusBadRequest)
-		return
-	}
-
-	// Get order data from the form
-	orderDataStr := r.FormValue("orderData")
-
-	if orderDataStr == "" || orderDataStr == "[]" {
-		session, err := app.sessionStore.Get(r, "session")
-		if err != nil {
-			http.Error(w, "Session error", http.StatusInternalServerError)
-			return
-		}
-		session.AddFlash("Please add items to your order before proceeding.", "error")
-		if err := session.Save(r, w); err != nil {
-			http.Error(w, "Session save error", http.StatusInternalServerError)
-			return
-		}
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	// Check if the items slice is empty
-	var items []OrderItemInput
-	if err := json.Unmarshal([]byte(orderDataStr), &items); err != nil {
-		http.Error(w, "Invalid order data", http.StatusBadRequest)
-		return
-	}
-
+	// Validate order items
 	if len(items) == 0 {
-		session, err := app.sessionStore.Get(r, "session")
-		if err != nil {
-			http.Error(w, "Session error", http.StatusInternalServerError)
-			return
-		}
-		session.AddFlash("Please add some yumminess to your order before proceeding.", "error")
-		if err := session.Save(r, w); err != nil {
-			http.Error(w, "Session save error", http.StatusInternalServerError)
-			return
-		}
+		session, _ := app.sessionStore.Get(r, "session")
+		session.AddFlash("Please add items before ordering.", "error")
+		_ = session.Save(r, w)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
-	// Start transaction
+	// Begin transaction
 	tx, err := app.Order.DB.Begin()
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, "Transaction error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
 
-	var totalCost float64
 	var fullItems []data.OrderItem
 	var messageItems []WhatsAppOrderItem
+	var totalCost float64
 
-	// Validate items and compute total
 	for _, item := range items {
 		menuItem, err := app.MenuItem.Get(int64(item.MenuItemID))
 		if err != nil {
 			http.Error(w, "Menu item not found", http.StatusNotFound)
 			return
 		}
-		subtotal := menuItem.Price * float64(item.ItemAmount)
-		totalCost += subtotal
+		sub := float64(item.ItemAmount) * menuItem.Price
+		totalCost += sub
 
 		fullItems = append(fullItems, data.OrderItem{
 			MenuItemID: item.MenuItemID,
 			Quantity:   item.ItemAmount,
 			ItemPrice:  menuItem.Price,
-			Subtotal:   subtotal,
+			Subtotal:   sub,
 		})
 
 		messageItems = append(messageItems, WhatsAppOrderItem{
 			Name:     item.ItemName,
 			Quantity: item.ItemAmount,
-			Subtotal: subtotal,
+			Subtotal: sub,
 		})
 	}
 
-	// Insert into orders table
+	// Insert order
 	orderID, err := app.Order.Insert(int(user.ID), totalCost)
 	if err != nil {
-		http.Error(w, "Could not save order", http.StatusInternalServerError)
+		http.Error(w, "Failed to create order", http.StatusInternalServerError)
 		return
 	}
 
-	// Insert into order_items table
 	for _, item := range fullItems {
 		item.OrderID = orderID
-		err := app.OrderItem.Insert(tx, item)
-		if err != nil {
-			http.Error(w, "Failed to save order items", http.StatusInternalServerError)
+		if err := app.OrderItem.Insert(tx, item); err != nil {
+			http.Error(w, "Could not insert order items", http.StatusInternalServerError)
 			return
 		}
+		_ = app.MenuItem.IncrementOrderCount(int64(item.MenuItemID))
 	}
 
-	//increment order count
-	for _, item := range fullItems {
-		err := app.MenuItem.IncrementOrderCount(int64(item.MenuItemID))
-		if err != nil {
-			http.Error(w, "Failed to increment order count", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// Commit transaction
 	if err := tx.Commit(); err != nil {
-		http.Error(w, "Could not finalize order", http.StatusInternalServerError)
+		http.Error(w, "Commit failed", http.StatusInternalServerError)
 		return
 	}
 
-	// Update popular items
+	// Async WhatsApp Notification
 	go func() {
-		err := app.MenuItem.UpdatePopularItems()
-		if err != nil {
-			app.logger.Error("Failed to update popular items", "error", err)
+		// Try to get user full name from session if available
+		fullName := user.FullName
+		session, _ := app.sessionStore.Get(r, "session")
+		if name, ok := session.Values["fullName"].(string); ok && name != "" {
+			fullName = name
+		}
+
+		// Get phone number from session if available, else use user.PhoneNo
+		phoneNo := user.PhoneNo
+		if sessionPhone, ok := session.Values["phoneNo"].(string); ok && sessionPhone != "" {
+			phoneNo = sessionPhone
+		}
+
+		// Add country code +501 if not already present
+		if len(phoneNo) > 0 && phoneNo[:4] != "+501" {
+			phoneNo = "+501" + phoneNo
+		}
+
+		sendWhatsAppMessages(
+			phoneNo,
+			messageItems,
+			totalCost,
+			fullName,
+		)
+	}()
+
+	// Async popular update
+	go func() {
+		if err := app.MenuItem.UpdatePopularItems(); err != nil {
+			app.logger.Error("Popular items update failed", "error", err)
 		}
 	}()
 
-	// 🔔 Send WhatsApp notification
-	go func(orderID int, messageItems []WhatsAppOrderItem) {
-		if err := sendWhatsAppMessage(orderID, messageItems); err != nil {
-			app.logger.Error("Failed to send WhatsApp notification", "error", err)
-		}
-	}(orderID, messageItems)
-
-	// Send success flash with the total included
-	session, err := app.sessionStore.Get(r, "session")
-	if err != nil {
-		http.Error(w, "Session error", http.StatusInternalServerError)
-		return
+	if isJSON {
+		// Mobile/web JSON response
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Order placed successfully!",
+			"note":    "Create an account later to track orders.",
+		})
+	} else {
+		// Web form success redirect
+		session, _ := app.sessionStore.Get(r, "session")
+		session.AddFlash(fmt.Sprintf("Order placed! Total: $%.2f", totalCost), "success")
+		_ = session.Save(r, w)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
-	session.AddFlash(fmt.Sprintf("Order placed successfully! Total: $%.2f", totalCost), "success")
-	if err := session.Save(r, w); err != nil {
-		http.Error(w, "Session save error", http.StatusInternalServerError)
-		return
-	}
-	// Redirect to the order confirmation page or home page
-
-	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

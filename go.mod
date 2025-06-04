@@ -19,7 +19,7 @@ require (
 	github.com/jackc/puddle v1.3.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/twilio/twilio-go v1.26.0 // indirect
+	github.com/twilio/twilio-go v1.26.2 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
 )

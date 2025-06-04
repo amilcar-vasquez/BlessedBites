@@ -174,6 +174,9 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["authenticatedUserID"] = user.ID // <- store the user ID
 	session.Values["userRole"] = user.Role          // <- store the role
 	session.Values["fullName"] = user.FullName      // <- store the full name
+	session.Values["email"] = user.Email            // <- store the email
+	session.Values["phoneNo"] = user.PhoneNo        // <- store the phone number
+	session.Values["createdAt"] = user.CreatedAt    // <- store the created at time
 	session.Options.MaxAge = 3600                   // Set session expiration to 1 hour
 
 	//also set these values in the template data
@@ -183,6 +186,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentUserID = user.ID
 	data.CurrentUserRole = user.Role
 	data.CurrentUserFullName = user.FullName
+	data.CurrentUserPhone = user.PhoneNo
 	data.AlertMessage = "Login successful"
 	data.AlertType = "alert-success"
 

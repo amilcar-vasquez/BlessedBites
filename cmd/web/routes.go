@@ -55,6 +55,9 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /reset-password-request", app.handlePasswordResetRequest)
 	mux.HandleFunc("GET /reset-password", app.showResetPasswordForm)
 	mux.HandleFunc("POST /reset-password", app.handleResetPasswordSubmission)
+	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "ui/static/img/favicon.ico")
+	})
 
 	return app.loggingMiddleware(mux)
 }

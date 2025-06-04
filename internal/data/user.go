@@ -30,17 +30,23 @@ type UserModel struct {
 
 // ValidateUser validates the user data
 func ValidateUser(v *validator.Validator, user *User) {
-	fmt.Println("Validating user data")
-	v.Check(validator.NotBlank(user.Email), "email", "Email must be provided")
-	v.Check(validator.IsEmail(user.Email), "email", "Email must be a valid email address")
+	hasEmail := validator.NotBlank(user.Email)
+	hasPhone := validator.NotBlank(user.PhoneNo)
+
+	v.Check(hasEmail || hasPhone, "email_phone", "Either email or phone number must be provided")
+
+	if hasEmail {
+		v.Check(validator.IsEmail(user.Email), "email", "Email must be a valid email address")
+	}
 
 	v.Check(validator.NotBlank(user.FullName), "fullname", "Full name must be provided")
 	v.Check(validator.MaxLength(user.FullName, 100), "fullname", "Full name must not exceed 100 characters")
-	v.Check(validator.MinLength(user.FullName, 5), "fullname", "Full name must be at least 2 characters long")
+	v.Check(validator.MinLength(user.FullName, 2), "fullname", "Full name must be at least 2 characters long")
 
-	v.Check(validator.NotBlank(user.Password), "password", "Password must be provided")
-	v.Check(validator.MinLength(user.Password, 8), "password", "Password must be at least 8 characters long")
-	v.Check(validator.MaxLength(user.Password, 100), "password", "Password must not exceed 100 characters")
+	if validator.NotBlank(user.Password) {
+		v.Check(validator.MinLength(user.Password, 8), "password", "Password must be at least 8 characters long")
+		v.Check(validator.MaxLength(user.Password, 100), "password", "Password must not exceed 100 characters")
+	}
 }
 
 func (u *UserModel) Insert(user *User) error {
@@ -108,6 +114,18 @@ func (u *UserModel) Delete(id int64) error {
 func (u *UserModel) GetByEmail(email string) (*User, error) {
 	query := `SELECT id, email, full_name, phone_no, password_hash, role, created_at FROM users WHERE email=$1`
 	row := u.DB.QueryRow(query, email)
+
+	var user User
+	err := row.Scan(&user.ID, &user.Email, &user.FullName, &user.PhoneNo, &user.Password, &user.Role, &user.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (u *UserModel) GetByPhone(phone string) (*User, error) {
+	query := `SELECT id, email, full_name, phone_no, password_hash, role, created_at FROM users WHERE phone_no=$1`
+	row := u.DB.QueryRow(query, phone)
 
 	var user User
 	err := row.Scan(&user.ID, &user.Email, &user.FullName, &user.PhoneNo, &user.Password, &user.Role, &user.CreatedAt)
@@ -306,6 +324,32 @@ func (u *UserModel) CreateWalkInCustomer(fullName string) (*User, error) {
 	err = u.Insert(user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert walk-in user: %w", err)
+	}
+
+	return user, nil
+}
+
+func (u *UserModel) CreateGuestUser(fullName, phone string) (*User, error) {
+	// Generate dummy email
+	randomBytes := make([]byte, 4)
+	rand.Read(randomBytes)
+	dummyEmail := fmt.Sprintf("guest_%s@blessedbites.local", hex.EncodeToString(randomBytes))
+
+	defaultPassword := make([]byte, 12)
+	rand.Read(defaultPassword)
+	hashedPassword, _ := bcrypt.GenerateFromPassword(defaultPassword, bcrypt.DefaultCost)
+
+	user := &User{
+		Email:    dummyEmail,
+		FullName: fullName,
+		PhoneNo:  phone,
+		Password: string(hashedPassword),
+		Role:     "guest",
+	}
+
+	err := u.Insert(user)
+	if err != nil {
+		return nil, err
 	}
 
 	return user, nil

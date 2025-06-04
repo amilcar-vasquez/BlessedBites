@@ -9,7 +9,7 @@
                 {{ if .IsAuthenticated }}
                 <p>Welcome {{ .CurrentUserFullName }}! </p>
                 {{ else }}
-                Logging in makes it easier to order!
+                Login to show your favs!
                 {{ end }}
             </div>
         <div class="category-sidebar">
@@ -35,13 +35,23 @@
             <p id="orderTotal">Total: $0.00</p>
             <form id="orderForm" action="/orders" method="POST">
                 {{ $.CSRFField  }}
-                {{ $.CSRFField }}
     
     <!-- If admin, show input for walk-in customer name -->
     {{ if eq .CurrentUserRole "admin" }}
     <div class="input-field">
-        <input id="walkInFullName" name="walkInFullName" type="text" required>
+        <input id="walkInFullName" name="walkInFullName" type="text" required class="white-text">
         <label for="walkInFullName" class="white-text">Customer Name</label>
+    </div>
+    {{ end }}
+    <!-- if user is not authenticate show input fields for guestUserName and guestUserPhone-->
+    {{ if not .IsAuthenticated }}
+    <div class="input-field">
+        <input id="guestUserName" name="guestUserName" type="text" required class="white-text">
+        <label for="guestUserName" class="white-text">Your Name</label>
+    </div>
+    <div class="input-field">
+        <input id="guestUserPhone" name="guestUserPhone" type="tel" required class="white-text">
+        <label for="guestUserPhone" class="white-text">Your Phone</label>
     </div>
     {{ end }}
                 <!-- Hidden fields for order data -->
