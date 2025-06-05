@@ -40,6 +40,11 @@
             <button type="submit" class="btn mustard darken-2">Log Out</button>
           </form>
         </li>
+        <li> <form action="/user/update/form" method="POST" style="display:inline;">
+                        {{ $.CSRFField  }}
+                        <input type="hidden" name="user_id" value="{{.CurrentUserID}}">
+                        <button class="btn mustard" type="submit">Update My Info</button>
+                      </form></li>
       {{ else }}
         <li><a href="/login" class="btn mustard darken-2">Log In</a></li>
         <li><a href="/signup" class="btn mustard darken-2">Sign Up</a></li>
@@ -61,6 +66,11 @@
         <button type="submit" class="btn mustard darken-2">Log Out</button>
       </form>
     </li>
+    <li> <form action="/user/update/form" method="POST" style="display:inline;">
+                        {{ $.CSRFField  }}
+                        <input type="hidden" name="user_id" value="{{.CurrentUserID}}">
+                        <button class="btn mustard" type="submit">Update My Info</button>
+                      </form></li>
   {{ else }}
     <li><a href="/login">Log In</a></li>
     <li><a href="/signup">Sign Up</a></li>
