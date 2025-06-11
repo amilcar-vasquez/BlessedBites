@@ -3,14 +3,17 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/amilcar-vasquez/blessed-bites/internal/utils"
 	"html/template"
 	"path/filepath"
 )
 
-func (app *application) newTemplateFuncs() template.FuncMap {
-	return template.FuncMap{
-		"json": jsonFunc, // assumes jsonFunc is declared elsewhere
-	}
+// create a template func map to hold custom functions
+var templateFuncMap = template.FuncMap{
+	"json":  jsonFunc,
+	"add":   utils.Add,
+	"sub":   utils.Subtract,
+	"until": utils.Until,
 }
 
 func jsonFunc(v interface{}) (template.JS, error) {
@@ -32,7 +35,7 @@ func NewTemplateCache() (map[string]*template.Template, error) {
 	for _, page := range pages {
 		fileName := filepath.Base(page)
 
-		ts, err := template.ParseFiles("./ui/html/base.tmpl", page)
+		ts, err := template.New("base.tmpl").Funcs(templateFuncMap).ParseFiles("./ui/html/base.tmpl", page)
 		if err != nil {
 			return nil, err
 		}

@@ -15,7 +15,6 @@ type TemplateData struct {
 	MenuItem            *data.MenuItem
 	Categories          []*data.Category
 	CategoryMap         map[int]string
-	RandomMenuItems     []*data.MenuItem
 	TopUserMenuItems    []*data.MenuItem
 	Users               []*data.User
 	User                *data.User
@@ -39,6 +38,8 @@ type TemplateData struct {
 	ChartLabels         []string
 	ChartData           []float64
 	Token               string // For password reset
+	CurrentPage         int    // For pagination
+	TotalPages          int    // For pagination
 }
 
 // factory function to initialize a new templateData struct
@@ -68,7 +69,18 @@ func (app *application) addDefaultData(td *TemplateData, w http.ResponseWriter, 
 	}
 
 	if fullName, ok := session.Values["fullName"].(string); ok {
-		td.CurrentUserFullName = fullName
+		// Set CurrentUserFullName to just the first word (first name)
+		if len(fullName) > 0 {
+			for i, r := range fullName {
+				if r == ' ' {
+					td.CurrentUserFullName = fullName[:i]
+					break
+				}
+			}
+			if td.CurrentUserFullName == "" {
+				td.CurrentUserFullName = fullName
+			}
+		}
 	}
 
 	//add logic for supporting flash messages

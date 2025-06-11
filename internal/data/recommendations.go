@@ -52,66 +52,6 @@ func NewRecommendationModel(db *sql.DB) RecommendationModel {
 	return RecommendationModel{DB: db}
 }
 
-// analyzes past orders and creates recommendations based on frequency of a certain user's orders
-func (r RecommendationModel) RecommendUserItem(userID int) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	// Step 1: Fetch order history for the user
-	orderQuery := `SELECT id FROM orders WHERE user_id = $1`
-	orderRows, err := r.DB.QueryContext(ctx, orderQuery, userID)
-	if err != nil {
-		return fmt.Errorf("fetching orders: %w", err)
-	}
-	defer orderRows.Close()
-
-	var orderIDs []int
-	for orderRows.Next() {
-		var id int
-		if err := orderRows.Scan(&id); err != nil {
-			return fmt.Errorf("scanning order ID: %w", err)
-		}
-		orderIDs = append(orderIDs, id)
-	}
-	if len(orderIDs) == 0 {
-		return nil // no orders, no recommendations
-	}
-
-	// Step 2: Aggregate item frequency
-	freqMap := make(map[int]int) // key: menuItemID, value: total quantity
-	itemQuery := `SELECT menu_item_id, quantity FROM order_items WHERE order_id = ANY($1)`
-	itemRows, err := r.DB.QueryContext(ctx, itemQuery, orderIDs)
-	if err != nil {
-		return fmt.Errorf("fetching order items: %w", err)
-	}
-	defer itemRows.Close()
-
-	for itemRows.Next() {
-		var itemID, qty int
-		if err := itemRows.Scan(&itemID, &qty); err != nil {
-			return fmt.Errorf("scanning order item: %w", err)
-		}
-		freqMap[itemID] += qty
-	}
-
-	// Step 3: Insert recommendations based on frequency
-	for menuItemID, count := range freqMap {
-		rec := Recommendation{
-			UserID:     userID,
-			MenuItemID: menuItemID,
-			Reason:     "frequent order",
-			Score:      float64(count), // simple frequency as score for now
-		}
-		err := r.Insert(rec)
-		if err != nil {
-			// optional: log and continue instead of failing
-			return fmt.Errorf("inserting recommendation: %w", err)
-		}
-	}
-
-	return nil
-}
-
 // GetTopRecommendationsByUser returns top N recommended items for a user, ordered by score
 func (r RecommendationModel) GetTopRecommendationsByUser(userID, limit int) ([]int, error) {
 	query := `
@@ -146,7 +86,10 @@ func (r RecommendationModel) RecommendPopularItem() ([]Recommendation, error) {
 	defer cancel()
 
 	// Step 1: Fetch popular items
-	popularQuery := `SELECT menu_item_id, COUNT(*) as order_count FROM order_items GROUP BY menu_item_id ORDER BY order_count DESC LIMIT 5`
+	popularQuery := `SELECT id as menu_item_id, order_count
+FROM menu_items
+ORDER BY order_count DESC
+LIMIT 5`
 	rows, err := r.DB.QueryContext(ctx, popularQuery)
 	if err != nil {
 		return nil, fmt.Errorf("fetching popular items: %w", err)

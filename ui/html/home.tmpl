@@ -107,7 +107,31 @@
                 </div>
             {{end}}
         </div>
-        
+        <div class="pagination center-align">
+  {{if gt .TotalPages 1}}
+    <ul class="pagination">
+      {{if gt .CurrentPage 1}}
+      <li class="waves-effect"><a href="/?page={{sub .CurrentPage 1}}"><i class="material-icons">chevron_left</i></a></li>
+      {{else}}
+      <li class="disabled"><a><i class="material-icons">chevron_left</i></a></li>
+      {{end}}
+
+      {{ $ctx := .}}
+      {{range $i, $ := until .TotalPages}}
+        {{ $page := add $i 1 }}
+        <li class="{{if eq $ctx.CurrentPage $page}}active{{else}}waves-effect{{end}}">
+          <a href="/?page={{$page}}">{{$page}}</a>
+        </li>
+      {{end}}
+
+      {{if lt .CurrentPage .TotalPages}}
+      <li class="waves-effect"><a href="/?page={{add .CurrentPage 1}}"><i class="material-icons">chevron_right</i></a></li>
+      {{else}}
+      <li class="disabled"><a><i class="material-icons">chevron_right</i></a></li>
+      {{end}}
+    </ul>
+  {{end}}
+</div>
     </div>
 </div>
 

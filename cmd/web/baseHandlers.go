@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
-	"math/rand"
+	"github.com/amilcar-vasquez/blessed-bites/internal/utils"
 	"net/http"
 	"sort"
-	"time"
+	"strconv"
 )
 
 // BaseHandler renders the common elements
@@ -45,9 +45,13 @@ func (app *application) getTopUserMenuItems(userID int, limit int) []*data.MenuI
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-
-	//random menu item
-	rand.Seed(time.Now().UnixNano())
+	page := 1
+	if p := r.URL.Query().Get("page"); p != "" {
+		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
+			page = parsed
+		}
+	}
+	app.logger.Info("Initial page value", "page", page)
 
 	// Fetch categories for sidebar and buttons
 	categories, err := app.Category.GetAll()
@@ -64,22 +68,6 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.logger.Error("failed to retrieve menu items", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
-	}
-
-	// Create a random menu item
-	var RandomMenuItems []*data.MenuItem
-	if len(menuItems) > 0 {
-		shuffled := make([]*data.MenuItem, len(menuItems))
-		copy(shuffled, menuItems)
-		rand.Shuffle(len(shuffled), func(i, j int) {
-			shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
-		})
-
-		limit := 4
-		if len(shuffled) < limit {
-			limit = len(shuffled)
-		}
-		RandomMenuItems = shuffled[:limit]
 	}
 
 	// Inject popularity flags BEFORE rendering
@@ -107,6 +95,17 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return false
 	})
 
+	pagedMenuItems, currentPage, totalPages := utils.Paginate(menuItems, page, 9) // Use the Paginate function from utils
+
+	// Output log with values for debugging
+	app.logger.Info("Pagination info",
+		"requestedPage", page,
+		"currentPage", currentPage,
+		"totalPages", totalPages,
+		"totalMenuItems", len(menuItems),
+		"pagedMenuItemsCount", len(pagedMenuItems),
+	) // Use the Paginate function from utils
+
 	//call the getTopUserMenuItems function to get the top user menu items
 	var TopUserMenuItems []*data.MenuItem
 	user := app.contextGetUser(r)
@@ -121,8 +120,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	data.Title = "Welcome to Blessed Bites"
 	data.HeaderText = "Welcome to Blessed Bites"
 	data.Categories = categories
-	data.MenuItems = menuItems
-	data.RandomMenuItems = RandomMenuItems
+	data.MenuItems = pagedMenuItems
+	data.CurrentPage = currentPage
+	data.TotalPages = totalPages
 	data.TopUserMenuItems = TopUserMenuItems
 
 	err = app.render(w, http.StatusOK, "home.tmpl", data)

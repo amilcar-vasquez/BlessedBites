@@ -20,7 +20,7 @@ body {
   margin: 0;
   padding: 0;
   position: relative;
-  background-color: #fdfdfd;
+  background-color: var(--burgundy);
   }
 
   body::before {
@@ -32,9 +32,19 @@ body {
     pointer-events: none;
   }
 
+.main-content {
+  background-color: white;
+  border-radius: var(--card-radius);
+  padding-top: 1rem;
+  margin-top: 1.5rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
 
 nav {
-  background: linear-gradient(to right, white 50%, var(--burgundy) 50%);
+  background: white;
   border-radius: 0 0 20px 20px;
 }
 
@@ -340,14 +350,14 @@ nav .brand-logo span {
 .auth-message {
   background-color: var(--mustard);
   color: white;
-  border-left: 6px solid var(--burgundy);
+  border-left: 6px solid var(--olive);
   padding: .1rem;
-  margin: 1rem auto;
   border-radius: var(--card-radius);
   font-family: 'Poppins', sans-serif;
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   max-width: 600px;
+  margin-bottom: 1rem;
 }
 
 
@@ -479,15 +489,19 @@ nav .brand-logo span {
 .search-box-wrapper input:focus:not([readonly]) {
   border-bottom: 1px solid var(--burgundy) !important;
   box-shadow: none !important;
+  color: white;
 }
 
 .top-buttons-message {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: .5rem;
   justify-content: center;
-  background-color: #e8fbe8; /* very light green */
+  background-color: var(--olive);
   border-radius: 18px;
+  color: white ;
+  padding: none;
+  font-weight: 500;
 }
 
 

@@ -9,6 +9,7 @@ import (
 	openapi "github.com/twilio/twilio-go/rest/api/v2010"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type OrderItemInput struct {
@@ -96,7 +97,7 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 	contentType := r.Header.Get("Content-Type")
 	isJSON := contentType == "application/json"
 
-	// Parse JSON input (mobile/webapp)
+	// Parse request input (JSON or form)
 	if isJSON {
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, "Invalid JSON input", http.StatusBadRequest)
@@ -104,7 +105,6 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		}
 		items = input.Items
 	} else {
-		// Handle form submission (web form / admin POS)
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Invalid form data", http.StatusBadRequest)
 			return
@@ -128,45 +128,65 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	// Check for walk-in admin order
+	// Get session
+	session, _ := app.sessionStore.Get(r, "session")
+
+	// --- User detection logic ---
 	var user *data.User
-	existingUser, err := app.User.GetByPhone(input.PhoneNo)
-	if err == nil && existingUser != nil {
-		user = existingUser
+
+	// 1. Check for logged-in user in session
+	user = app.contextGetUser(r)
+	if user != nil {
+		app.logger.Info("User detected from session", "userID", user.ID, "fullName", user.FullName)
 	} else {
-		user, err = app.User.CreateGuestUser(input.FullName, input.PhoneNo)
-		if err != nil {
-			http.Error(w, "Unable to create guest user", http.StatusInternalServerError)
-			return
+		app.logger.Info("No user detected in session")
+	}
+
+	// 2. Fallback to guest user via phone number
+	if user == nil && input.PhoneNo != "" {
+		existingUser, err := app.User.GetByPhone(input.PhoneNo)
+		if err == nil && existingUser != nil {
+			user = existingUser
+		} else {
+			user, err = app.User.CreateGuestUser(input.FullName, input.PhoneNo)
+			if err != nil {
+				http.Error(w, "Unable to create guest user", http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 
-	// Admin placing walk-in order?
-	if user.Role == "admin" {
-		fullName := r.FormValue("walkInFullName")
-		if fullName == "" {
+	// 3. Handle admin walk-in order override
+	if user != nil && user.Role == "admin" {
+		walkInFullName := r.FormValue("walkInFullName")
+		if walkInFullName == "" {
 			http.Error(w, "Full name required for walk-in", http.StatusBadRequest)
 			return
 		}
-		walkInUser, err := app.User.CreateWalkInCustomer(fullName)
+		walkInUser, err := app.User.CreateWalkInCustomer(walkInFullName)
 		if err != nil {
 			http.Error(w, "Failed to create walk-in customer", http.StatusInternalServerError)
 			return
 		}
-		app.logger.Info("Walk-in customer created", "userID", walkInUser.ID, "fullName", fullName)
+		app.logger.Info("Walk-in customer created", "userID", walkInUser.ID, "fullName", walkInFullName)
 		user = walkInUser
 	}
 
-	// Validate order items
+	// Final guard: must have a user by this point
+	if user == nil {
+		http.Error(w, "User could not be determined", http.StatusInternalServerError)
+		return
+	}
+
+	// --- Order validation ---
 	if len(items) == 0 {
-		session, _ := app.sessionStore.Get(r, "session")
 		session.AddFlash("Please add items before ordering.", "error")
 		_ = session.Save(r, w)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
-	// Begin transaction
+	// --- Transaction starts ---
 	tx, err := app.Order.DB.Begin()
 	if err != nil {
 		http.Error(w, "Transaction error", http.StatusInternalServerError)
@@ -201,7 +221,7 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		})
 	}
 
-	// Insert order
+	// Insert order and items
 	orderID, err := app.Order.Insert(int(user.ID), totalCost)
 	if err != nil {
 		http.Error(w, "Failed to create order", http.StatusInternalServerError)
@@ -222,51 +242,39 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Async WhatsApp Notification
+	// --- Async: WhatsApp Notification ---
 	go func() {
-		// Try to get user full name from session if available
 		fullName := user.FullName
-		session, _ := app.sessionStore.Get(r, "session")
 		if name, ok := session.Values["fullName"].(string); ok && name != "" {
 			fullName = name
 		}
 
-		// Get phone number from session if available, else use user.PhoneNo
 		phoneNo := user.PhoneNo
 		if sessionPhone, ok := session.Values["phoneNo"].(string); ok && sessionPhone != "" {
 			phoneNo = sessionPhone
 		}
-
-		// Add country code +501 if not already present
-		if len(phoneNo) > 0 && phoneNo[:4] != "+501" {
+		if len(phoneNo) > 0 && !strings.HasPrefix(phoneNo, "+501") {
 			phoneNo = "+501" + phoneNo
 		}
 
-		sendWhatsAppMessages(
-			phoneNo,
-			messageItems,
-			totalCost,
-			fullName,
-		)
+		sendWhatsAppMessages(phoneNo, messageItems, totalCost, fullName)
 	}()
 
-	// Async popular update
+	// --- Async: Update Popular Items ---
 	go func() {
 		if err := app.MenuItem.UpdatePopularItems(); err != nil {
 			app.logger.Error("Popular items update failed", "error", err)
 		}
 	}()
 
+	// --- Response handling ---
 	if isJSON {
-		// Mobile/web JSON response
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "Order placed successfully!",
 			"note":    "Create an account later to track orders.",
 		})
 	} else {
-		// Web form success redirect
-		session, _ := app.sessionStore.Get(r, "session")
 		session.AddFlash(fmt.Sprintf("Order placed! Total: $%.2f", totalCost), "success")
 		_ = session.Save(r, w)
 		http.Redirect(w, r, "/", http.StatusSeeOther)

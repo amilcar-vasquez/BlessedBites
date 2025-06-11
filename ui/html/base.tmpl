@@ -19,73 +19,79 @@
 <body>
     <div class="container">
         <!-- Navbar -->
-        <nav>
-  <div class="nav-wrapper container">
-    <a href="/" class="brand-logo">
-      <img src="/static/img/BlessedBitesIcon.png" alt="Logo" class="nav-logo"> <span>Blessed Bites</span>
-    </a>
+      <nav>
+        <div class="nav-wrapper container">
+          <a href="/" class="brand-logo">
+            <img src="/static/img/BlessedBitesIcon.png" alt="Logo" class="nav-logo"> <span>Blessed Bites</span>
+          </a>
 
-    <a href="#" data-target="mobile-demo" class="sidenav-trigger">
-      <i class="material-icons">menu</i>
-    </a>
+          <a href="#" data-target="mobile-demo" class="sidenav-trigger">
+            <i class="material-icons">menu</i>
+          </a>
 
-    <ul class="right hide-on-med-and-down">
-      {{ if and .IsAuthenticated (eq .CurrentUserRole "admin") }}
-        <li><a href="/dashboard" class="btn-flat nav-link mustard-text">Dashboard</a></li>
-      {{ end }}
-      {{ if .IsAuthenticated }}
-        <li>
-          <form method="POST" action="/logout" style="display:inline;">
-            {{ .CSRFField }}
-            <button type="submit" class="btn mustard darken-2">Log Out</button>
-          </form>
-        </li>
-        <li> <form action="/user/update/form" method="POST" style="display:inline;">
-                        {{ $.CSRFField  }}
-                        <input type="hidden" name="user_id" value="{{.CurrentUserID}}">
-                        <button class="btn mustard" type="submit">Update My Info</button>
-                      </form></li>
-      {{ else }}
-        <li><a href="/login" class="btn mustard darken-2">Log In</a></li>
-        <li><a href="/signup" class="btn mustard darken-2">Sign Up</a></li>
-         
-      {{ end }}
-    </ul>
-  </div>
-</nav>
+          <ul class="right hide-on-med-and-down">
+            {{ if and .IsAuthenticated (eq .CurrentUserRole "admin") }}
+              <li><a href="/dashboard" class="btn-flat nav-link mustard-text">Dashboard</a></li>
+            {{ end }}
+            {{ if .IsAuthenticated }}
+              <li>
+                <form method="POST" action="/logout" style="display:inline;">
+                  {{ .CSRFField }}
+                  <button type="submit" class="btn mustard darken-2">Log Out</button>
+                </form>
+              </li>
+              {{ if ne .CurrentUserRole "admin" }}
+                <li>
+                  <form action="/user/update/form" method="POST" style="display:inline;">
+                    {{ $.CSRFField }}
+                    <input type="hidden" name="user_id" value="{{.CurrentUserID}}">
+                    <button class="btn mustard" type="submit">Update My Info</button>
+                  </form>
+                </li>
+              {{ end }}
+            {{ else }}
+              <li><a href="/login" class="btn mustard darken-2">Log In</a></li>
+              <li><a href="/signup" class="btn mustard darken-2">Sign Up</a></li>
+              
+            {{ end }}
+          </ul>
+        </div>
+      </nav>
 
-<!-- Mobile Nav -->
-<ul class="sidenav" id="mobile-demo">
-  {{ if and .IsAuthenticated (eq .CurrentUserRole "admin") }}
-    <li><a href="/dashboard">Dashboard</a></li>
-  {{ end }}
-  {{ if .IsAuthenticated }}
-    <li>
-      <form method="POST" action="/logout">
-        {{ .CSRFField }}
-        <button type="submit" class="btn mustard darken-2">Log Out</button>
-      </form>
-    </li>
-    <li> <form action="/user/update/form" method="POST" style="display:inline;">
-                        {{ $.CSRFField  }}
-                        <input type="hidden" name="user_id" value="{{.CurrentUserID}}">
-                        <button class="btn mustard" type="submit">Update My Info</button>
-                      </form></li>
-  {{ else }}
-    <li><a href="/login">Log In</a></li>
-    <li><a href="/signup">Sign Up</a></li>
-  {{ end }}
-</ul>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var elems = document.querySelectorAll('.sidenav');
-    var instances = M.Sidenav.init(elems);
-  });
-</script>
-
-        {{ block "content" .}}
+      <!-- Mobile Nav -->
+      <ul class="sidenav" id="mobile-demo">
+        {{ if and .IsAuthenticated (eq .CurrentUserRole "admin") }}
+          <li><a href="/dashboard">Dashboard</a></li>
         {{ end }}
+        {{ if .IsAuthenticated }}
+          <li>
+            <form method="POST" action="/logout">
+              {{ .CSRFField }}
+              <button type="submit" class="btn mustard darken-2">Log Out</button>
+            </form>
+          </li>
+          <li> <form action="/user/update/form" method="POST" style="display:inline;">
+                              {{ $.CSRFField  }}
+                              <input type="hidden" name="user_id" value="{{.CurrentUserID}}">
+                              <button class="btn mustard" type="submit">Update My Info</button>
+                            </form></li>
+        {{ else }}
+          <li><a href="/login">Log In</a></li>
+          <li><a href="/signup">Sign Up</a></li>
+        {{ end }}
+      </ul>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          var elems = document.querySelectorAll('.sidenav');
+          var instances = M.Sidenav.init(elems);
+        });
+      </script>
+
+        <div class="main-content">
+            {{ block "content" .}}
+            {{ end }}
+        </div>
     </div>
 
     <!-- Materialize JS and jQuery -->
