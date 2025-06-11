@@ -42,6 +42,10 @@
         <input id="walkInFullName" name="walkInFullName" type="text" required class="white-text">
         <label for="walkInFullName" class="white-text">Customer Name</label>
     </div>
+    <div class="input-field">
+        <input id="walkInPhone" name="walkInPhone" type="tel" class="white-text">
+        <label for="walkInPhone" class="white-text">Customer Phone</label>
+    </div>
     {{ end }}
     <!-- if user is not authenticate show input fields for guestUserName and guestUserPhone-->
     {{ if not .IsAuthenticated }}
@@ -70,7 +74,7 @@
 <div class="top-buttons">
     {{range .TopUserMenuItems }}
     
-        <a class="btn">{{.Name}}</a>
+        <div class="top-btn darken"><a href="#" class="btn-add-order" data-id="{{.ID}}" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}">{{.Name}}</a></div>
     {{end}}
     {{ if not .TopUserMenuItems }}
     <div class="top-buttons-message">

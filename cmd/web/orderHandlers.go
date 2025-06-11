@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
+	"github.com/amilcar-vasquez/blessed-bites/internal/utils"
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/api/v2010"
 	"net/http"
@@ -150,6 +151,7 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		} else {
 			user, err = app.User.CreateGuestUser(input.FullName, input.PhoneNo)
 			if err != nil {
+				app.logger.Error("Unable to create guest user", "error", err, "fullName", input.FullName, "phoneNo", input.PhoneNo)
 				http.Error(w, "Unable to create guest user", http.StatusInternalServerError)
 				return
 			}
@@ -159,12 +161,19 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 	// 3. Handle admin walk-in order override
 	if user != nil && user.Role == "admin" {
 		walkInFullName := r.FormValue("walkInFullName")
+		walkInPhoneNo := r.FormValue("walkInPhoneNo")
 		if walkInFullName == "" {
+			app.logger.Error("Walk-in customer creation failed: missing full name", "adminID", user.ID)
 			http.Error(w, "Full name required for walk-in", http.StatusBadRequest)
 			return
 		}
-		walkInUser, err := app.User.CreateWalkInCustomer(walkInFullName)
+		if walkInPhoneNo == "" {
+			//create randome 7 digits for phone number
+			walkInPhoneNo = utils.RandomPhone()
+		}
+		walkInUser, err := app.User.CreateWalkInCustomer(walkInFullName, walkInPhoneNo)
 		if err != nil {
+			app.logger.Error("Failed to create walk-in customer", "error", err, "walkInFullName", walkInFullName, "adminID", user.ID)
 			http.Error(w, "Failed to create walk-in customer", http.StatusInternalServerError)
 			return
 		}

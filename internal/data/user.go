@@ -292,7 +292,7 @@ func (u *UserModel) FinalizePasswordReset(token, newPassword string) error {
 	return u.ClearResetToken(user.ID)
 }
 
-func (u *UserModel) CreateWalkInCustomer(fullName string) (*User, error) {
+func (u *UserModel) CreateWalkInCustomer(fullName, phone string) (*User, error) {
 	// Generate a dummy but unique email
 	randomBytes := make([]byte, 4)
 	if _, err := rand.Read(randomBytes); err != nil {
@@ -315,7 +315,7 @@ func (u *UserModel) CreateWalkInCustomer(fullName string) (*User, error) {
 	user := &User{
 		Email:    dummyEmail,
 		FullName: fullName,
-		PhoneNo:  "", // optional or empty
+		PhoneNo:  phone, // accept phone number from form value
 		Password: string(hashedPassword),
 		Role:     "customer", // you can change to "walkin" or "guest" if desired
 	}

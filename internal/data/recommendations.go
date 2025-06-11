@@ -119,16 +119,15 @@ func (r RecommendationModel) GetPopularItemIDs(limit int) ([]int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `
+	query := fmt.Sprintf(`
 	SELECT oi.menu_item_id
 	FROM order_items oi
 	JOIN menu_items mi ON oi.menu_item_id = mi.id
 	GROUP BY oi.menu_item_id
 	ORDER BY SUM(order_count) DESC, oi.menu_item_id ASC
-	LIMIT $1
-	`
+	LIMIT %d`, limit)
 
-	rows, err := r.DB.QueryContext(ctx, query, limit)
+	rows, err := r.DB.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("fetching popular item IDs: %w", err)
 	}
