@@ -1,0 +1,9 @@
+# Ignore files not needed in the Docker image
+.git
+.gitignore
+*.md
+*.log
+*.env
+bin/
+tmp/
+ui/static/img/uploads/

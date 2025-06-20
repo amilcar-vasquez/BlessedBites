@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: blessedbites
+      POSTGRES_USER: blessedbites
+      POSTGRES_PASSWORD: blessedbites
+    ports:
+      - "5433:5433"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      DB_DSN: ${JOURNAL_DB_DSN}
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./ui/static/img/uploads:/app/ui/static/img/uploads
+    restart: unless-stopped
+
+volumes:
+  db_data:
