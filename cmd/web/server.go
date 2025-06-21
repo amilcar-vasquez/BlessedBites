@@ -1,3 +1,4 @@
+//file: cmd/web/server.go
 package main
 
 import (
@@ -19,6 +20,7 @@ func (app *application) serve() error {
 
 		csrf.TrustedOrigins([]string{
 			"https://localhost:4000",
+			"https://blessedbites.bz",
 		}),
 		csrf.ErrorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			app.logger.Error("CSRF failure",
@@ -45,5 +47,5 @@ func (app *application) serve() error {
 		ErrorLog:     slog.NewLogLogger(app.logger.Handler(), slog.LevelError),
 	}
 	app.logger.Info("starting server", "addr", srv.Addr, "handler", srv.Handler)
-	return srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	return srv.ListenAndServe()
 }
