@@ -15,13 +15,12 @@ func (app *application) serve() error {
 		csrfKey,
 		csrf.Secure(true),
 		csrf.SameSite(csrf.SameSiteDefaultMode),
-		csrf.HttpOnly(false),
+		csrf.HttpOnly(true),
 		csrf.Path("/"),
 
 		csrf.TrustedOrigins([]string{
-			"https://localhost:4000",
-			"https://blessedbites.bz",
-		}),
+    "https://blessedbites.bz",
+}),
 		csrf.ErrorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			app.logger.Error("CSRF failure",
 				"method", r.Method,
