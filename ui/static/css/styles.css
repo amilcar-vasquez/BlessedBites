@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
 
@@ -15,37 +14,34 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  background-color: var(--light-bg);
+  background-color: var(--burgundy);
   color: var(--text-dark);
   margin: 0;
   padding: 0;
   position: relative;
-  background-color: var(--burgundy);
-  }
+}
 
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    opacity: 0.6;
-    pointer-events: none;
-  }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.6;
+  pointer-events: none;
+}
 
 .main-content {
   background-color: white;
   border-radius: var(--card-radius);
-  padding-top: 1rem;
-  margin-top: 1.5rem;
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
+  padding: 1rem;
+  margin: 1.5rem auto;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
-
 
 nav {
   background: white;
   border-radius: 0 0 20px 20px;
+  padding: 0.5rem 1rem;
 }
 
 nav .brand-logo {
@@ -61,18 +57,12 @@ nav .brand-logo img {
   padding: .1rem;  
 }
 
-nav .brand-logo span {
-  display: inline-block;
-  vertical-align: bottom;
-}
-
 .nav-logo {
   height: 66px;
   vertical-align: middle;
   margin-right: 8px;
 }
 
-/* Align links and make them more refined */
 .nav-link {
   font-weight: 500;
   font-size: 1rem;
@@ -88,9 +78,7 @@ nav .brand-logo span {
   color: white !important;
   background-color: var(--mustard);
   border-radius: var(--btn-radius);
-  transition: all 0.3s ease;
 }
-
 
 .btn-mustard {
   display: inline-block;
@@ -109,7 +97,6 @@ nav .brand-logo span {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Big Top Buttons */
 .top-buttons {
   margin-top: 1.5rem;
   display: flex;
@@ -128,47 +115,34 @@ nav .brand-logo span {
 }
 
 .top-buttons .btn:hover {
-
   background-color: var(--burgundy);
   color: white;
   box-shadow: 0 6px 8px rgba(0,0,0,0.2);
 }
 
-.burgundy {
-  background-color: var(--burgundy);
+.burgundy, .mustard, .olive, .grayed-out {
   border-radius: var(--btn-radius);
   margin: 0.25rem;
   color: white;
 }
 
-.mustard {
-  background-color: var(--mustard);
-  border-radius: var(--btn-radius);
-  margin: 0.25rem;
-}
-
-.olive {
-  background-color: var(--olive);
-  border-radius: var(--btn-radius);
-  margin: 0.25rem;
-  color: white;
-}
-.grayed-out {
-  background-color: var(--grayed-out);
-  border-radius: var(--btn-radius);
-  margin: 0.25rem;
-  color: white;
-}
+.burgundy { background-color: var(--burgundy); }
+.mustard { background-color: var(--mustard); }
+.olive { background-color: var(--olive); }
+.grayed-out { background-color: var(--grayed-out); }
 
 .grayed-out-text {
   color: var(--grayed-out);
 }
 
-/* Menu Cards */
 .card {
   border-radius: var(--card-radius);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .card:hover {
@@ -176,17 +150,24 @@ nav .brand-logo span {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
+.card-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--burgundy);
+  text-align: center;
+}
+
 .card-btn {
   background-color: var(--mustard);
   color: white;
   text-align: center;
   text-transform: uppercase;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
+  padding: 1rem;
+  margin-top: auto;
 }
+
 .card-btn:hover {
   background-color: var(--burgundy);
-  color: white;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
@@ -196,51 +177,39 @@ nav .brand-logo span {
   text-decoration: none;
 }
 
-.card-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--burgundy);
+.card-content p {
+  font-size: 0.95rem;
+  line-height: 1.3;
+  margin-bottom: 1rem;
 }
 
-.top-btn{
+.top-btn {
   background-color: var(--mustard);
   color: white;
   border-radius: var(--btn-radius);
   padding: 0.1rem 1rem;
   text-decoration: none;
   font-weight: 500;
-  transition: background-color 0.2s, color 0.2s;
 }
 
 .top-btn:hover {
   background-color: var(--burgundy);
-  color: white;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-.top-btn a {
-  color: white;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.squared{
+.squared {
   aspect-ratio: 1/1;
   overflow: hidden;
+  position: relative;
 }
 
 .squared img {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
-/* Category Sidebar */
-/* Sidebar Container */
 .category-sidebar {
   background-color: white;
   padding: 1.5rem;
@@ -250,7 +219,6 @@ nav .brand-logo span {
   margin-bottom: 2rem;
 }
 
-/* Sidebar Title */
 .sidebar-title {
   font-size: 1.1rem;
   font-weight: 600;
@@ -258,7 +226,6 @@ nav .brand-logo span {
   margin-bottom: 1rem;
 }
 
-/* Category Item */
 .category-item {
   margin: 0.5rem 0;
 }
@@ -270,9 +237,9 @@ nav .brand-logo span {
   color: var(--burgundy);
   border-radius: var(--btn-radius);
   text-decoration: none;
-  transition: background-color 0.2s, color 0.2s;
   font-weight: 500;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .category-item a:hover {
@@ -281,7 +248,6 @@ nav .brand-logo span {
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Special link for 'Anything delicious' */
 .category-item.special a {
   background-color: var(--burgundy);
   color: white;
@@ -292,7 +258,6 @@ nav .brand-logo span {
 
 .category-item.special a:hover {
   background-color: #4a0217;
-  color: #fff;
 }
 
 .order-sidebar {
@@ -300,25 +265,24 @@ nav .brand-logo span {
   background-color: var(--burgundy);
   padding: 1rem;
   border-radius: var(--card-radius);
-  border-color: var(--mustard)
+  border-color: var(--mustard);
 }
 
 .order-sidebar ul {
   list-style: none;
   padding-left: 0;
 }
+
 .order-sidebar li {
   margin-bottom: 0.5rem;
 }
 
 .input-field-mustard:focus:not([readonly]) {
   color: var(--mustard);
-  padding: 0.5rem;
-  border: none;
   border-bottom: 1px solid var(--mustard);
 }
 
-.error{
+.error {
   color: var(--burgundy);
   font-size: 0.9rem;
 }
@@ -330,7 +294,6 @@ nav .brand-logo span {
   padding: 1rem 1.5rem;
   margin: 1rem auto;
   border-radius: var(--card-radius);
-  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   max-width: 600px;
@@ -344,13 +307,12 @@ nav .brand-logo span {
 }
 
 .flash-message.success {
-  background-color: #d4edda; /* Optional: for type-specific variation */
+  background-color: #d4edda;
   color: var(--text-dark);
 }
 
 .flash-message.error {
   background-color: var(--burgundy);
-  color: white;
 }
 
 .flash-message.warning {
@@ -375,91 +337,47 @@ nav .brand-logo span {
   border-left: 6px solid var(--olive);
   padding: .1rem;
   border-radius: var(--card-radius);
-  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   max-width: 600px;
   margin-bottom: 1rem;
 }
 
-
-.invalid-input{
-  border:none;
+.invalid-input {
   border-bottom: 1px solid var(--burgundy);
 }
 
-/* Make the row use flexbox and ensure all items align */
 .row.equal-height {
   display: flex;
   flex-wrap: wrap;
 }
 
-/* Ensure that each column has equal height */
 .row.equal-height > .col {
   display: flex;
   flex-direction: column;
 }
 
-/* Ensure card takes up all available space in the column */
-.card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-/* Push the button to the bottom of the card */
-.card-content p {
-  font-size: 0.95rem;
-  line-height: 1.3;
-}
-
-/* Style for card button */
-.card-btn {
-  margin-top: auto;  /* Push it to the bottom */
-  padding: 1rem;
-  text-align: center;
-}
-
-/* Optional: You can tweak the padding for the card content for more spacing */
-.card-content p {
-  margin-bottom: 1rem;
-}
-
-/* Badge */
 .thumb-badge {
   background-color: var(--burgundy);
   border-radius: .5rem;
-  order: -1; /* Bumps it to the top of the row */
+  order: -1;
   border: 2px solid var(--burgundy);
   color: var(--light-bg);
   font-size: 1.1rem;
-  align-items: center;
-  justify-content: center;
-  line-height: normal;
   animation: thumb-badge-jump 0.5s cubic-bezier(.25,1.5,.5,1) 1;
- 
 }
 
 @keyframes thumb-badge-jump {
-  0%   { transform: translateY(0);}
-  30%  { transform: translateY(-0.2rem);}
+  0% { transform: translateY(0);}
+  30% { transform: translateY(-0.2rem);}
   100% { transform: translateY(0);}
 }
 
-
-.thumb-badge .material-icons {
-  font-size: inherit;
-   /* Animation */
-  animation: thumb-badge-jump 1s cubic-bezier(.25,1.5,.5,1) 1;
-}
-
-.img-popular img{
+.img-popular img {
   width: 20%;
   height: auto;
   border-radius: var(--card-radius);
 }
-
 
 .search-form {
   display: flex;
@@ -479,7 +397,6 @@ nav .brand-logo span {
   border: 1px solid var(--mustard);
   border-radius: var(--btn-radius);
   font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
 }
 
 .material-icon-button {
@@ -494,24 +411,12 @@ nav .brand-logo span {
   font-size: 1.5rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.material-icon-button i.material-icons {
-  font-size: 1.5rem;
 }
 
 .search-box-wrapper input:focus {
   outline: none;
   border-color: var(--burgundy) !important;
   box-shadow: none !important;
-}
-
-/* Override Materialize's green bottom border */
-.search-box-wrapper input:focus:not([readonly]) {
-  border-bottom: 1px solid var(--burgundy) !important;
-  box-shadow: none !important;
-  color: white;
 }
 
 .top-buttons-message {
@@ -521,13 +426,58 @@ nav .brand-logo span {
   justify-content: center;
   background-color: var(--olive);
   border-radius: 18px;
-  color: white ;
-  padding: none;
+  color: white;
   font-weight: 500;
 }
 
+/* Responsive Enhancements */
+@media (max-width: 992px) {
+  .main-content, .order-sidebar, .category-sidebar {
+    margin: 1rem;
+    max-width: 100%;
+  }
+
+  .top-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .search-box-wrapper {
+    max-width: 100%;
+  }
+}
 
 @media (max-width: 768px) {
+  nav {
+    border-radius: 0 0 12px 12px;
+  }
+
+  nav .brand-logo {
+    font-size: 1.2rem;
+    padding-left: 0.5rem;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    text-align: left;
+  }
+
+  .main-content {
+    margin: 1rem 0.5rem;
+    padding: 1rem 0.5rem;
+  }
+
+  .top-buttons-message {
+    flex-direction: column;
+    padding: 0.75rem;
+  }
+
+  .card-title {
+    font-size: 1.2rem;
+  }
+
   .order-sidebar {
     position: fixed;
     bottom: 0;
@@ -535,44 +485,47 @@ nav .brand-logo span {
     width: 100%;
     border-radius: 0;
     z-index: 1000;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 0.75rem;
   }
 
-  nav {
-    border-radius: 0 0 12px 12px;
-    padding: 0.5rem 0;
-    background: var(--burgundy);
-  }
-
-  nav .brand-logo {
-    font-size: 1.2rem;
-    padding-left: 0.5rem;
-    color: white;
-  }
-
-  .nav-link {
-    display: block;
-    padding: 0.7rem 1rem;
-    font-size: 1rem;
-    color: white !important;
-    background: none;
-    border-radius: 0;
-    text-align: left;
-  }
-
-  .nav-link:hover {
-    background-color: var(--mustard);
-    color: var(--burgundy) !important;
-  }
-
-  .top-buttons {
+  .search-form {
     flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 1rem;
+    align-items: stretch;
   }
 
-  .nav-logo {
-    height: 40px;
-    margin-right: 4px;
+  .search-box-wrapper input {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .material-icon-button {
+    right: 8px;
+    font-size: 1.3rem;
+  }
+
+  .img-popular img {
+    width: 40%;
+    margin: 0 auto;
+    display: block;
+  }
+
+  .row.equal-height {
+    flex-direction: column;
+  }
+
+  .category-sidebar {
+    padding: 1rem;
+  }
+
+  .flash-message {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .flash-message::before {
+    font-size: 1.1rem;
   }
 }
 
@@ -582,7 +535,7 @@ nav .brand-logo span {
     opacity: 1;
   }
   100% {
-    transform: scale(0.2) translate(300px, -300px); /* Adjust direction/offset */
+    transform: scale(0.2) translate(300px, -300px);
     opacity: 0;
   }
 }
