@@ -445,11 +445,28 @@ nav .brand-logo img {
   .search-box-wrapper {
     max-width: 100%;
   }
+   /* Override burger icon color */
+nav a.sidenav-trigger i.material-icons {
+  color: var(--mustard) !important; /* or any color you prefer */
+  font-size: 2.2rem; /* Optional: adjust size */
+}
+
+/* Optional: hover effect */
+nav a.sidenav-trigger:hover i.material-icons {
+  color: var(--burgundy) !important;
+}
+/* mobile-friendly version of .highlight table */
+  .highlight {
+    width: 100%;
+    overflow-x: auto;
+  }
+
 }
 
 @media (max-width: 768px) {
   nav {
     border-radius: 0 0 12px 12px;
+    color: var(--burgundy);
   }
 
   nav .brand-logo {
@@ -463,6 +480,17 @@ nav .brand-logo img {
     font-size: 1rem;
     text-align: left;
   }
+
+ /* Override burger icon color */
+nav a.sidenav-trigger i.material-icons {
+  color: var(--mustard) !important; /* or any color you prefer */
+  font-size: 2.2rem; /* Optional: adjust size */
+}
+
+/* Optional: hover effect */
+nav a.sidenav-trigger:hover i.material-icons {
+  color: var(--burgundy) !important;
+}
 
   .main-content {
     margin: 1rem 0.5rem;
