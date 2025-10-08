@@ -21,6 +21,20 @@ body {
   position: relative;
 }
 
+/* Make the top navbar fixed so it's always visible */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+}
+
+/* Push main content down so it doesn't sit under the fixed nav. Adjust as needed. */
+.main-content {
+  margin-top: 6rem; /* space for fixed nav */
+}
+
 body::before {
   content: "";
   position: fixed;
@@ -575,6 +589,37 @@ nav a.sidenav-trigger:hover i.material-icons {
   /* Hide favorites/top-buttons on mobile (desktop only) */
   .favorites-section {
     display: none;
+  }
+
+  /* Floating cart button for mobile */
+  .mobile-cart-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 1rem;
+    bottom: 4.5rem;
+    z-index: 2000;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--mustard);
+    color: white;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    font-size: 1.4rem;
+    text-decoration: none;
+  }
+
+  .mobile-cart-fab .cart-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--burgundy);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    display: inline-block;
   }
 
   /* Hide the inline order sidebar on mobile; show a floating checkout button instead */
