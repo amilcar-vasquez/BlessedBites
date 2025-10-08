@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', function() {
         var elems = document.querySelectorAll('select');
         M.FormSelect.init(elems);
     }, 100); // Give it 100ms to ensure DOM is stable
+
+    // Initialize order from localStorage
+    const existing = JSON.parse(localStorage.getItem('blessed_order') || '[]');
+    syncOrderState(existing);
 });
 
 
@@ -67,28 +71,30 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-document.querySelectorAll('.btn-add-order').forEach(button => {
-    button.addEventListener('click', function (e) {
-        e.preventDefault();
-        const menuItemID = parseInt(button.dataset.id);
-        const itemName = button.dataset.name;
-        const itemPrice = parseFloat(button.dataset.price);
+// Use event delegation to catch dynamically loaded menu items
+document.addEventListener('click', function (e) {
+    const target = e.target.closest('.btn-add-order');
+    if (!target) return;
+    e.preventDefault();
 
-        // Prompt user for quantity
-        const itemAmount = parseInt(prompt(`Enter quantity for ${itemName}:`, "1"), 10);
-        if (isNaN(itemAmount) || itemAmount <= 0) {
-            alert("Invalid quantity. Please enter a positive number.");
-            return;
-        }
+    const menuItemID = parseInt(target.dataset.id);
+    const itemName = target.dataset.name;
+    const itemPrice = parseFloat(target.dataset.price);
 
-        // Create or update the current order object
-        let orderData = JSON.parse(document.getElementById('orderData').value || '[]');
-        orderData.push({ id: menuItemID, name: itemName, price: itemPrice, qty: itemAmount });
-        document.getElementById('orderData').value = JSON.stringify(orderData);
+    // Prompt user for quantity
+    const itemAmount = parseInt(prompt(`Enter quantity for ${itemName}:`, "1"), 10);
+    if (isNaN(itemAmount) || itemAmount <= 0) {
+        alert("Invalid quantity. Please enter a positive number.");
+        return;
+    }
 
-        // Update the order summary display
-        renderOrder(orderData);
-    });
+    // Load existing order from localStorage
+    let orderData = JSON.parse(localStorage.getItem('blessed_order') || '[]');
+    orderData.push({ id: menuItemID, name: itemName, price: itemPrice, qty: itemAmount });
+    localStorage.setItem('blessed_order', JSON.stringify(orderData));
+
+    // Sync to any hidden inputs and render
+    syncOrderState(orderData);
 });
 
 function renderOrder(orderData) {
@@ -103,6 +109,42 @@ function renderOrder(orderData) {
         total += item.price * item.qty;
     });
     orderTotal.textContent = `Total: $${total.toFixed(2)}`;
+    // Update cart badges (desktop and mobile)
+    const count = orderData.reduce((acc, it) => acc + (it.qty || 0), 0);
+    const desktopEl = document.getElementById('cartCount');
+    if (desktopEl) {
+        desktopEl.textContent = count;
+        desktopEl.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    document.querySelectorAll('.cart-count').forEach(el => {
+        el.textContent = count;
+        el.style.display = count > 0 ? 'inline-block' : 'none';
+    });
+}
+
+function syncOrderState(orderData) {
+    // Render order UI if present
+    try {
+        renderOrder(orderData);
+    } catch (err) {
+        // ignore missing DOM elements
+    }
+    // Sync hidden inputs used by forms
+    const hid = document.getElementById('orderData');
+    if (hid) hid.value = JSON.stringify(orderData || []);
+    const hid2 = document.getElementById('orderDataCheckout');
+    if (hid2) hid2.value = JSON.stringify(orderData || []);
+    // Update cart badges even if not rendering order list
+    const count = (orderData || []).reduce((acc, it) => acc + (it.qty || 0), 0);
+    const desktopEl2 = document.getElementById('cartCount');
+    if (desktopEl2) {
+        desktopEl2.textContent = count;
+        desktopEl2.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    document.querySelectorAll('.cart-count').forEach(el => {
+        el.textContent = count;
+        el.style.display = count > 0 ? 'inline-block' : 'none';
+    });
 }
 
 function flyToCart(elem) {

@@ -23,7 +23,10 @@
               <a href="/">Anything delicious</a>
             </div>
           </div>          
-        <div class="order-sidebar">
+                <!-- Mobile-only checkout button (visible when sidebar is hidden on small screens) -->
+                <a id="mobileCheckoutButton" href="/checkout" class="btn grayed-out" style="display:none;">I'm Done</a>
+
+                <div class="order-sidebar home-order-sidebar">
             <h6>Your Order</h6>
             {{ if .AlertMessage }}
         <div class="flash-message {{.AlertType}}">
@@ -60,6 +63,7 @@
     {{ end }}
                 <!-- Hidden fields for order data -->
                 <input type="hidden" name="orderData" id="orderData">
+                <a href="/checkout" class="btn grayed-out" style="display:inline-block; margin-right:0.5rem;">I'm Done</a>
                 <button type="submit" class="btn mustard">Place Order</button>
             </form>
         </div>
@@ -67,6 +71,8 @@
 
     <!-- Menu Items Grid -->
     <div class="col s12 m8 l9">
+        <!-- Favorites (desktop only) -->
+        <div class="favorites-section">
         {{ if .IsAuthenticated }}
          {{ if .TopUserMenuItems }}
         <div class="top-buttons-message"><p>Your Favorites</p></div>
@@ -82,6 +88,7 @@
     </div>
     {{ end }}
 </div>
+        </div>
 {{ end }}
         <form action="/search" method="GET" class="search-form">
             <div class="search-box-wrapper">
@@ -94,14 +101,13 @@
         <div id="results"></div>        
         <div id="menuCards" class="row equal-height">
             {{range .MenuItems}}
-                <div class="col s12 m6 l4 menu-card">
+                <div class="col s6 m6 l4 menu-card">
                     <div class="card">
                         <div class="card-image">
                             <img class="responsive-img" src="/{{.ImageURL}}" alt="{{.Name}}">
                         </div>
                         <div class="card-content">
                             <span class="card-title">{{.Name}} {{ if .Popular }}<span class="thumb-badge"><i class="material-icons">thumb_up</i></span>{{ end }}</span>
-                            <p>{{.Description}}</p>
                             <p><strong>${{printf "%.2f" .Price}}</strong></p>
                         </div>
                         <div class="card-btn darken">

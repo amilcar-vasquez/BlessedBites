@@ -47,6 +47,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("/search.json", app.searchMenuJSONHandler)
 	mux.HandleFunc("/menu/category/", app.viewMenuByCategory)
 	mux.HandleFunc("POST /orders", app.createOrderHandler)
+	mux.HandleFunc("GET /checkout", app.checkoutHandler)
 	mux.HandleFunc("POST /ratings", app.createRatingHandler)
 	mux.HandleFunc("GET /ratings/{menu_item_id}", app.getAverageRatingHandler)
 	mux.HandleFunc("POST /menu/active", app.requireAuth(app.setActiveStatus))

@@ -54,6 +54,13 @@
               <li><a href="/signup" class="btn mustard darken-2">Sign Up</a></li>
               
             {{ end }}
+            <!-- Cart button -->
+            <li>
+              <a href="/checkout" id="cartButton" class="btn grayed-out" style="margin-left:8px; position:relative;">
+                <i class="material-icons">shopping_cart</i>
+                <span id="cartCount" style="position:absolute; top:-6px; right:-6px; background:#e49629; color:white; border-radius:50%; padding:2px 6px; font-size:0.8rem; display:none;">0</span>
+              </a>
+            </li>
           </ul>
         </div>
       </nav>
@@ -79,6 +86,12 @@
           <li><a href="/login">Log In</a></li>
           <li><a href="/signup">Sign Up</a></li>
         {{ end }}
+        <li>
+          <a href="/checkout" id="cartButtonMobile" class="btn grayed-out" style="margin:8px; position:relative; display:flex; align-items:center;">
+            <i class="material-icons">shopping_cart</i>
+            <span class="cart-count" style="margin-left:8px; background:#e49629; color:white; border-radius:50%; padding:2px 6px; font-size:0.8rem; display:none;">0</span>
+          </a>
+        </li>
       </ul>
 
       <script>

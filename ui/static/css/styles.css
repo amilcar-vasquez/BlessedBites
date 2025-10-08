@@ -539,8 +539,24 @@ nav a.sidenav-trigger:hover i.material-icons {
     display: block;
   }
 
+  /* Keep the grid wrapping on small screens so we can show two cards per row. */
   .row.equal-height {
-    flex-direction: column;
+    /* allow wrapping rows (do not force single-column) */
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  /* Ensure menu cards are 2-per-row on small screens and have inner padding */
+  #menuCards .menu-card {
+    box-sizing: border-box;
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 0.35rem;
+  }
+
+  /* Make the menu item title smaller on mobile to avoid overflow */
+  .card-title {
+    font-size: 1rem;
   }
 
   .category-sidebar {
@@ -554,6 +570,35 @@ nav a.sidenav-trigger:hover i.material-icons {
 
   .flash-message::before {
     font-size: 1.1rem;
+  }
+
+  /* Hide favorites/top-buttons on mobile (desktop only) */
+  .favorites-section {
+    display: none;
+  }
+
+  /* Hide the inline order sidebar on mobile; show a floating checkout button instead */
+  .home-order-sidebar {
+    display: none;
+  }
+
+  #mobileCheckoutButton {
+    display: inline-block;
+    position: fixed;
+    right: 1rem;
+    bottom: 4.5rem; /* above the order-sidebar when present or above other UI */
+    z-index: 2000;
+    padding: 0.6rem 0.9rem;
+    border-radius: 999px;
+    background-color: var(--grayed-out);
+    color: white;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+    font-weight: 600;
+  }
+
+  /* Make the floating button more prominent */
+  #mobileCheckoutButton:hover {
+    background-color: var(--burgundy);
   }
 }
 
