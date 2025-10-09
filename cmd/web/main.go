@@ -5,17 +5,42 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"html/template"
+	"log/slog"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
 	"github.com/amilcar-vasquez/blessed-bites/internal/mailer"
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
-	"html/template"
-	"log/slog"
-	"os"
-	"time"
 )
 
-var sessionStore = sessions.NewCookieStore([]byte("super-secret-key"))
+// Initialize session store with proper configuration
+func initSessionStore() *sessions.CookieStore {
+	sessionKey := []byte(os.Getenv("SESSION_KEY"))
+	if len(sessionKey) == 0 {
+		// Fallback key for development only - DIFFERENT from CSRF key
+		sessionKey = []byte("session-key-32-bytes-long-different")
+	}
+
+	store := sessions.NewCookieStore(sessionKey)
+
+	// Configure session options with DIFFERENT cookie name to avoid CSRF conflicts
+	store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   3600, // 1 hour
+		HttpOnly: true,
+		Secure:   os.Getenv("APP_ENV") != "development", // Only secure in production
+		SameSite: http.SameSiteDefaultMode,
+		Domain:   "", // Explicit empty domain for localhost
+	}
+
+	return store
+}
+
+var sessionStore = initSessionStore()
 
 type application struct {
 	addr           *string
@@ -32,6 +57,8 @@ type application struct {
 	logger         *slog.Logger
 	templateCache  map[string]*template.Template
 	mailer         *mailer.Mailer // Add mailer field
+	env            string
+	csrfKey        []byte // CSRF key for custom implementation
 }
 
 func main() {
@@ -79,7 +106,9 @@ func main() {
 			Password: os.Getenv("MAIL_PASSWORD"),
 			From:     os.Getenv("MAIL_USERNAME"),
 		},
+		env: os.Getenv("APP_ENV"),
 	}
+	app.logger.Info("application starting", "addr", *app.addr, "env", app.env)
 
 	err = app.serve()
 	if err != nil {

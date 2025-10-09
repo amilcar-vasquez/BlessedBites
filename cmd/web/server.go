@@ -7,14 +7,18 @@ import (
 	"os"
 	"time"
 
-	"github.com/gorilla/csrf"
+	"github.com/amilcar-vasquez/blessed-bites/internal/csrf"
 )
 
 func (app *application) serve() error {
-	csrfKey := []byte("ZQnXOK/iAwl+wMHKrQxS1VEw+9KAZUq=")
+	// Use the SESSION_KEY for CSRF to ensure consistency with session store
+	csrfKey := []byte(os.Getenv("SESSION_KEY"))
+	if len(csrfKey) == 0 {
+		csrfKey = []byte("session-key-32-bytes-long-different")
+	}
 
-	// Allow toggling secure cookies and trusted origins for development
-	secure := true
+	// Set secure to true if the app environment is NOT development
+	secure := os.Getenv("APP_ENV") != "development"
 	trusted := []string{"https://blessedbites.bz"}
 	if os.Getenv("APP_ENV") == "development" {
 		secure = false
@@ -22,28 +26,25 @@ func (app *application) serve() error {
 		trusted = []string{"http://localhost:4000", "http://127.0.0.1:4000"}
 	}
 
-	csrfMiddleware := csrf.Protect(
-		csrfKey,
-		csrf.Secure(secure),
-		csrf.SameSite(csrf.SameSiteDefaultMode),
-		csrf.HttpOnly(true),
-		csrf.Path("/"),
-		csrf.TrustedOrigins(trusted),
-		csrf.ErrorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			app.logger.Error("CSRF failure",
-				"method", r.Method,
-				"path", r.URL.Path,
-				"form_token", r.FormValue("gorilla.csrf.Token"),
-				"header_token", r.Header.Get("X-CSRF-Token"),
-				"cookie", r.Header.Get("Cookie"),
-				"origin", r.Header.Get("Origin"),
-				"referer", r.Referer(),
-			)
-			http.Error(w, "Forbidden - CSRF token invalid", http.StatusForbidden)
-		},
-		),
-		),
-	)
+	// Log CSRF configuration for debugging
+	if os.Getenv("APP_ENV") == "development" {
+		app.logger.Info("CSRF Configuration",
+			"secure", secure,
+			"trusted_origins", trusted,
+			"key_length", len(csrfKey))
+	}
+
+	// Store CSRF key in app for use in handlers
+	app.csrfKey = csrfKey
+
+	// Create custom CSRF middleware
+	csrfConfig := csrf.Config{
+		Key:    csrfKey,
+		Secure: secure,
+		MaxAge: 3600, // 1 hour
+	}
+
+	csrfMiddleware := csrf.Middleware(csrfConfig)
 
 	srv := &http.Server{
 		Addr:         *app.addr,

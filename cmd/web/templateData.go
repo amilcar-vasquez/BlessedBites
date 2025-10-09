@@ -2,10 +2,12 @@
 package main
 
 import (
-	"github.com/amilcar-vasquez/blessed-bites/internal/data"
-	"github.com/gorilla/csrf"
 	"html/template"
 	"net/http"
+	"os"
+
+	"github.com/amilcar-vasquez/blessed-bites/internal/csrf"
+	"github.com/amilcar-vasquez/blessed-bites/internal/data"
 )
 
 type TemplateData struct {
@@ -53,51 +55,69 @@ func NewTemplateData() *TemplateData {
 }
 
 func (app *application) addDefaultData(td *TemplateData, w http.ResponseWriter, r *http.Request) *TemplateData {
-	td.CSRFField = csrf.TemplateField(r)
-	session, _ := app.sessionStore.Get(r, "session")
+	if td == nil {
+		td = &TemplateData{}
+	}
 
-	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
+	// Get session for reading auth status
+	session, err := app.sessionStore.Get(r, "session")
+	if err != nil {
+		app.logger.Error("Failed to get session", "error", err)
+		// Continue with empty session
+		session, _ = app.sessionStore.New(r, "session")
+	}
+
+	// Generate CSRF token using our custom implementation
+	secure := os.Getenv("APP_ENV") != "development"
+	td.CSRFField = csrf.TemplateField(r, app.csrfKey, w, secure)
+
+	// Check authentication status WITHOUT modifying session
+	if userID, exists := session.Values["authenticatedUserID"]; exists {
 		td.IsAuthenticated = true
-	}
 
-	if role, ok := session.Values["userRole"].(string); ok {
-		td.CurrentUserRole = role
-	}
-
-	if userID, ok := session.Values["authenticatedUserID"].(int64); ok {
-		td.CurrentUserID = userID
-	}
-
-	if fullName, ok := session.Values["fullName"].(string); ok {
-		// Set CurrentUserFullName to just the first word (first name)
-		if len(fullName) > 0 {
-			for i, r := range fullName {
-				if r == ' ' {
-					td.CurrentUserFullName = fullName[:i]
-					break
-				}
-			}
-			if td.CurrentUserFullName == "" {
-				td.CurrentUserFullName = fullName
-			}
+		if id, ok := userID.(int); ok {
+			td.CurrentUserID = int64(id)
 		}
 	}
 
-	//add logic for supporting flash messages
+	// Debug: Log all session values
+	if os.Getenv("APP_ENV") == "development" {
+		app.logger.Info("Session values debug",
+			"authenticatedUserID", session.Values["authenticatedUserID"],
+			"userRole", session.Values["userRole"],
+			"fullName", session.Values["fullName"],
+			"phoneNo", session.Values["phoneNo"],
+			"authenticated", session.Values["authenticated"])
+	}
 
-	if flashes := session.Flashes("success"); len(flashes) > 0 {
-		td.AlertMessage = flashes[0].(string)
-		td.AlertType = "success" // NEW: Custom class instead of Materialize colors
+	// Get user details from session (avoid database calls)
+	if role, exists := session.Values["userRole"]; exists {
+		if roleStr, ok := role.(string); ok {
+			td.CurrentUserRole = roleStr
+		}
 	}
-	if flashes := session.Flashes("error"); len(flashes) > 0 {
-		td.AlertMessage = flashes[0].(string)
-		td.AlertType = "error" // You can customize more types this way
+
+	if fullName, exists := session.Values["fullName"]; exists {
+		if nameStr, ok := fullName.(string); ok {
+			td.CurrentUserFullName = nameStr
+		}
 	}
-	if err := session.Save(r, w); err != nil {
-		app.logger.Error("Error saving session", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return nil
+
+	if phone, exists := session.Values["phoneNo"]; exists {
+		if phoneStr, ok := phone.(string); ok {
+			td.CurrentUserPhone = phoneStr
+		}
 	}
+
+	// Handle flash messages - READ ONLY, don't modify session
+	if flash, exists := session.Values["flash"]; exists && flash != "" {
+		if flashStr, ok := flash.(string); ok && flashStr != "" {
+			td.AlertMessage = flashStr
+			td.AlertType = "alert-info" // default
+			// NOTE: Flash removal should be handled by individual handlers, not here
+			// Modifying sessions in addDefaultData breaks CSRF token validation
+		}
+	}
+
 	return td
-
 }

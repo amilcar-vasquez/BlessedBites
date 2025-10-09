@@ -43,42 +43,63 @@ func noCacheMiddleware(h http.Handler) http.Handler {
 func (app *application) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, _ := app.sessionStore.Get(r, "session")
+
 		auth, ok := session.Values["authenticated"].(bool)
+
+		// Debug logging
+		app.logger.Info("requireAuth middleware",
+			"path", r.URL.Path,
+			"app.env", app.env,
+			"auth", auth,
+			"ok", ok,
+			"session_values", session.Values)
+
+		// ✅ Bypass auth in local development
+		if app.env == "development" {
+			app.logger.Info("Bypassing authentication for localhost (development mode)")
+			session.Values["authenticated"] = true
+			session.Values["authenticatedUserID"] = int64(1)
+			session.Values["userRole"] = "admin"
+			session.Values["fullName"] = "Local Dev"
+			err := session.Save(r, w)
+			if err != nil {
+				app.logger.Error("Failed to save session in development bypass", "error", err)
+			}
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		if !ok || !auth {
-			// Set a flash message
 			flashSession, _ := app.sessionStore.Get(r, "flash")
 			flashSession.Values["alertMessage"] = "This is an admin-only area. Please log in first."
 			flashSession.Values["alertType"] = "alert-warning"
 			flashSession.Save(r, w)
 
-			// Redirect to login page
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
+
 		next.ServeHTTP(w, r)
 	}
 }
 
-// IsAuthenticated checks if the user is authenticated by checking the session.
 func (app *application) IsAuthenticated(r *http.Request) bool {
-	session, _ := app.sessionStore.Get(r, "session-name")
-	_, ok := session.Values["userID"]
-	return ok
+	session, _ := app.sessionStore.Get(r, "session")
+	auth, ok := session.Values["authenticated"].(bool)
+	return ok && auth
 }
 
-// CurrentUserID retrieves the current user's ID from the session.
 func (app *application) CurrentUserID(r *http.Request) (int64, error) {
-	session, _ := app.sessionStore.Get(r, "session-name")
-	id, ok := session.Values["userID"].(int64)
+	session, _ := app.sessionStore.Get(r, "session")
+	id, ok := session.Values["authenticatedUserID"].(int64)
 	if !ok {
 		return 0, fmt.Errorf("user ID not found in session")
 	}
 	return id, nil
 }
 
-// CurrentUser retrieves the current user full name from the session.
 func (app *application) CurrentUserFullName(r *http.Request) (string, error) {
-	session, _ := app.sessionStore.Get(r, "session-name")
+	session, _ := app.sessionStore.Get(r, "session")
 	fullName, ok := session.Values["fullName"].(string)
 	if !ok {
 		return "", fmt.Errorf("user full name not found in session")

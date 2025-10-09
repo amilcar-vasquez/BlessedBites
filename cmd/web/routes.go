@@ -60,5 +60,10 @@ func (app *application) routes() http.Handler {
 		http.ServeFile(w, r, "ui/static/img/favicon.ico")
 	})
 
+	// Dev-only debug route to inspect CSRF token/cookie for local troubleshooting
+	if os.Getenv("APP_ENV") == "development" {
+		mux.HandleFunc("GET /debug/csrf", app.debugCSRFHandler)
+	}
+
 	return app.loggingMiddleware(mux)
 }

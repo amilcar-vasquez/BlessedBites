@@ -9,22 +9,6 @@ import (
 	"strconv"
 )
 
-// BaseHandler renders the common elements
-func (app *application) base(w http.ResponseWriter, r *http.Request) {
-	// Prepare the common template data
-	data := NewTemplateData()
-	data.Title = "Blessed Bites - Base"
-	data.HeaderText = "Welcome to Blessed Bites"
-
-	// Render the base template
-	err := app.render(w, http.StatusOK, "base.tmpl", data)
-	if err != nil {
-		app.logger.Error("failed to render base template", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
 // helper function to get top user items:
 func (app *application) getTopUserMenuItems(userID int, limit int) []*data.MenuItem {
 	topItems := []*data.MenuItem{}

@@ -1,0 +1,94 @@
+/* Responsive overrides kept separate for clarity */
+
+/* Make tables responsive on small screens */
+@media (max-width: 768px) {
+  /* Allow highlight tables to scroll horizontally instead of overflowing */
+  .app-container .highlight {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: none;
+    margin-bottom: 1rem;
+  }
+
+  /* Ensure table cells wrap and don't force the table wider than the viewport */
+  .app-container .highlight th,
+  .app-container .highlight td {
+    white-space: normal !important;
+    word-break: break-word !important;
+    vertical-align: middle;
+  }
+
+  /* Images inside tables should scale down */
+  .app-container .highlight img {
+    max-width: 64px;
+    height: auto;
+    display: block;
+  }
+
+  /* Make action buttons smaller and tighter on mobile */
+  .app-container .btn,
+  .app-container .btn-small {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.85rem !important;
+    line-height: 1 !important;
+    min-width: 2.4rem !important;
+    border-radius: 8px !important;
+  }
+
+  /* Hide description, category columns and show icon-only controls on very small screens */
+  .app-container table.highlight thead th:nth-child(2),
+  .app-container table.highlight tbody td:nth-child(2),
+  .app-container table.highlight thead th:nth-child(4),
+  .app-container table.highlight tbody td:nth-child(4) {
+    display: none !important;
+  }
+
+  /* Hide text buttons in the actions cell and show icon-only buttons */
+  .app-container td > form > button:not(.mobile-only-icon) {
+    display: none !important;
+  }
+
+  .app-container .mobile-only-icon {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.35rem !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    font-size: 1.1rem !important;
+  }
+
+  /* Even smaller for inline table buttons */
+  .app-container table .btn-small {
+    padding: 0.2rem 0.45rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* When forms are inline inside table cells, make them stack neatly */
+  .app-container td > form {
+    display: inline-block;
+    margin: 0.15rem 0.25rem 0.15rem 0;
+  }
+
+  /* Slightly reduce card title to avoid overflow on narrow screens */
+  .app-container .card-title {
+    font-size: 0.95rem !important;
+  }
+
+  /* Reduce padding on the main content area when very narrow */
+  .app-container .main-content {
+    padding: 0.75rem !important;
+    margin: 1rem 0 !important;
+  }
+}
+
+/* Gentle improvements for medium screens to avoid cramped buttons */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .app-container .btn-small {
+    padding: 0.35rem 0.6rem !important;
+    font-size: 0.95rem !important;
+  }
+}

@@ -162,3 +162,28 @@ function flyToCart(elem) {
 }
 // Example usage:
 // flyToCart(document.querySelector('.dish-image'));
+
+// Development helper: log CSRF form token and cookie to help debug CSRF failures.
+// This only runs on localhost to avoid leaking tokens in production.
+if (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    document.addEventListener('DOMContentLoaded', function () {
+        try {
+            const getCookie = (name) => document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1] || '';
+            const csrfCookie = getCookie('_gorilla_csrf');
+            console.info('DEV CSRF DEBUG: _gorilla_csrf cookie=', csrfCookie);
+
+            document.querySelectorAll('form').forEach(form => {
+                const input = form.querySelector('input[name="gorilla.csrf.Token"]');
+                if (input) {
+                    console.info('DEV CSRF DEBUG: form action=', form.action, 'form token=', input.value);
+                    // Intercept submit to log tokens right before submission
+                    form.addEventListener('submit', function (ev) {
+                        console.info('DEV CSRF DEBUG: submitting', form.action, 'form token=', input.value, 'cookie=', getCookie('_gorilla_csrf'));
+                    });
+                }
+            });
+        } catch (err) {
+            console.warn('DEV CSRF DEBUG: failed to inspect forms', err);
+        }
+    });
+}

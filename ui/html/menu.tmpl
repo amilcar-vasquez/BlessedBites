@@ -1,5 +1,5 @@
 {{define "content"}}
-<div class="container" style="margin-top: 3rem;">
+<div class="app-container" style="margin-top: 3rem;">
   <h4>Menu Items</h4>
 
   {{ if .MenuItems }}
@@ -32,22 +32,30 @@
           <form action="/menu/edit" method="POST" style="display:inline;">
             {{ $.CSRFField  }}
             <input type="hidden" name="id" value="{{.ID}}">
-            <button class="btn-small mustard" type="submit">Update</button>
+            <button class="btn-small mustard" type="submit" title="Edit {{.Name}}" aria-label="Edit {{.Name}}">
+              <i class="material-icons">edit</i>
+            </button>
           </form>
           <form action="/menu/delete" method="POST" style="display:inline;">
             {{ $.CSRFField  }}
             <input type="hidden" name="id" value="{{.ID}}">
-            <button class="btn-small burgundy" type="submit" onclick="return confirm('Delete this item?');">Delete</button>
+            <button class="btn-small burgundy" type="submit" title="Delete {{.Name}}" aria-label="Delete {{.Name}}" onclick="return confirm('Delete this item?');">
+              <i class="material-icons">delete</i>
+            </button>
           </form>
           <form action="/menu/active" method="POST" style="display:inline;">
             {{ $.CSRFField  }}
             <input type="hidden" name="id" value="{{.ID}}">
             {{ if .IsActive }}
             <input type="hidden" name="active_status" value="false">
-            <button class="btn-small olive" type="submit">Make Unavailable</button>
+            <button class="btn-small olive" type="submit" title="Make {{.Name}} unavailable" aria-label="Make {{.Name}} unavailable">
+              <i class="material-icons">visibility_off</i>
+            </button>
             {{ else }}
             <input type="hidden" name="active_status" value="true">
-            <button class="btn-small grayed-out" type="submit">Make Available</button>
+            <button class="btn-small grayed-out" type="submit" title="Make {{.Name}} available" aria-label="Make {{.Name}} available">
+              <i class="material-icons">visibility</i>
+            </button>
             {{ end }}
           </form>
         </td>
