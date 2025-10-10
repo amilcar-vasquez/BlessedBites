@@ -26,7 +26,7 @@
                 <!-- Mobile-only checkout button (visible when sidebar is hidden on small screens) -->
                 <a id="mobileCheckoutButton" href="/checkout" class="btn grayed-out" style="display:none;">I'm Done</a>
 
-                <div class="order-sidebar home-order-sidebar">
+                <div class="order-sidebar home-order-sidebar receipt">
             <h6>Your Order</h6>
             {{ if .AlertMessage }}
         <div class="flash-message {{.AlertType}}">
@@ -63,8 +63,7 @@
     {{ end }}
                 <!-- Hidden fields for order data -->
                 <input type="hidden" name="orderData" id="orderData">
-                <a href="/checkout" class="btn grayed-out" style="display:inline-block; margin-right:0.5rem;">I'm Done</a>
-                <button type="submit" class="btn mustard">Place Order</button>
+                <a href="/checkout" class="btn grayed-out" style="display:inline-block; margin-right:0.5rem;">Checkout</a>
             </form>
         </div>
     </div>

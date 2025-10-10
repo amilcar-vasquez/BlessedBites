@@ -36,14 +36,17 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 		return err
 	}
 
+	// Set the status header before writing the body (correct order).
 	w.WriteHeader(status)
 
+	// Write the rendered template to the ResponseWriter.
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		err := fmt.Errorf("failed to write template to browser: %s", err)
-		app.logger.Error("failed to write template to browser", "error", err)
-
-		return err
+		// Log write failures at Info to avoid causing handlers to attempt
+		// secondary writes (which would result in superfluous WriteHeader
+		// logs). In practice these are often client disconnects.
+		app.logger.Info("failed to write template to browser", "error", err)
+		return nil
 	}
 
 	return nil

@@ -60,12 +60,8 @@ func (app *application) addDefaultData(td *TemplateData, w http.ResponseWriter, 
 	}
 
 	// Get session for reading auth status
-	session, err := app.sessionStore.Get(r, "session")
-	if err != nil {
-		app.logger.Error("Failed to get session", "error", err)
-		// Continue with empty session
-		session, _ = app.sessionStore.New(r, "session")
-	}
+	// obtain session safely (don't fail on invalid cookie)
+	session, _ := app.getSessionSafe(nil, r, "session")
 
 	// Generate CSRF token using our custom implementation
 	secure := os.Getenv("APP_ENV") != "development"

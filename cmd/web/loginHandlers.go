@@ -14,35 +14,29 @@ import (
 
 // handler for rendering the login form
 func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
-	//check if user is already logged in
-	session, err := app.sessionStore.Get(r, "session")
-	if err != nil {
-		app.logger.Error("Failed to get session", "error", err)
-		http.Error(w, "Failed to retrieve session", http.StatusInternalServerError)
-		return
-	}
+	session, _ := app.getSessionSafe(w, r, "session")
+	// check if user is already logged in
 	isAuthenticated, ok := session.Values["authenticated"].(bool)
 	if ok && isAuthenticated {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 	//if not logged in, render the login form
-
-	// Handle signup-data session first
-	session, _ = app.sessionStore.Get(r, "signup-data")
-	if session.Values["email"] != nil {
-		session.Options.MaxAge = -1 // delete the session
-		session.Save(r, w)
+	// Handle signup-data session first (separate session var)
+	signupSession, _ := app.getSessionSafe(w, r, "signup-data")
+	if signupSession != nil && signupSession.Values["email"] != nil {
+		signupSession.Options.MaxAge = -1 // delete the session
+		signupSession.Save(r, w)
 	}
 
 	// Generate template data with CSRF token AFTER session operations
 	data := app.addDefaultData(NewTemplateData(), w, r)
 
 	// Add signup success message if needed
-	if session.Values["email"] != nil {
+	if signupSession != nil && signupSession.Values["email"] != nil {
 		alertMessage := "Sign up was successful with (" +
-			"Email: " + session.Values["email"].(string) + " , " +
-			"Password: " + session.Values["password"].(string) +
+			"Email: " + signupSession.Values["email"].(string) + " , " +
+			"Password: " + signupSession.Values["password"].(string) +
 			")"
 		data.AlertMessage = alertMessage
 		data.AlertType = "success"
@@ -50,20 +44,20 @@ func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("CSRF token:", csrf.Token(r))
 
-	flashSession, _ := app.sessionStore.Get(r, "flash")
-	if msg, ok := flashSession.Values["alertMessage"].(string); ok {
-		data.AlertMessage = msg
-		if typ, ok := flashSession.Values["alertType"].(string); ok {
-			data.AlertType = typ
-		} else {
-			data.AlertType = "alert-info"
+	flashSession, _ := app.getSessionSafe(w, r, "flash")
+	if flashSession != nil {
+		if msg, ok := flashSession.Values["alertMessage"].(string); ok {
+			data.AlertMessage = msg
+			if typ, ok := flashSession.Values["alertType"].(string); ok {
+				data.AlertType = typ
+			} else {
+				data.AlertType = "alert-info"
+			}
+			flashSession.Options.MaxAge = -1 // clear flash
+			flashSession.Save(r, w)
 		}
-		flashSession.Options.MaxAge = -1 // clear flash
-		flashSession.Save(r, w)
 	}
-
-	err = app.render(w, http.StatusOK, "login.tmpl", data)
-	if err != nil {
+	if err := app.render(w, http.StatusOK, "login.tmpl", data); err != nil {
 		app.logger.Error("failed to render login page", "template", "signin.tmpl", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -73,18 +67,22 @@ func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
 
 // handler for processing the login form
 func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := app.getSessionSafe(w, r, "session")
 	// Check if the user is already logged in
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
+	// ensure we have a session object to use
+	session, _ = app.getSessionSafe(w, r, "session")
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Invalid form", http.StatusBadRequest)
 		return
 	}
 
+	// reuse session variable
 	// Check CSRF token
 	email := strings.TrimSpace(r.Form.Get("email"))
 	password := r.Form.Get("password")
@@ -163,13 +161,8 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Store user information in the session
-	session, err := app.sessionStore.Get(r, "session")
-	if err != nil {
-		app.logger.Error("Failed to get session", "error", err)
-		http.Error(w, "Failed to retrieve session", http.StatusInternalServerError)
-		return
-	}
+	// Store user information in the session (safe getter)
+	session, _ = app.getSessionSafe(w, r, "session")
 
 	session.Values["authenticated"] = true
 	session.Values["authenticatedUserID"] = user.ID // <- store the user ID
@@ -201,11 +194,11 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	session, err := app.sessionStore.Get(r, "session")
+	session, err := app.getSessionSafe(w, r, "session")
 	if err != nil {
 		app.logger.Error("Failed to get session", "error", err)
-		http.Error(w, "Failed to retrieve session", http.StatusInternalServerError)
-		return
+		// continue with logout flow but ensure session is invalidated client-side
+		session = nil
 	}
 
 	// Log the logout
@@ -217,12 +210,18 @@ func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	session.Options.MaxAge = -1
 
 	// Optional: set a flash message before clearing
-	// If you're not using flash messages, you can skip this
-	flashSession, _ := app.sessionStore.New(r, "flash")
-	flashSession.Values["alertMessage"] = "You have been logged out successfully."
-	flashSession.Values["alertType"] = "alert-success"
+	flashSession, _ := app.getSessionSafe(w, r, "flash")
+	if flashSession != nil {
+		flashSession.Values["alertMessage"] = "You have been logged out successfully."
+		flashSession.Values["alertType"] = "alert-success"
+		flashSession.Save(r, w)
+	}
 
-	err = session.Save(r, w)
+	if session != nil {
+		err = session.Save(r, w)
+	} else {
+		err = nil
+	}
 	if err != nil {
 		app.logger.Error("failed to save invalidated session", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

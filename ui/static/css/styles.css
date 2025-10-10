@@ -320,6 +320,80 @@ nav .brand-logo img {
   margin-bottom: 0.5rem;
 }
 
+/* Receipt / POS-like styling */
+.order-sidebar.receipt {
+  background-color: transparent; /* keep parent bg showing through for compact look */
+  color: var(--text-dark);
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+}
+
+.order-sidebar.receipt h6 {
+  font-family: 'Roboto', monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-dark);
+  margin: 0 0 0.5rem 0;
+}
+
+.order-sidebar.receipt ul {
+  list-style: none;
+  padding: 0.25rem 0;
+  margin: 0 0 0.5rem 0;
+  font-family: 'Roboto', monospace;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+.order-sidebar.receipt li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0;
+  border-bottom: 1px dotted rgba(0,0,0,0.08); /* subtle dotted separator */
+}
+
+.order-sidebar.receipt li .item-left {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.order-sidebar.receipt li .qty {
+  min-width: 2.2rem;
+  text-align: right;
+  color: rgba(0,0,0,0.8);
+}
+
+.order-sidebar.receipt li .name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 10rem;
+}
+
+.order-sidebar.receipt li .price {
+  min-width: 4.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.order-sidebar.receipt .order-summary {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Roboto', monospace;
+}
+
+.order-sidebar.receipt .small-note {
+  font-size: 0.8rem;
+  color: rgba(0,0,0,0.6);
+  margin-top: 0.4rem;
+}
+
 .input-field-mustard:focus:not([readonly]) {
   color: var(--mustard);
   border-bottom: 1px solid var(--mustard);

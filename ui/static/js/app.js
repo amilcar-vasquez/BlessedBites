@@ -9,6 +9,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize order from localStorage
     const existing = JSON.parse(localStorage.getItem('blessed_order') || '[]');
     syncOrderState(existing);
+    // If a server flash message indicates success (e.g. after placing an order), clear stored order
+    try {
+        const flash = document.querySelector('.flash-message');
+        if (flash) {
+            const classes = flash.className || '';
+            const text = (flash.textContent || '').toLowerCase();
+            const isSuccessClass = classes.split(' ').some(c => c.toLowerCase().includes('success'));
+            const looksLikeOrderSuccess = /order placed|placed!|order placed!|order confirmed|order placed/i.test(text);
+            if (isSuccessClass || looksLikeOrderSuccess) {
+                // Clear saved order so it doesn't persist after successful checkout
+                localStorage.removeItem('blessed_order');
+                syncOrderState([]);
+            }
+        }
+    } catch (err) {
+        console.warn('Failed to inspect flash message for order clear', err);
+    }
 });
 
 
@@ -100,15 +117,48 @@ document.addEventListener('click', function (e) {
 function renderOrder(orderData) {
     const orderList = document.getElementById('orderList');
     const orderTotal = document.getElementById('orderTotal');
+    if (!orderList) return;
     orderList.innerHTML = '';
     let total = 0;
+    if (!orderData || orderData.length === 0) {
+        const emptyLi = document.createElement('li');
+        emptyLi.className = 'empty-order';
+        emptyLi.textContent = 'Your order is empty.';
+        orderList.appendChild(emptyLi);
+        if (orderTotal) orderTotal.textContent = `Total: $0.00`;
+        return;
+    }
+
     orderData.forEach(item => {
         const li = document.createElement('li');
-        li.textContent = `${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}`;
+        li.className = 'order-item';
+
+        const left = document.createElement('div');
+        left.className = 'item-left';
+
+        const qty = document.createElement('span');
+        qty.className = 'qty';
+        qty.textContent = item.qty + 'x';
+
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.textContent = item.name;
+
+        left.appendChild(qty);
+        left.appendChild(name);
+
+        const price = document.createElement('span');
+        price.className = 'price';
+        price.textContent = `$${(item.price * item.qty).toFixed(2)}`;
+
+        li.appendChild(left);
+        li.appendChild(price);
         orderList.appendChild(li);
+
         total += item.price * item.qty;
     });
-    orderTotal.textContent = `Total: $${total.toFixed(2)}`;
+
+    if (orderTotal) orderTotal.textContent = `Total: $${total.toFixed(2)}`;
     // Update cart badges (desktop and mobile)
     const count = orderData.reduce((acc, it) => acc + (it.qty || 0), 0);
     const desktopEl = document.getElementById('cartCount');

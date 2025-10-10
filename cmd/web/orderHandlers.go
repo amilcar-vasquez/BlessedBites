@@ -4,13 +4,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
 	"github.com/amilcar-vasquez/blessed-bites/internal/utils"
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/api/v2010"
-	"net/http"
-	"os"
-	"strings"
 )
 
 type OrderItemInput struct {
@@ -116,9 +117,14 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 
 		orderDataStr := r.FormValue("orderData")
 		if orderDataStr == "" || orderDataStr == "[]" {
-			session, _ := app.sessionStore.Get(r, "session")
-			session.AddFlash("Please add items to your order before proceeding.", "error")
-			_ = session.Save(r, w)
+			// Use dedicated flash session so front-end can detect success/error messages
+			flashSession, _ := app.getSessionSafe(w, r, "flash")
+			if flashSession == nil {
+				flashSession, _ = app.sessionStore.New(r, "flash")
+			}
+			flashSession.Values["alertMessage"] = "Please add items to your order before proceeding."
+			flashSession.Values["alertType"] = "alert-error"
+			_ = flashSession.Save(r, w)
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
@@ -129,14 +135,14 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	// Get session
-	session, _ := app.sessionStore.Get(r, "session")
+	// Get session (use safe getter to handle invalid cookies)
+	session, _ := app.getSessionSafe(w, r, "session")
 
 	// --- User detection logic ---
 	var user *data.User
 
 	// 1. Check for logged-in user in session
-	user = app.contextGetUser(r)
+	user = app.contextGetUser(w, r)
 	if user != nil {
 		app.logger.Info("User detected from session", "userID", user.ID, "fullName", user.FullName)
 	} else {
@@ -189,8 +195,13 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 
 	// --- Order validation ---
 	if len(items) == 0 {
-		session.AddFlash("Please add items before ordering.", "error")
-		_ = session.Save(r, w)
+		flashSession, _ := app.getSessionSafe(w, r, "flash")
+		if flashSession == nil {
+			flashSession, _ = app.sessionStore.New(r, "flash")
+		}
+		flashSession.Values["alertMessage"] = "Please add items before ordering."
+		flashSession.Values["alertType"] = "alert-error"
+		_ = flashSession.Save(r, w)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
@@ -284,8 +295,14 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 			"note":    "Create an account later to track orders.",
 		})
 	} else {
-		session.AddFlash(fmt.Sprintf("Order placed! Total: $%.2f", totalCost), "success")
-		_ = session.Save(r, w)
+		flashSession, _ := app.getSessionSafe(w, r, "flash")
+		if flashSession == nil {
+			flashSession, _ = app.sessionStore.New(r, "flash")
+		}
+		flashSession.Values["alertMessage"] = fmt.Sprintf("Order placed! Total: $%.2f", totalCost)
+		flashSession.Values["alertType"] = "alert-success"
+		_ = flashSession.Save(r, w)
+		// Ensure any client-side saved order data is cleared on redirect by rendering the flash
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }

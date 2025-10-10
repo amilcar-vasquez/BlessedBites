@@ -4,11 +4,13 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"flag"
 	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/amilcar-vasquez/blessed-bites/internal/data"
@@ -19,13 +21,34 @@ import (
 
 // Initialize session store with proper configuration
 func initSessionStore() *sessions.CookieStore {
-	sessionKey := []byte(os.Getenv("SESSION_KEY"))
-	if len(sessionKey) == 0 {
-		// Fallback key for development only - DIFFERENT from CSRF key
-		sessionKey = []byte("session-key-32-bytes-long-different")
+	// Support SESSION_KEYS (comma-separated) or fallback to SESSION_KEY.
+	// Values can be raw or base64-encoded. Multiple keys allow rotation.
+	keysEnv := os.Getenv("SESSION_KEYS")
+	var keys [][]byte
+
+	if keysEnv != "" {
+		parts := strings.Split(keysEnv, ",")
+		for _, p := range parts {
+			p = strings.TrimSpace(p)
+			if decoded, err := base64.StdEncoding.DecodeString(p); err == nil && len(decoded) > 0 {
+				keys = append(keys, decoded)
+			} else if p != "" {
+				keys = append(keys, []byte(p))
+			}
+		}
+	} else {
+		k := os.Getenv("SESSION_KEY")
+		if k == "" {
+			k = "session-key-32-bytes-long-different"
+		}
+		if decoded, err := base64.StdEncoding.DecodeString(k); err == nil && len(decoded) > 0 {
+			keys = append(keys, decoded)
+		} else {
+			keys = append(keys, []byte(k))
+		}
 	}
 
-	store := sessions.NewCookieStore(sessionKey)
+	store := sessions.NewCookieStore(keys...)
 
 	// Configure session options with DIFFERENT cookie name to avoid CSRF conflicts
 	store.Options = &sessions.Options{

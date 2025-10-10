@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/amilcar-vasquez/blessed-bites/internal/data"
-	"github.com/amilcar-vasquez/blessed-bites/internal/utils"
 	"net/http"
 	"sort"
 	"strconv"
+
+	"github.com/amilcar-vasquez/blessed-bites/internal/data"
+	"github.com/amilcar-vasquez/blessed-bites/internal/utils"
 )
 
 // helper function to get top user items:
@@ -92,7 +93,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	//call the getTopUserMenuItems function to get the top user menu items
 	var TopUserMenuItems []*data.MenuItem
-	user := app.contextGetUser(r)
+	user := app.contextGetUser(w, r)
 	if user == nil {
 		app.logger.Info("User not found in session")
 	} else {
@@ -101,6 +102,20 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	// Prepare the data
 	data := app.addDefaultData(NewTemplateData(), w, r) // <- THIS LINE IS KEY
+	// Read dedicated flash session (if present) and clear it so flash is shown once
+	if flashSession, err := app.getSessionSafe(w, r, "flash"); err == nil && flashSession != nil {
+		if msg, ok := flashSession.Values["alertMessage"].(string); ok && msg != "" {
+			data.AlertMessage = msg
+			if typ, ok := flashSession.Values["alertType"].(string); ok && typ != "" {
+				data.AlertType = typ
+			} else {
+				data.AlertType = "alert-info"
+			}
+			// clear flash
+			flashSession.Options.MaxAge = -1
+			_ = flashSession.Save(r, w)
+		}
+	}
 	data.Title = "Welcome to Blessed Bites"
 	data.HeaderText = "Welcome to Blessed Bites"
 	data.Categories = categories
@@ -140,9 +155,10 @@ func (app *application) searchMenuJSONHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (app *application) contextGetUser(r *http.Request) *data.User {
-	session, err := app.sessionStore.Get(r, "session")
+func (app *application) contextGetUser(w http.ResponseWriter, r *http.Request) *data.User {
+	session, err := app.getSessionSafe(w, r, "session")
 	if err != nil {
+		app.logger.Error("Failed to get session", "error", err)
 		return nil
 	}
 

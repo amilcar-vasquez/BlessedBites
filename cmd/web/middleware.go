@@ -42,7 +42,7 @@ func noCacheMiddleware(h http.Handler) http.Handler {
 // requireAuth is a middleware that checks if the user is authenticated.
 func (app *application) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, _ := app.sessionStore.Get(r, "session")
+		session, _ := app.getSessionSafe(w, r, "session")
 
 		auth, ok := session.Values["authenticated"].(bool)
 
@@ -70,7 +70,7 @@ func (app *application) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if !ok || !auth {
-			flashSession, _ := app.sessionStore.Get(r, "flash")
+			flashSession, _ := app.getSessionSafe(w, r, "flash")
 			flashSession.Values["alertMessage"] = "This is an admin-only area. Please log in first."
 			flashSession.Values["alertType"] = "alert-warning"
 			flashSession.Save(r, w)
@@ -84,22 +84,44 @@ func (app *application) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func (app *application) IsAuthenticated(r *http.Request) bool {
-	session, _ := app.sessionStore.Get(r, "session")
+	session, err := app.getSessionSafe(nil, r, "session")
+	if err != nil {
+		app.logger.Error("Failed to get session in IsAuthenticated", "error", err)
+		return false
+	}
+	if session == nil {
+		return false
+	}
 	auth, ok := session.Values["authenticated"].(bool)
 	return ok && auth
 }
 
 func (app *application) CurrentUserID(r *http.Request) (int64, error) {
-	session, _ := app.sessionStore.Get(r, "session")
-	id, ok := session.Values["authenticatedUserID"].(int64)
-	if !ok {
+	session, err := app.getSessionSafe(nil, r, "session")
+	if err != nil {
+		return 0, err
+	}
+	if session == nil {
 		return 0, fmt.Errorf("user ID not found in session")
 	}
-	return id, nil
+	// stored user id may be int or int64 depending on where it was set
+	if id64, ok := session.Values["authenticatedUserID"].(int64); ok {
+		return id64, nil
+	}
+	if idInt, ok := session.Values["authenticatedUserID"].(int); ok {
+		return int64(idInt), nil
+	}
+	return 0, fmt.Errorf("user ID not found in session")
 }
 
 func (app *application) CurrentUserFullName(r *http.Request) (string, error) {
-	session, _ := app.sessionStore.Get(r, "session")
+	session, err := app.getSessionSafe(nil, r, "session")
+	if err != nil {
+		return "", err
+	}
+	if session == nil {
+		return "", fmt.Errorf("user full name not found in session")
+	}
 	fullName, ok := session.Values["fullName"].(string)
 	if !ok {
 		return "", fmt.Errorf("user full name not found in session")
