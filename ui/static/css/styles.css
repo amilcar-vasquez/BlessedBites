@@ -825,3 +825,10 @@ nav a.sidenav-trigger:hover i.material-icons {
   z-index: 9999;
   pointer-events: none;
 }
+
+/* TEMP DEBUG: Force outline for menu cards regardless of viewport so we can confirm the selector works.
+   Remove this after you verify the outline appears on your device. */
+.menu-card {
+  outline: 2px dashed rgba(255,0,0,0.9) !important;
+  outline-offset: 2px;
+}
