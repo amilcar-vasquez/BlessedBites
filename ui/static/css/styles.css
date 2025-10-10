@@ -693,6 +693,36 @@ nav a.sidenav-trigger:hover i.material-icons {
     padding: 0.35rem;
   }
 
+  /* Make sure cards are rendered as block-level items and their inner
+     card layout is consistent on mobile. Some combinations of flex
+     containers and framework grid classes can collapse children; these
+     rules force a predictable layout. */
+  #menuCards {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.35rem;
+  }
+
+  #menuCards .menu-card {
+    display: block !important;
+    min-width: 0; /* allow shrinking inside flex rows */
+  }
+
+  /* Ensure the inner card expands to available width and images scale */
+  #menuCards .menu-card .card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  #menuCards .menu-card .card .card-image img,
+  #menuCards .menu-card .card img.responsive-img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
   /* Make the menu item title smaller on mobile to avoid overflow */
   .card-title {
     font-size: 0.66rem;
