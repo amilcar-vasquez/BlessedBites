@@ -800,6 +800,12 @@ nav a.sidenav-trigger:hover i.material-icons {
   #mobileCheckoutButton:hover {
     background-color: var(--burgundy);
   }
+
+  /* DEBUG: outline menu cards on mobile to help visual layout debugging. Remove after verification. */
+  #menuCards .menu-card {
+    outline: 2px dashed rgba(255,0,0,0.9) !important;
+    outline-offset: 2px;
+  }
 }
 
 @keyframes fly-to-cart {
