@@ -23,7 +23,7 @@
               <a href="/">Anything delicious</a>
             </div>
           </div>          
-                <!-- Mobile-only checkout button (visible when sidebar is hidden on small screens) -->
+<!-- Mobile-only checkout button (visible when sidebar is hidden on small screens) -->
                 <a id="mobileCheckoutButton" href="/checkout" class="btn grayed-out" style="display:none;">I'm Done</a>
 
                 <div class="order-sidebar home-order-sidebar receipt">
@@ -89,6 +89,7 @@
 </div>
         </div>
 {{ end }}
+        </div>
         <form action="/search" method="GET" class="search-form">
             <div class="search-box-wrapper">
               <input type="text" id="searchBox" name="q" placeholder="Search menu..." autocomplete="off">
@@ -115,7 +116,7 @@
                     </div>
                 </div>
             {{end}}
-        </div>
+
         <div class="pagination center-align">
   {{if gt .TotalPages 1}}
     <ul class="pagination">

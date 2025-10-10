@@ -92,3 +92,255 @@
     font-size: 0.95rem !important;
   }
 }
+
+
+@media (max-width: 768px) {
+  nav {
+    border-radius: 0 0 12px 12px;
+    color: var(--burgundy);
+  }
+
+  nav .brand-logo {
+    font-size: 1.2rem;
+    padding-left: 0.5rem;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    text-align: left;
+  }
+
+ /* Override burger icon color */
+nav a.sidenav-trigger i.material-icons {
+  color: var(--mustard) !important; /* or any color you prefer */
+  font-size: 2.2rem; /* Optional: adjust size */
+}
+
+/* Optional: hover effect */
+nav a.sidenav-trigger:hover i.material-icons {
+  color: var(--burgundy) !important;
+}
+
+  .main-content {
+    margin: 1rem 0.5rem;
+    padding: 1rem 0.5rem;
+  }
+
+  .top-buttons-message {
+    flex-direction: column;
+    padding: 0.75rem;
+  }
+
+  .card .card-title {
+    font-size: 1.1rem;
+  }
+
+  .order-sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 0;
+    z-index: 1000;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 0.75rem;
+  }
+
+  /* Checkout page: make order summary inline and readable */
+  .checkout-order {
+    position: static !important;
+    width: 100% !important;
+    max-height: none !important;
+    border-radius: var(--card-radius);
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    color: var(--text-dark) !important;
+  }
+
+  .checkout-order ul#orderList {
+    color: var(--text-dark) !important;
+    list-style: disc;
+    padding-left: 1.25rem;
+  }
+
+  .checkout-order p, .checkout-order li {
+    color: var(--text-dark) !important;
+  }
+
+  .search-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box-wrapper input {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .material-icon-button {
+    right: 8px;
+    font-size: 1.3rem;
+  }
+
+  .img-popular img {
+    width: 40%;
+    margin: 0 auto;
+    display: block;
+  }
+
+  /* Keep the grid wrapping on small screens so we can show two cards per row. */
+  .row.equal-height {
+    /* allow wrapping rows (do not force single-column) */
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  /* Ensure menu cards are 2-per-row on small screens and have inner padding */
+  #menuCards .menu-card {
+    box-sizing: border-box;
+    flex: 0 0 49%;
+    max-width: 49%;
+    padding: 0.35rem;
+  }
+
+  /* Make sure cards are rendered as block-level items and their inner
+     card layout is consistent on mobile. Some combinations of flex
+     containers and framework grid classes can collapse children; these
+     rules force a predictable layout. */
+  #menuCards {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.35rem;
+  }
+
+  #menuCards .menu-card {
+    display: block !important;
+    min-width: 0; /* allow shrinking inside flex rows */
+  }
+
+  /* Ensure the inner card expands to available width and images scale */
+  #menuCards .menu-card .card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  #menuCards .menu-card .card .card-image img,
+  #menuCards .menu-card .card img.responsive-img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Make the menu item title smaller on mobile to avoid overflow */
+  .card-title {
+    font-size: 0.66rem;
+  }
+
+  .category-sidebar {
+    padding: 1rem;
+  }
+
+  .flash-message {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .flash-message::before {
+    font-size: 1.1rem;
+  }
+
+  /* Hide favorites/top-buttons on mobile (desktop only) */
+  .favorites-section {
+    display: none;
+  }
+
+  /* Floating cart button for mobile */
+  .mobile-cart-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 1rem;
+    bottom: 4.5rem;
+    z-index: 2000;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--mustard);
+    color: white;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    font-size: 1.4rem;
+    text-decoration: none;
+  }
+
+  .mobile-cart-fab .cart-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--burgundy);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    display: inline-block;
+  }
+
+  /* Hide the inline order sidebar on mobile; show a floating checkout button instead */
+  .home-order-sidebar {
+    display: none;
+  }
+
+  #mobileCheckoutButton {
+    display: inline-block;
+    position: fixed;
+    right: 1rem;
+    bottom: 4.5rem; /* above the order-sidebar when present or above other UI */
+    z-index: 2000;
+    padding: 0.6rem 0.9rem;
+    border-radius: 999px;
+    background-color: var(--grayed-out);
+    color: white;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+    font-weight: 600;
+  }
+
+  /* Make the floating button more prominent */
+  #mobileCheckoutButton:hover {
+    background-color: var(--burgundy);
+  }
+
+
+@keyframes fly-to-cart {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.2) translate(300px, -300px);
+    opacity: 0;
+  }
+}
+
+.fly-anim {
+  animation: fly-to-cart 0.7s ease-in-out forwards;
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.receipt{
+ 
+  max-width: 90%;
+  text-align: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  color: var(--text-dark);
+}
+
+}
