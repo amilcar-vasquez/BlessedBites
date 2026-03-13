@@ -75,6 +75,9 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /api/v1/admin/category", adminProtected(adminHandler.CreateCategory))
 	mux.Handle("DELETE /api/v1/admin/category/{id}", adminProtected(adminHandler.DeleteCategory))
 	mux.Handle("GET /api/v1/admin/orders", adminProtected(adminHandler.ListOrders))
+	mux.Handle("GET /api/v1/admin/users", adminProtected(adminHandler.ListUsers))
+	mux.Handle("PUT /api/v1/admin/users/{id}", adminProtected(adminHandler.UpdateUser))
+	mux.Handle("DELETE /api/v1/admin/users/{id}", adminProtected(adminHandler.DeleteUser))
 
 	return middleware.CORS(app.config.corsOrigin)(middleware.Logging(app.logger)(mux))
 }
