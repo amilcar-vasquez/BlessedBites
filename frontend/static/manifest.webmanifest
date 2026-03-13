@@ -1,0 +1,16 @@
+{
+  "name": "BlessedBites",
+  "short_name": "BlessedBites",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6efe1",
+  "theme_color": "#1f4f46",
+  "description": "Mobile-first food ordering in San Ignacio, Belize.",
+  "icons": [
+    {
+      "src": "/icons/placeholder.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

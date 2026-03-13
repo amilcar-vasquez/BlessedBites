@@ -8,5 +8,5 @@ services:
     ports:
       - "4000:4000"
     volumes:
-      - ./ui/static/img/uploads:/app/ui/static/img/uploads
+      - ./uploads:/app/uploads
     restart: unless-stopped

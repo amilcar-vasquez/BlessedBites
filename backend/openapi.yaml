@@ -1,0 +1,704 @@
+openapi: 3.0.3
+info:
+  title: BlessedBites API
+  version: 1.0.0
+  description: |
+    REST API for the BlessedBites food ordering platform.
+
+    **Authentication**: Protected endpoints require a Bearer JWT obtained via
+    `POST /auth/login`. Refresh tokens are set/rotated via an `HttpOnly`
+    `bb_refresh` cookie on `/auth/refresh`. Each refresh rotates the token —
+    reuse of a consumed refresh token returns `401`.
+servers:
+  - url: /api/v1
+
+security: []
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags: [System]
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /menu:
+    get:
+      summary: List all active menu items
+      tags: [Menu]
+      responses:
+        '200':
+          description: Array of menu items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MenuItem'
+
+  /menu/{id}:
+    get:
+      summary: Get a single menu item by ID
+      tags: [Menu]
+      parameters:
+        - $ref: '#/components/parameters/PathID'
+      responses:
+        '200':
+          description: Menu item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /categories:
+    get:
+      summary: List all categories
+      tags: [Menu]
+      responses:
+        '200':
+          description: Array of categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+
+  /search:
+    get:
+      summary: Search menu items by keyword
+      tags: [Menu]
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+          description: Search term (name or description)
+      responses:
+        '200':
+          description: Matching menu items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MenuItem'
+
+  /orders:
+    post:
+      summary: Place a new order
+      tags: [Orders]
+      security:
+        - BearerAuth: []
+        - {}  # also allowed for guests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            example:
+              items:
+                - menu_item_id: 3
+                  quantity: 2
+                - menu_item_id: 7
+                  quantity: 1
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /orders/stream:
+    get:
+      summary: SSE stream of live order status updates (kitchen view)
+      tags: [Orders]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: |
+            Server-Sent Events stream. Each event carries a JSON-encoded order
+            status update (`id`, `status`).
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /ratings:
+    post:
+      summary: Submit a rating for a menu item
+      tags: [Ratings]
+      security:
+        - BearerAuth: []
+        - {}  # also allowed for guests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingRequest'
+      responses:
+        '201':
+          description: Rating recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /ratings/{menu_item_id}:
+    get:
+      summary: Get the average rating for a menu item
+      tags: [Ratings]
+      parameters:
+        - in: path
+          name: menu_item_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Average rating
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  menu_item_id:
+                    type: integer
+                  average:
+                    type: number
+                    format: float
+                  count:
+                    type: integer
+
+  /auth/login:
+    post:
+      summary: Authenticate and obtain tokens
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: user@example.com
+              password: secret123
+      responses:
+        '200':
+          description: Access token + sets bb_refresh cookie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/signup:
+    post:
+      summary: Register a new customer account
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/logout:
+    post:
+      summary: Invalidate the refresh token and clear its cookie
+      tags: [Auth]
+      responses:
+        '200':
+          description: Logged out – refresh token revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /auth/refresh:
+    post:
+      summary: Rotate refresh token and issue a new access token
+      tags: [Auth]
+      description: |
+        Reads the `bb_refresh` HttpOnly cookie. On success the old token is
+        revoked and a **new** `bb_refresh` cookie is set (token rotation).
+        Replaying a consumed refresh token returns `401`.
+      responses:
+        '200':
+          description: New access token (refresh cookie also rotated)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/reset-password-request:
+    post:
+      summary: Request a password reset email
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Always returns 200 to prevent email enumeration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /auth/reset-password:
+    post:
+      summary: Complete a password reset using the emailed token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password updated
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /admin/menu:
+    get:
+      summary: Admin – list all menu items (including inactive)
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Full menu list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MenuItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Admin – create a new menu item
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertMenuItemRequest'
+      responses:
+        '201':
+          description: Created menu item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/menu/{id}:
+    put:
+      summary: Admin – replace a menu item
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PathID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertMenuItemRequest'
+      responses:
+        '200':
+          description: Updated menu item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Admin – delete a menu item
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PathID'
+      responses:
+        '200':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/category:
+    post:
+      summary: Admin – create a category
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+
+  /admin/category/{id}:
+    delete:
+      summary: Admin – delete a category
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PathID'
+      responses:
+        '200':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/orders:
+    get:
+      summary: Admin – list all orders with customer names
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Order list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Short-lived access token obtained from `POST /auth/login` or
+        `POST /auth/refresh`. Valid for 30 minutes.
+
+  parameters:
+    PathID:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+
+  responses:
+    BadRequest:
+      description: Bad request – validation or parse error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Authenticated but insufficient permissions (admin required)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      example:
+        error: resource not found
+
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        category_id:
+          type: integer
+        image_url:
+          type: string
+        is_active:
+          type: boolean
+      example:
+        id: 1
+        name: Jerk Chicken
+        description: Slow-cooked with signature spices
+        price: 14.99
+        category_id: 2
+        image_url: /uploads/jerk-chicken.jpg
+        is_active: true
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      example:
+        id: 2
+        name: Main Courses
+
+    OrderItem:
+      type: object
+      required: [menu_item_id, quantity]
+      properties:
+        menu_item_id:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+
+    CreateOrderRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderItem'
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum: [pending, preparing, ready, delivered, cancelled]
+        total_cost:
+          type: number
+          format: float
+        created_at:
+          type: string
+          format: date-time
+
+    AdminOrder:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        full_name:
+          type: string
+        total_cost:
+          type: number
+          format: float
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    SignupRequest:
+      type: object
+      required: [email, full_name, phone_no, password]
+      properties:
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        phone_no:
+          type: string
+        password:
+          type: string
+          minLength: 8
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Short-lived JWT access token (30 min)
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            email:
+              type: string
+            full_name:
+              type: string
+            role:
+              type: string
+              enum: [customer, admin]
+
+    RatingRequest:
+      type: object
+      required: [menu_item_id, score]
+      properties:
+        menu_item_id:
+          type: integer
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    ResetPasswordRequest:
+      type: object
+      required: [token, new_password]
+      properties:
+        token:
+          type: string
+        new_password:
+          type: string
+          minLength: 8
+
+    UpsertMenuItemRequest:
+      type: object
+      required: [name, price, category_id]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+          minimum: 0
+        category_id:
+          type: integer
+        image_url:
+          type: string
+        is_active:
+          type: boolean

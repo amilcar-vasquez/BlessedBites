@@ -1,0 +1,18 @@
+:80 {
+  encode gzip
+
+  # Static user-uploaded images (served directly by Caddy)
+  handle /uploads/* {
+    root * /srv/uploads
+    rewrite * {path}
+    file_server
+  }
+
+  handle /api/* {
+    reverse_proxy go-api:8080
+  }
+
+  handle {
+    reverse_proxy svelte-frontend:3000
+  }
+}

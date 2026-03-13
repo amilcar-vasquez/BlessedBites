@@ -1,2 +1,13 @@
 .envrc
 .env
+
+# Frontend local deps and build output
+frontend/node_modules/
+frontend/.svelte-kit/
+frontend/build/
+frontend/.vite/
+
+# Generic JS package manager artifacts
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*

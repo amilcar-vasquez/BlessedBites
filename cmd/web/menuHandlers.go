@@ -3,8 +3,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/amilcar-vasquez/blessed-bites/internal/data"
-	"github.com/amilcar-vasquez/blessed-bites/internal/validator"
 	"io"
 	"net/http"
 	"os"
@@ -12,6 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/amilcar-vasquez/blessed-bites/internal/data"
+	"github.com/amilcar-vasquez/blessed-bites/internal/validator"
 )
 
 func generateFileName(categoryID int, name, originalFilename string) string {
@@ -88,7 +89,10 @@ func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*d
 		if file != nil {
 			defer file.Close()
 			fileName := generateFileName(categoryID, name, header.Filename)
-			imagePath := "./ui/static/img/uploads/" + fileName
+			if err := os.MkdirAll("./uploads", 0o755); err != nil {
+				return nil, formData, formErrors, fmt.Errorf("creating uploads directory: %w", err)
+			}
+			imagePath := "./uploads/" + fileName
 			dst, err := os.Create(imagePath)
 			if err != nil {
 				return nil, formData, formErrors, fmt.Errorf("saving uploaded file: %w", err)
@@ -97,7 +101,7 @@ func (app *application) parseMenuItemForm(r *http.Request, isMultipart bool) (*d
 			if _, err := io.Copy(dst, file); err != nil {
 				return nil, formData, formErrors, fmt.Errorf("copying uploaded file: %w", err)
 			}
-			imageURL = imagePath
+			imageURL = "/uploads/" + fileName
 		}
 	}
 

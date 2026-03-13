@@ -6,4 +6,4 @@
 *.env
 bin/
 tmp/
-ui/static/img/uploads/
+uploads/
