@@ -32,6 +32,21 @@ export async function fetchMenu(activeOnly = true, categoryId?: number): Promise
   }));
 }
 
+export async function fetchMenuItem(id: number): Promise<MenuItem> {
+  const item = await apiGet<MenuItem>(`/menu/${id}`);
+  return { ...item, image_url: normalizeImageUrl(item.image_url) };
+}
+
+export async function searchMenu(q: string): Promise<MenuItem[]> {
+  const payload = await apiGet<MenuResponse>(`/search?q=${encodeURIComponent(q)}`);
+  return payload.items.map((item) => ({
+    ...item,
+    image_url: normalizeImageUrl(item.image_url)
+  }));
+}
+
+export { normalizeImageUrl };
+
 function normalizeImageUrl(raw?: string): string | undefined {
   if (!raw) return raw;
 

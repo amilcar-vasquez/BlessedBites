@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Blessed Bites - Premium Fast-Casual Dining</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#7c5700",
+                        "primary": "#994422",
+                        "on-primary-container": "#ffffff",
+                        "surface-variant": "#f1dfd9",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#ffede7",
+                        "surface-container-low": "#fff1ec",
+                        "primary-container": "#b85c38",
+                        "surface": "#fff8f6",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#7b2f0e",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#ffb59a",
+                        "on-secondary-fixed": "#042010",
+                        "tertiary-container": "#9b6e06",
+                        "secondary-fixed": "#caebd0",
+                        "background": "#fff8f6",
+                        "primary-fixed": "#ffdbcf",
+                        "on-tertiary-fixed-variant": "#5f4100",
+                        "on-secondary-container": "#4e6b56",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#caebd0",
+                        "outline-variant": "#dbc1b8",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#ffffff",
+                        "secondary-fixed-dim": "#aeceb5",
+                        "on-surface-variant": "#55433c",
+                        "tertiary-fixed": "#ffdeaa",
+                        "on-background": "#231a16",
+                        "surface-tint": "#9a4523",
+                        "surface-container-highest": "#f1dfd9",
+                        "surface-dim": "#e8d6d1",
+                        "surface-container-high": "#f6e4df",
+                        "on-primary-fixed": "#380d00",
+                        "tertiary-fixed-dim": "#f5bd58",
+                        "error-container": "#ffdad6",
+                        "secondary": "#486550",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#231a16",
+                        "on-secondary-fixed-variant": "#314d39",
+                        "surface-bright": "#fff8f6",
+                        "on-tertiary-fixed": "#271900",
+                        "outline": "#88726b",
+                        "surface-container": "#fceae4",
+                        "inverse-primary": "#ffb59a",
+                        "inverse-surface": "#382e2b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "base": "8px",
+                        "margin-desktop": "64px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "margin-mobile": "16px",
+                        "xl": "32px",
+                        "gutter": "16px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "title-lg": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "label-lg": ["Inter"],
+                        "display-lg": ["Montserrat"],
+                        "title-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "title-lg": ["22px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "headline-md": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500" }],
+                        "display-lg": ["57px", { "lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "700" }],
+                        "title-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .glass-panel {
+            background: rgba(255, 248, 246, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .image-zoom-container:hover img {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar Component -->
+<header class="bg-surface/80 dark:bg-surface/80 backdrop-blur-lg shadow-sm bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline docked full-width top-0 sticky flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-20 z-50 transition-all hover:bg-surface-container-high dark:hover:bg-surface-container-high">
+<!-- Logo -->
+<div class="flex items-center gap-xs">
+<span class="font-display-lg text-display-lg font-bold text-primary dark:text-inverse-primary" style="font-size: 24px; line-height: 32px;">Blessed Bites</span>
+</div>
+<!-- Desktop Navigation -->
+<nav class="hidden md:flex items-center gap-lg">
+<!-- Active State (Assuming Home intent aligns best with Menu to start, but there's no "Home" in the JSON. I'll highlight nothing or just the first item conceptually, but since it's the home page and not 'Menu', I will leave all inactive to avoid confusion, or highlight none since there isn't a direct match. The instructions say "Apply the style_active_navigation classes ONLY to that matching item". If no match, don't apply.) -->
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors font-label-lg text-label-lg hover:bg-surface-container-high dark:hover:bg-surface-container-high px-sm py-xs rounded-md" href="#">Menu</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors font-label-lg text-label-lg hover:bg-surface-container-high dark:hover:bg-surface-container-high px-sm py-xs rounded-md" href="#">Offers</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors font-label-lg text-label-lg hover:bg-surface-container-high dark:hover:bg-surface-container-high px-sm py-xs rounded-md" href="#">About</a>
+</nav>
+<!-- Actions & Search Bar (Left config in JSON but placing logically based on layout string "flex justify-between") -->
+<div class="flex items-center gap-md">
+<!-- Search Icon (Simulating the 'on_left' requirement somewhat abstractly or just providing an icon) -->
+<button aria-label="Search" class="text-primary dark:text-inverse-primary p-sm rounded-full hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="font-label-lg text-label-lg text-primary dark:text-inverse-primary hover:bg-surface-container-high dark:hover:bg-surface-container-high px-md py-sm rounded-lg transition-colors">
+                Login
+            </button>
+<button class="font-label-lg text-label-lg bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container px-md py-sm rounded-lg transition-colors flex items-center gap-xs shadow-sm">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+                Cart
+            </button>
+</div>
+</header>
+<main class="flex-grow flex flex-col">
+<!-- Hero Section -->
+<section class="relative w-full h-[716px] min-h-[500px] flex items-center justify-center overflow-hidden bg-surface-variant">
+<!-- Background Image -->
+<div class="absolute inset-0 z-0">
+<img alt="Hero Food Image" class="w-full h-full object-cover object-center opacity-80" data-alt="A spectacular overhead shot of a premium fast-casual dining spread on a rustic wooden table. The lighting is warm and natural, casting soft shadows that highlight the textures of freshly baked artisan bread, a vibrant green salad, and a beautifully plated terracotta bowl of hearty stew. The composition is editorial and modern, emphasizing high-quality ingredients and a welcoming, warm atmosphere. The overall mood is appetizing and crafted, adhering to a high-end culinary aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtR0agSsNwkoV1brcElYh2Gm_71XM1y10T7JZBYDJWSb57_sylXw6MP9QyNeQCHTe5k2uYPfa5ONM1HZEpvy57oAFGJSmCgqa6nS_ZH0kAMIuxkkzBPTQMt8DswiMoTnX_5Cdi6zO3pyUpvp1stehI7C7BdmasA4Q6VCM-Yzy1bRQt08xUIOEOT1u3DsgtimT5I_8kDm-lJuJLsbwVzlT2MO5_A6ded2bBqZ-8wRYGPIIUp5qbVjc3TRJK7atmpXG_60j1tbJvvF8Q"/>
+</div>
+<!-- Gradient Overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent z-10"></div>
+<!-- Hero Content -->
+<div class="relative z-20 text-center px-margin-mobile md:px-margin-desktop max-w-4xl mx-auto flex flex-col items-center">
+<span class="inline-block px-4 py-1.5 mb-6 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm tracking-wider uppercase backdrop-blur-sm bg-opacity-80 border border-outline-variant">
+                    Premium Fast-Casual
+                </span>
+<h1 class="font-display-lg text-display-lg text-on-surface mb-6 drop-shadow-md">
+                    Fresh Food. <br/>
+<span class="text-primary">Made With Care.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl mx-auto drop-shadow-sm bg-surface/40 p-4 rounded-xl backdrop-blur-md">
+                    Experience the perfect blend of healthy ingredients and culinary craftsmanship. Order ahead for quick pickup or settle in for a relaxing meal.
+                </p>
+<div class="flex flex-col sm:flex-row gap-4 items-center justify-center w-full">
+<button class="w-full sm:w-auto px-8 py-4 bg-primary text-on-primary font-title-md text-title-md rounded-xl shadow-md hover:shadow-lg hover:bg-primary-container transition-all transform hover:-translate-y-1">
+                        Order Now
+                    </button>
+<button class="w-full sm:w-auto px-8 py-4 bg-surface text-primary border-2 border-primary font-title-md text-title-md rounded-xl hover:bg-surface-variant transition-all">
+                        Browse Menu
+                    </button>
+</div>
+</div>
+</section>
+<!-- Featured Categories (Horizontal Scroll) -->
+<section class="py-xl px-margin-mobile md:px-margin-desktop bg-background relative z-20 -mt-10">
+<div class="glass-panel rounded-2xl p-6 shadow-sm border border-outline-variant flex items-center justify-between gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory">
+<!-- Category Item -->
+<a class="flex flex-col items-center gap-sm min-w-[100px] snap-center group" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors shadow-sm text-primary">
+<span class="material-symbols-outlined text-3xl" data-icon="bakery_dining">bakery_dining</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface group-hover:text-primary transition-colors">Breakfast</span>
+</a>
+<!-- Category Item -->
+<a class="flex flex-col items-center gap-sm min-w-[100px] snap-center group" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors shadow-sm text-primary">
+<span class="material-symbols-outlined text-3xl" data-icon="lunch_dining">lunch_dining</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface group-hover:text-primary transition-colors">Lunch</span>
+</a>
+<!-- Category Item -->
+<a class="flex flex-col items-center gap-sm min-w-[100px] snap-center group" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors shadow-sm text-primary">
+<span class="material-symbols-outlined text-3xl" data-icon="dinner_dining">dinner_dining</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface group-hover:text-primary transition-colors">Dinner</span>
+</a>
+<!-- Category Item -->
+<a class="flex flex-col items-center gap-sm min-w-[100px] snap-center group" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors shadow-sm text-primary">
+<span class="material-symbols-outlined text-3xl" data-icon="icecream">icecream</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface group-hover:text-primary transition-colors">Desserts</span>
+</a>
+<!-- Category Item -->
+<a class="flex flex-col items-center gap-sm min-w-[100px] snap-center group" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors shadow-sm text-primary">
+<span class="material-symbols-outlined text-3xl" data-icon="local_cafe">local_cafe</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface group-hover:text-primary transition-colors">Drinks</span>
+</a>
+</div>
+</section>
+<!-- Popular Items Bento Grid -->
+<section class="py-xl px-margin-mobile md:px-margin-desktop bg-surface-container-lowest">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Popular Items</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Crafted with fresh, locally sourced ingredients.</p>
+</div>
+<a class="hidden md:flex items-center gap-xs font-label-lg text-label-lg text-primary hover:underline decoration-primary" href="#">
+                    View Full Menu
+                    <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<!-- Food Card 1 -->
+<div class="bg-surface rounded-2xl overflow-hidden border border-outline-variant shadow-sm hover:shadow-md transition-shadow group image-zoom-container flex flex-col h-full">
+<div class="relative h-48 overflow-hidden">
+<img alt="Harvest Bowl" class="w-full h-full object-cover transition-transform duration-500" data-alt="A close-up of a vibrant, healthy harvest bowl in a sleek ceramic dish. The bowl is filled with roasted sweet potatoes, quinoa, fresh greens, and a drizzle of creamy tahini dressing. The lighting is bright and crisp, emphasizing the rich, earthy tones of the food against a clean, light-colored background. The aesthetic is modern, healthy, and appetizing, reflecting a premium fast-casual dining experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIlYevqCkSbMJ-am8mmKPNilvFYZVpaKG5SsTRmZJDWJyRqV872AVn8AJ7mbqvJOBU2tKE1kiHmLs4kVAABd0C2LlFNm9RSrJD4kE0-k3SXm0lJO6R-v8WoPYy6npyXW_UHy3sN4EOARJNrXsVPbY1mLY-u6UJYmL4Tg8aU7JZyzqaAJb3gkmgk6_j22wdacTxqhL8P69KdKayffojZuhHL2YxM977q9wbyoA2udGHDzxwD6IDRPhlrgQvbsCKiDBSvrGAvAjpRv-a"/>
+<div class="absolute top-4 right-4 bg-surface/90 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-tertiary-container text-sm" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">4.9</span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-1">Roasted Harvest Bowl</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-4 flex-grow">Quinoa, roasted sweet potatoes, kale, toasted almonds, and our signature tahini dressing.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-title-md text-title-md text-primary font-bold">$14.50</span>
+<button aria-label="Add to cart" class="bg-surface-variant text-primary p-2 rounded-full hover:bg-primary hover:text-on-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Food Card 2 -->
+<div class="bg-surface rounded-2xl overflow-hidden border border-outline-variant shadow-sm hover:shadow-md transition-shadow group image-zoom-container flex flex-col h-full">
+<div class="relative h-48 overflow-hidden">
+<img alt="Artisan Burger" class="w-full h-full object-cover transition-transform duration-500" data-alt="A high-quality image of an artisan burger stacked with a juicy patty, melted cheese, fresh lettuce, and tomato, housed in a toasted brioche bun. The burger sits on a pristine white plate atop a subtle, warm-toned wooden surface. The lighting is focused and appetizing, highlighting the textures of the bun and the glisten of the ingredients. The scene is styled to look gourmet yet accessible, fitting a modern corporate dining brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4y_S3gSE88H-EoWytc2pWwTWdjotY6bEb1gCfSSTo2LcDOKoerrwKIoV6fipwHF_lvYsNjwlPpSree-v0F1R8z2PmL39Xw7-vF1YMehW9G2cvkCp3d6v26zK2FIFYVYMSuX86lR6t11dJSgwnIeBiNeKAs3IHCLb-UCUbaY0NLOGzdkuw2C6JgITJSfNxydB-xtSDH-iVU9MpaBKhwW0Hiki50ng3LqV_XpGHH3krePNqNuB4mWdPFqvPm1IVebmoYqXF1IgNLBPj"/>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-1">Blessed Signature Burger</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-4 flex-grow">Grass-fed beef, aged cheddar, caramelized onions, house sauce on a toasted brioche bun.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-title-md text-title-md text-primary font-bold">$16.00</span>
+<button aria-label="Add to cart" class="bg-surface-variant text-primary p-2 rounded-full hover:bg-primary hover:text-on-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Food Card 3 -->
+<div class="bg-surface rounded-2xl overflow-hidden border border-outline-variant shadow-sm hover:shadow-md transition-shadow group image-zoom-container flex flex-col h-full">
+<div class="relative h-48 overflow-hidden">
+<img alt="Grilled Salmon" class="w-full h-full object-cover transition-transform duration-500" data-alt="An elegant presentation of a perfectly grilled salmon fillet resting on a bed of seasoned asparagus spears. The dish is garnished with a wedge of lemon and fresh herbs. The background is softly out of focus, featuring warm, ambient lighting typical of an upscale fast-casual restaurant. The color palette emphasizes the vibrant pink of the salmon and the deep green of the vegetables, communicating freshness and premium quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNVkHhnvwuVAWiRHRDkeCISbsKkqNI5ZwB9cTuel3kDvK_TPaopHwCZwnl7frJtTUKkN1jftyH5LTPN2yvFkQPSZsDViJP5ziEzREJWZsoa9wB7L6sIdgY0D6m23ZYU0b4JpVvhQZfLme0iIRG7hTr7_BGGGLNVGmAg8kt1qltXmsb9noTjfS7VBbL7bl5fYuFJphjQ1BKGvJcM3BEIfcIZ5hZ6SDOq2S893cIcItADG9eXJzo1xYxQqz6Xj-EHfMZCBYeQ-Jh4zSL"/>
+<div class="absolute top-4 right-4 bg-surface/90 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-tertiary-container text-sm" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">4.8</span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-1">Herb Grilled Salmon</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-4 flex-grow">Wild-caught salmon fillet with seasonal roasted vegetables and lemon-herb glaze.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-title-md text-title-md text-primary font-bold">$22.00</span>
+<button aria-label="Add to cart" class="bg-surface-variant text-primary p-2 rounded-full hover:bg-primary hover:text-on-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 text-center md:hidden">
+<button class="w-full py-3 bg-surface-variant text-primary border border-outline-variant font-title-md text-title-md rounded-xl hover:bg-surface-container-high transition-colors">
+                    View Full Menu
+                </button>
+</div>
+</section>
+<!-- Testimonials -->
+<section class="py-xl px-margin-mobile md:px-margin-desktop bg-surface-container-low border-y border-outline-variant relative overflow-hidden">
+<!-- Decorative background element -->
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-container/10 rounded-full blur-3xl z-0"></div>
+<div class="relative z-10 text-center mb-10">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Community Love</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 max-w-xl mx-auto">See what our guests have to say about their Blessed Bites experience.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+<!-- Testimonial 1 -->
+<div class="bg-surface p-6 rounded-2xl shadow-sm border border-outline-variant">
+<div class="flex gap-1 text-tertiary-container mb-4">
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface italic mb-6">"The absolute best lunch spot. The quality of the ingredients is unmatched, and the space is so inviting. The Harvest Bowl is a weekly staple for me."</p>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold font-label-lg">
+                            SJ
+                        </div>
+<div>
+<p class="font-title-md text-title-md text-on-surface">Sarah J.</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Local Professional</p>
+</div>
+</div>
+</div>
+<!-- Testimonial 2 -->
+<div class="bg-surface p-6 rounded-2xl shadow-sm border border-outline-variant">
+<div class="flex gap-1 text-tertiary-container mb-4">
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface italic mb-6">"Finally, a place that balances health and serious flavor. The app makes ordering ahead incredibly easy, but dining in feels like a premium experience."</p>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container font-bold font-label-lg">
+                            MR
+                        </div>
+<div>
+<p class="font-title-md text-title-md text-on-surface">Marcus R.</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Food Blogger</p>
+</div>
+</div>
+</div>
+<!-- Testimonial 3 -->
+<div class="bg-surface p-6 rounded-2xl shadow-sm border border-outline-variant">
+<div class="flex gap-1 text-tertiary-container mb-4">
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" data-icon="star_half" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star_half</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface italic mb-6">"Great ambiance and excellent service. The grilled salmon is cooked to perfection every single time. Highly recommend for casual dinners."</p>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold font-label-lg">
+                            ET
+                        </div>
+<div>
+<p class="font-title-md text-title-md text-on-surface">Emily T.</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Regular Customer</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Component -->
+<footer class="bg-surface-container-highest dark:bg-surface-dim border-t border-outline-variant w-full py-xl px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-md full-width flat no shadows Transition-opacity duration-300">
+<!-- Brand Logo/Name -->
+<div class="mb-4 md:mb-0">
+<span class="font-title-lg text-title-lg font-black text-primary">Blessed Bites</span>
+</div>
+<!-- Links -->
+<nav class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-4 md:mb-0">
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary hover:underline decoration-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary hover:underline decoration-primary transition-colors" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary hover:underline decoration-primary transition-colors" href="#">Contact Us</a>
+</nav>
+<!-- Copyright -->
+<div class="font-body-md text-body-md text-on-surface dark:text-on-surface text-center md:text-right">
+            © 2024 Blessed Bites. Premium Fast-Casual Dining.
+        </div>
+</footer>
+</body></html>

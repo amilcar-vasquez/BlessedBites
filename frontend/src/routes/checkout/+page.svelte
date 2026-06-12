@@ -1,338 +1,471 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { apiPost } from '$lib/api/client';
+  import { goto } from '$app/navigation';
+  import { createOrder } from '$lib/api/orders';
+  import { auth } from '$lib/stores/auth';
+  import { cart, cartTotal, clearCart, setQty } from '$lib/stores/cart';
+  import { showToast } from '$lib/stores/toast';
+  import QuantitySelector from '$lib/components/QuantitySelector.svelte';
 
-  type CartItem = { id: number; name: string; price: number; qty: number };
-  type OrderResponse = { order_id: number; message: string };
+  let fullName = $state('');
+  let phoneNo = $state('');
+  let deliveryOption = $state<'pickup' | 'delivery'>('pickup');
+  let paymentOption = $state<'cash' | 'card'>('cash');
+  let submitting = $state(false);
+  let errorMessage = $state<string | null>(null);
 
-  let cart: CartItem[] = [];
-  let total = 0;
-  let fullName = '';
-  let phoneNo = '';
-  let error = '';
-  let successHint = '';
-  let submitting = false;
-
-  onMount(() => {
-    const raw = localStorage.getItem('bb_cart');
-    cart = raw ? (JSON.parse(raw) as CartItem[]) : [];
-    total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-
-    const userRaw = localStorage.getItem('bb_user');
-    if (userRaw) {
-      try {
-        const user = JSON.parse(userRaw) as { full_name?: string; phone_no?: string };
-        fullName = user.full_name || '';
-        phoneNo = user.phone_no || '';
-      } catch {
-        // ignore malformed local user cache
-      }
+  $effect(() => {
+    if (!fullName && $auth.user?.full_name) {
+      fullName = $auth.user.full_name;
     }
   });
 
-  async function submitOrder() {
-    error = '';
-    successHint = '';
-    if (cart.length === 0) {
-      error = 'Your cart is empty.';
-      return;
-    }
+  const canSubmit = $derived(
+    $cart.length > 0 && fullName.trim().length > 1 && phoneNo.trim().length >= 7 && !submitting
+  );
 
-    if (!fullName.trim() || !phoneNo.trim()) {
-      error = 'Please provide both full name and phone number.';
-      return;
-    }
-
+  async function placeOrder(e: Event) {
+    e.preventDefault();
+    if (!canSubmit) return;
     submitting = true;
+    errorMessage = null;
     try {
-      const items = cart.map((item) => ({ id: item.id, qty: item.qty }));
-      await apiPost<OrderResponse>('/orders', {
-        items,
-        full_name: fullName,
-        phone_no: phoneNo
+      const result = await createOrder({
+        items: $cart.map((i) => ({ id: i.id, qty: i.qty })),
+        full_name: fullName.trim(),
+        phone_no: phoneNo.trim()
       });
-
-      localStorage.removeItem('bb_cart');
-      successHint = 'Order placed. Redirecting...';
-      window.location.href = '/order-success';
-    } catch (e) {
-      console.error(e);
-      error = 'Could not place order. Check your details and try again.';
+      // Stash a snapshot so the success page can offer per-item ratings.
+      sessionStorage.setItem(
+        'bb_last_order',
+        JSON.stringify({
+          order_id: result.order_id,
+          total: $cartTotal,
+          items: $cart.map((i) => ({ id: i.id, name: i.name, qty: i.qty }))
+        })
+      );
+      clearCart();
+      showToast('Order placed — thank you!', 'success');
+      goto(`/order-success?id=${result.order_id}`);
+    } catch {
+      errorMessage = 'We could not place your order. Please check your details and try again.';
     } finally {
       submitting = false;
     }
   }
 </script>
 
-<main class="checkout-shell">
-  <section class="hero card">
-    <div>
-      <p class="eyebrow">Final Step</p>
-      <h1>Secure Checkout</h1>
-      <p class="support">Fast pickup flow designed for San Ignacio rush hour.</p>
-    </div>
-    <a class="back-link" href="/">Back To Menu</a>
-  </section>
+<svelte:head>
+  <title>Checkout — Blessed Bites</title>
+</svelte:head>
 
-  {#if cart.length === 0}
-    <section class="empty card">
-      <h2>Your cart is empty</h2>
-      <p>Add a few favorites before checking out.</p>
-      <a href="/" class="cta">Browse Menu</a>
-    </section>
+<div class="page">
+  <header class="page-head">
+    <h1 class="headline-lg">Checkout</h1>
+    <p class="body-md muted">Almost there — confirm your order details below.</p>
+  </header>
+
+  {#if $cart.length === 0}
+    <div class="bb-card empty">
+      <span class="material-symbols-outlined" aria-hidden="true">shopping_cart_off</span>
+      <p class="body-lg">Your cart is empty.</p>
+      <a class="primary-btn label-lg" href="/menu">Browse the menu</a>
+    </div>
   {:else}
-    <section class="grid">
-      <article class="card summary" aria-label="Order summary">
-        <h2>Order Summary</h2>
-        <ul>
-          {#each cart as item (item.id)}
+    <div class="layout">
+      <form class="form" onsubmit={placeOrder}>
+        <!-- Contact -->
+        <section class="bb-card block">
+          <h2 class="title-lg"><span class="step label-sm">1</span> Contact details</h2>
+          {#if !$auth.user}
+            <p class="body-md muted">
+              Checking out as a guest. <a href="/login">Log in</a> to track your orders.
+            </p>
+          {/if}
+          <label class="field">
+            <span class="label-lg">Full name</span>
+            <input
+              type="text"
+              required
+              minlength="2"
+              autocomplete="name"
+              placeholder="Jane Doe"
+              bind:value={fullName}
+            />
+          </label>
+          <label class="field">
+            <span class="label-lg">Phone number</span>
+            <input
+              type="tel"
+              required
+              minlength="7"
+              autocomplete="tel"
+              placeholder="+1 555 000 1234"
+              bind:value={phoneNo}
+            />
+          </label>
+        </section>
+
+        <!-- Fulfilment -->
+        <section class="bb-card block">
+          <h2 class="title-lg"><span class="step label-sm">2</span> Fulfilment</h2>
+          <div class="options">
+            <label class="option" class:selected={deliveryOption === 'pickup'}>
+              <input type="radio" name="delivery" value="pickup" bind:group={deliveryOption} />
+              <span class="material-symbols-outlined" aria-hidden="true">storefront</span>
+              <span class="option-text">
+                <span class="title-md">Pickup</span>
+                <span class="label-sm muted">Ready in ~20 min</span>
+              </span>
+            </label>
+            <label class="option" class:selected={deliveryOption === 'delivery'}>
+              <input type="radio" name="delivery" value="delivery" bind:group={deliveryOption} />
+              <span class="material-symbols-outlined" aria-hidden="true">local_shipping</span>
+              <span class="option-text">
+                <span class="title-md">Delivery</span>
+                <span class="label-sm muted">Coming soon</span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Payment -->
+        <section class="bb-card block">
+          <h2 class="title-lg"><span class="step label-sm">3</span> Payment</h2>
+          <div class="options">
+            <label class="option" class:selected={paymentOption === 'cash'}>
+              <input type="radio" name="payment" value="cash" bind:group={paymentOption} />
+              <span class="material-symbols-outlined" aria-hidden="true">payments</span>
+              <span class="option-text">
+                <span class="title-md">Pay at counter</span>
+                <span class="label-sm muted">Cash or card on pickup</span>
+              </span>
+            </label>
+            <label class="option" class:selected={paymentOption === 'card'}>
+              <input type="radio" name="payment" value="card" bind:group={paymentOption} />
+              <span class="material-symbols-outlined" aria-hidden="true">credit_card</span>
+              <span class="option-text">
+                <span class="title-md">Card online</span>
+                <span class="label-sm muted">Coming soon</span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        {#if errorMessage}
+          <p class="error body-md" role="alert">{errorMessage}</p>
+        {/if}
+
+        <button type="submit" class="primary-btn submit label-lg" disabled={!canSubmit}>
+          {#if submitting}
+            Placing order…
+          {:else}
+            Place order — ${$cartTotal.toFixed(2)}
+          {/if}
+        </button>
+      </form>
+
+      <!-- Summary -->
+      <aside class="bb-card summary">
+        <h2 class="title-lg">Order summary</h2>
+        <ul class="items">
+          {#each $cart as item (item.id)}
             <li>
-              <div class="item-meta">
-                <span class="item-name">{item.name}</span>
-                <span class="item-qty">Qty {item.qty}</span>
+              {#if item.image_url}
+                <img src={item.image_url} alt="" loading="lazy" />
+              {:else}
+                <span class="thumb-placeholder material-symbols-outlined" aria-hidden="true">restaurant</span>
+              {/if}
+              <div class="item-info">
+                <span class="title-md">{item.name}</span>
+                <span class="label-sm muted">${item.price.toFixed(2)} each</span>
+                <QuantitySelector qty={item.qty} onchange={(q) => setQty(item.id, q)} />
               </div>
-              <strong>${(item.price * item.qty).toFixed(2)}</strong>
+              <span class="title-md line-total">${(item.price * item.qty).toFixed(2)}</span>
             </li>
           {/each}
         </ul>
-
-        <div class="total-row">
-          <span>Total</span>
-          <strong>${total.toFixed(2)}</strong>
+        <div class="totals">
+          <div class="row body-md">
+            <span>Subtotal</span>
+            <span>${$cartTotal.toFixed(2)}</span>
+          </div>
+          <div class="row body-md muted">
+            <span>Taxes &amp; fees</span>
+            <span>Included</span>
+          </div>
+          <div class="row total title-lg">
+            <span>Total</span>
+            <span>${$cartTotal.toFixed(2)}</span>
+          </div>
         </div>
-      </article>
-
-      <article class="card form-card" aria-label="Customer information">
-        <h2>Pickup Details</h2>
-        <p class="support">We will use this to confirm your order is ready.</p>
-
-        <form on:submit|preventDefault={submitOrder} class="form">
-          <label for="fullName">Full name</label>
-          <input id="fullName" bind:value={fullName} placeholder="e.g. Ana Lopez" autocomplete="name" required />
-
-          <label for="phone">Phone number</label>
-          <input id="phone" bind:value={phoneNo} placeholder="e.g. +501 610 1234" autocomplete="tel" required />
-
-          <button class="cta" type="submit" disabled={submitting}>
-            {submitting ? 'Placing Order...' : 'Place Order'}
-          </button>
-        </form>
-
-        {#if error}
-          <p class="feedback error" role="alert">{error}</p>
-        {/if}
-        {#if successHint}
-          <p class="feedback ok" role="status">{successHint}</p>
-        {/if}
-      </article>
-    </section>
+      </aside>
+    </div>
   {/if}
-</main>
+</div>
 
 <style>
-  :global(body) {
-    background:
-      radial-gradient(circle at 8% 8%, #f9e9c8 0%, transparent 42%),
-      radial-gradient(circle at 90% 12%, #f1d6bf 0%, transparent 36%),
-      #fff7ef;
+  .page {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: var(--bb-space-lg) var(--bb-margin-mobile) var(--bb-space-xl);
   }
 
-  .checkout-shell {
-    --m3-primary: #7f1d2d;
-    --m3-secondary: #8d6500;
-    --m3-surface: #fffaf5;
-    --m3-outline: #e6d2c7;
-    --m3-on-surface-variant: #6f4744;
-
-    max-width: 1120px;
-    margin: 1.25rem auto 2rem;
-    padding: 0 1rem;
-    font-family: 'Sora', 'Nunito Sans', 'Trebuchet MS', sans-serif;
+  .page-head {
+    margin-bottom: var(--bb-space-lg);
   }
 
-  .card {
-    background: var(--m3-surface);
-    border: 1px solid var(--m3-outline);
-    border-radius: 24px;
-    box-shadow: 0 8px 30px rgba(61, 20, 16, 0.08);
-  }
-
-  .hero {
-    padding: 1.2rem 1.2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .eyebrow {
+  .page-head h1 {
     margin: 0;
-    color: var(--m3-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.75rem;
-    font-weight: 800;
+    color: var(--md-sys-color-on-surface);
   }
 
-  h1 {
-    margin: 0.2rem 0 0.4rem;
-    color: #4f1a24;
-    font-size: clamp(1.4rem, 2.4vw, 2rem);
+  .page-head p {
+    margin: var(--bb-space-xs) 0 0;
   }
 
-  h2 {
-    margin: 0 0 0.5rem;
-    color: #4f1a24;
+  .muted {
+    color: var(--md-sys-color-on-surface-variant);
   }
 
-  .support {
-    margin: 0;
-    color: var(--m3-on-surface-variant);
-  }
-
-  .back-link {
-    text-decoration: none;
-    font-weight: 700;
-    color: #5e1a28;
-    background: #f6dfb7;
-    border-radius: 999px;
-    padding: 0.55rem 0.9rem;
-    white-space: nowrap;
-  }
-
-  .grid {
+  .layout {
     display: grid;
-    gap: 1rem;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+    gap: var(--bb-space-lg);
+    align-items: start;
   }
 
-  .summary,
-  .form-card,
-  .empty {
-    padding: 1rem;
-  }
-
-  ul {
-    list-style: none;
-    margin: 0.75rem 0;
-    padding: 0;
-    display: grid;
-    gap: 0.65rem;
-  }
-
-  li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    border-bottom: 1px solid #f0dfd6;
-    padding-bottom: 0.55rem;
-  }
-
-  .item-meta {
-    display: grid;
-    gap: 0.1rem;
-  }
-
-  .item-name {
-    font-weight: 700;
-    color: #4f1a24;
-  }
-
-  .item-qty {
-    font-size: 0.82rem;
-    color: var(--m3-on-surface-variant);
-  }
-
-  .total-row {
-    margin-top: 0.8rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1.05rem;
-  }
-
-  .total-row strong {
-    color: var(--m3-primary);
-    font-size: 1.3rem;
+  @media (min-width: 900px) {
+    .layout {
+      grid-template-columns: 1fr 380px;
+    }
   }
 
   .form {
-    margin-top: 0.7rem;
-    display: grid;
-    gap: 0.45rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-lg);
   }
 
-  label {
-    font-size: 0.88rem;
+  .block {
+    padding: var(--bb-space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-md);
+  }
+
+  .block h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--bb-space-sm);
+    margin: 0;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .step {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--bb-shape-full);
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-weight: 700;
-    color: #57322e;
   }
 
-  input {
-    border: 1px solid #d8c4b8;
-    border-radius: 14px;
-    padding: 0.72rem 0.84rem;
-    font: inherit;
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-xs);
+  }
+
+  .field span {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .field input {
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--bb-shape-sm);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    padding: 14px 16px;
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 16px;
+    outline: none;
     transition: border-color 150ms ease, box-shadow 150ms ease;
   }
 
-  input:focus {
-    outline: none;
-    border-color: #8d6500;
-    box-shadow: 0 0 0 3px rgba(141, 101, 0, 0.15);
+  .field input:focus {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 1px var(--md-sys-color-primary);
   }
 
-  .cta {
-    margin-top: 0.55rem;
-    border: none;
-    border-radius: 999px;
-    padding: 0.72rem 1rem;
-    background: linear-gradient(130deg, var(--m3-primary), #a2253b);
-    color: #fff9ea;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-    text-decoration: none;
-    text-align: center;
+  .options {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--bb-space-md);
+  }
+
+  @media (min-width: 600px) {
+    .options {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: var(--bb-space-md);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--bb-shape-md);
+    padding: var(--bb-space-md);
     cursor: pointer;
+    transition: border-color 150ms ease, background-color 150ms ease;
   }
 
-  .cta:disabled {
-    opacity: 0.7;
+  .option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .option .material-symbols-outlined {
+    color: var(--md-sys-color-primary);
+    font-size: 28px;
+  }
+
+  .option.selected {
+    border-color: var(--md-sys-color-primary);
+    background: color-mix(in srgb, var(--md-sys-color-primary-container) 35%, transparent);
+  }
+
+  .option-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .error {
+    margin: 0;
+    color: var(--md-sys-color-error);
+  }
+
+  .primary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    padding: 16px 32px;
+    border-radius: var(--bb-shape-full);
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: var(--bb-elev-1);
+    transition: box-shadow 200ms ease, opacity 150ms ease;
+  }
+
+  .primary-btn:hover:not(:disabled) {
+    box-shadow: var(--bb-elev-2);
+  }
+
+  .primary-btn:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
-  .feedback {
-    margin-top: 0.7rem;
-    border-radius: 12px;
-    padding: 0.65rem 0.75rem;
-    font-weight: 600;
+  .summary {
+    padding: var(--bb-space-lg);
+    position: sticky;
+    top: 96px;
   }
 
-  .feedback.error {
-    background: #ffe5e8;
-    color: #7d1228;
+  .summary h2 {
+    margin: 0 0 var(--bb-space-md);
+    color: var(--md-sys-color-on-surface);
   }
 
-  .feedback.ok {
-    background: #e2f5e8;
-    color: #1f6b3c;
+  .items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-md);
+  }
+
+  .items li {
+    display: flex;
+    gap: var(--bb-space-md);
+    align-items: flex-start;
+  }
+
+  .items img,
+  .thumb-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--bb-shape-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .thumb-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-outline);
+  }
+
+  .item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-xs);
+    min-width: 0;
+  }
+
+  .line-total {
+    color: var(--md-sys-color-primary);
+    white-space: nowrap;
+  }
+
+  .totals {
+    margin-top: var(--bb-space-lg);
+    border-top: 1px dashed var(--md-sys-color-outline-variant);
+    padding-top: var(--bb-space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-sm);
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .row.total {
+    color: var(--md-sys-color-primary);
+    font-weight: 800;
+  }
+
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--bb-space-md);
+    padding: var(--bb-space-xl);
+    text-align: center;
+  }
+
+  .empty .material-symbols-outlined {
+    font-size: 48px;
+    color: var(--md-sys-color-outline);
   }
 
   .empty p {
-    color: var(--m3-on-surface-variant);
-    margin-bottom: 1rem;
-  }
-
-  @media (max-width: 860px) {
-    .hero {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .grid {
-      grid-template-columns: 1fr;
-    }
+    margin: 0;
+    color: var(--md-sys-color-on-surface-variant);
   }
 </style>

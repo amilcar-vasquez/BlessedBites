@@ -1,79 +1,83 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { signup } from '$lib/api/auth';
+  import AuthCard from '$lib/components/AuthCard.svelte';
 
-  let fullName = '';
-  let email = '';
-  let phoneNo = '';
-  let password = '';
-  let confirmPassword = '';
-  let error = '';
-  let submitting = false;
+  let fullName = $state('');
+  let email = $state('');
+  let phoneNo = $state('');
+  let password = $state('');
+  let confirmPassword = $state('');
+  let submitting = $state(false);
+  let errorMessage = $state<string | null>(null);
 
-  async function submit() {
-    error = '';
-
+  async function handleSubmit(e: Event) {
+    e.preventDefault();
+    if (submitting) return;
     if (password !== confirmPassword) {
-      error = 'Passwords do not match.';
+      errorMessage = 'Passwords do not match.';
       return;
     }
-
     submitting = true;
+    errorMessage = null;
     try {
       await signup({
-        full_name: fullName,
-        email,
-        phone_no: phoneNo,
+        email: email.trim(),
+        full_name: fullName.trim(),
+        phone_no: phoneNo.trim(),
         password
       });
-      await goto('/signup-thanks');
-    } catch (e) {
-      console.error(e);
-      error = 'Could not create account. Please verify details and try again.';
+      goto('/signup-thanks');
+    } catch {
+      errorMessage = 'Could not create your account. The email may already be in use.';
     } finally {
       submitting = false;
     }
   }
 </script>
 
-<main class="auth-shell">
-  <section class="card">
-    <h1>Sign Up</h1>
-    <p>Create your BlessedBites account.</p>
+<svelte:head>
+  <title>Sign Up — Blessed Bites</title>
+</svelte:head>
 
-    <form on:submit|preventDefault={submit}>
-      <label for="fullName">Full name</label>
-      <input id="fullName" type="text" bind:value={fullName} required />
-
-      <label for="email">Email</label>
-      <input id="email" type="email" bind:value={email} required />
-
-      <label for="phoneNo">Phone number</label>
-      <input id="phoneNo" type="tel" bind:value={phoneNo} required />
-
-      <label for="password">Password</label>
-      <input id="password" type="password" bind:value={password} required minlength="8" />
-
-      <label for="confirm">Confirm password</label>
-      <input id="confirm" type="password" bind:value={confirmPassword} required minlength="8" />
-
-      {#if error}<p class="error">{error}</p>{/if}
-
-      <button class="btn" type="submit" disabled={submitting}>
-        {submitting ? 'Creating account...' : 'Create Account'}
-      </button>
-    </form>
-  </section>
-</main>
+<AuthCard title="Create your account" subtitle="Join Blessed Bites for faster checkout and order history.">
+  <form onsubmit={handleSubmit}>
+    <label class="bb-field">
+      <span>Full name</span>
+      <input type="text" required minlength="2" autocomplete="name" placeholder="Jane Doe" bind:value={fullName} />
+    </label>
+    <label class="bb-field">
+      <span>Email</span>
+      <input type="email" required autocomplete="email" placeholder="you@example.com" bind:value={email} />
+    </label>
+    <label class="bb-field">
+      <span>Phone number</span>
+      <input type="tel" required minlength="7" autocomplete="tel" placeholder="+1 555 000 1234" bind:value={phoneNo} />
+    </label>
+    <label class="bb-field">
+      <span>Password</span>
+      <input type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" bind:value={password} />
+    </label>
+    <label class="bb-field">
+      <span>Confirm password</span>
+      <input type="password" required autocomplete="new-password" placeholder="Repeat your password" bind:value={confirmPassword} />
+    </label>
+    {#if errorMessage}
+      <p class="bb-form-error" role="alert">{errorMessage}</p>
+    {/if}
+    <button type="submit" class="bb-btn-primary" disabled={submitting}>
+      {submitting ? 'Creating account…' : 'Sign Up'}
+    </button>
+  </form>
+  {#snippet footer()}
+    Already have an account? <a href="/login">Login</a>
+  {/snippet}
+</AuthCard>
 
 <style>
-  .auth-shell { max-width: 560px; margin: 2rem auto; padding: 1rem; }
-  .card { background: #fffaf5; border: 1px solid #e7d3c9; border-radius: 20px; padding: 1rem 1.2rem; }
-  h1 { margin: 0 0 0.4rem; }
-  p { margin: 0 0 1rem; color: #6f4744; }
-  form { display: grid; gap: 0.55rem; }
-  label { font-weight: 700; font-size: 0.9rem; }
-  input { border: 1px solid #d9c5bc; border-radius: 12px; padding: 0.65rem 0.8rem; }
-  .btn { margin-top: 0.35rem; border: none; border-radius: 999px; padding: 0.65rem 1rem; background: #7f1d2d; color: #fff; font-weight: 700; }
-  .error { color: #8a1732; margin: 0.15rem 0; }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-md);
+  }
 </style>

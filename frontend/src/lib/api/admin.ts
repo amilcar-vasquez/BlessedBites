@@ -1,4 +1,5 @@
 import { apiDelete, apiGet, apiPost, apiPut } from './client';
+import { getAccessToken } from '$lib/stores/auth';
 import type { MenuItem } from './menu';
 import type { Category } from './categories';
 
@@ -23,11 +24,6 @@ export type AdminUser = {
 type ListResponse<T> = {
   items: T[];
 };
-
-function getAccessToken(): string {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem('bb_access_token') || '';
-}
 
 export async function listAdminMenu(): Promise<MenuItem[]> {
   const token = getAccessToken();

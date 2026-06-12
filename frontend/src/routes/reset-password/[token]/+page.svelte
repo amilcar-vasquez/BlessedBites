@@ -1,61 +1,66 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { resetPassword } from '$lib/api/auth';
+  import { showToast } from '$lib/stores/toast';
+  import AuthCard from '$lib/components/AuthCard.svelte';
 
-  let password = '';
-  let confirm = '';
-  let error = '';
-  let submitting = false;
+  let password = $state('');
+  let confirmPassword = $state('');
+  let submitting = $state(false);
+  let errorMessage = $state<string | null>(null);
 
-  async function submit() {
-    error = '';
-
-    if (password !== confirm) {
-      error = 'Passwords do not match.';
+  async function handleSubmit(e: Event) {
+    e.preventDefault();
+    if (submitting) return;
+    if (password !== confirmPassword) {
+      errorMessage = 'Passwords do not match.';
       return;
     }
-
     submitting = true;
+    errorMessage = null;
     try {
-      await resetPassword($page.params.token, password);
-      await goto('/login');
-    } catch (e) {
-      console.error(e);
-      error = 'Reset failed. Token may be expired or invalid.';
+      await resetPassword($page.params.token ?? '', password);
+      showToast('Password updated — log in with your new password.', 'success');
+      goto('/login');
+    } catch {
+      errorMessage = 'This reset link is invalid or has expired. Request a new one.';
     } finally {
       submitting = false;
     }
   }
 </script>
 
-<main class="auth-shell">
-  <section class="card">
-    <h1>Set New Password</h1>
-    <p>Choose a secure password for your account.</p>
+<svelte:head>
+  <title>Choose a New Password — Blessed Bites</title>
+</svelte:head>
 
-    <form on:submit|preventDefault={submit}>
-      <label for="password">New password</label>
-      <input id="password" type="password" bind:value={password} required minlength="8" />
-
-      <label for="confirm">Confirm password</label>
-      <input id="confirm" type="password" bind:value={confirm} required minlength="8" />
-
-      {#if error}<p class="error">{error}</p>{/if}
-
-      <button class="btn" type="submit" disabled={submitting}>
-        {submitting ? 'Updating...' : 'Reset Password'}
-      </button>
-    </form>
-  </section>
-</main>
+<AuthCard title="Choose a new password" subtitle="Make it strong — at least 8 characters.">
+  <form onsubmit={handleSubmit}>
+    <label class="bb-field">
+      <span>New password</span>
+      <input type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" bind:value={password} />
+    </label>
+    <label class="bb-field">
+      <span>Confirm new password</span>
+      <input type="password" required autocomplete="new-password" placeholder="Repeat your password" bind:value={confirmPassword} />
+    </label>
+    {#if errorMessage}
+      <p class="bb-form-error" role="alert">{errorMessage}</p>
+    {/if}
+    <button type="submit" class="bb-btn-primary" disabled={submitting}>
+      {submitting ? 'Updating…' : 'Update password'}
+    </button>
+  </form>
+  {#snippet footer()}
+    Need a new link? <a href="/reset-password-request">Request reset</a>
+  {/snippet}
+</AuthCard>
 
 <style>
-  .auth-shell { max-width: 520px; margin: 2rem auto; padding: 1rem; }
-  .card { background: #fffaf5; border: 1px solid #e7d3c9; border-radius: 20px; padding: 1rem 1.2rem; }
-  form { display: grid; gap: 0.55rem; }
-  label { font-weight: 700; font-size: 0.9rem; }
-  input { border: 1px solid #d9c5bc; border-radius: 12px; padding: 0.65rem 0.8rem; }
-  .btn { margin-top: 0.35rem; border: none; border-radius: 999px; padding: 0.65rem 1rem; background: #7f1d2d; color: #fff; font-weight: 700; }
-  .error { color: #8a1732; }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-md);
+  }
 </style>

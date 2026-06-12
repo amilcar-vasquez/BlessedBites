@@ -1,13 +1,35 @@
-<main class="shell">
-  <section class="card">
-    <h1>Thank You for Signing Up!</h1>
-    <p>You are now eligible for a BlessedBites coupon.</p>
-    <a href="/login" class="btn">Login now</a>
-  </section>
-</main>
+<script lang="ts">
+  import AuthCard from '$lib/components/AuthCard.svelte';
+</script>
+
+<svelte:head>
+  <title>Welcome — Blessed Bites</title>
+</svelte:head>
+
+<AuthCard title="You're in!" subtitle="Your account has been created successfully.">
+  <div class="content">
+    <span class="material-symbols-outlined fill icon" aria-hidden="true">celebration</span>
+    <p class="body-lg">Welcome to the Blessed Bites family. Log in to start ordering.</p>
+    <a class="bb-btn-primary" href="/login">Continue to Login</a>
+  </div>
+</AuthCard>
 
 <style>
-  .shell { max-width: 640px; margin: 2rem auto; padding: 1rem; }
-  .card { background: #fffaf5; border: 1px solid #e7d3c9; border-radius: 20px; padding: 1.2rem; text-align: center; }
-  .btn { display: inline-block; margin-top: 1rem; border-radius: 999px; padding: 0.65rem 1rem; background: #7f1d2d; color: #fff; text-decoration: none; font-weight: 700; }
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--bb-space-md);
+  }
+
+  .icon {
+    font-size: 56px;
+    color: var(--md-sys-color-tertiary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--md-sys-color-on-surface-variant);
+  }
 </style>

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fetchCategories, type Category } from '$lib/api/categories';
   import {
     createAdminCategory,
     createAdminMenu,
@@ -9,263 +8,644 @@
     listAdminMenu,
     updateAdminMenu
   } from '$lib/api/admin';
-  import type { MenuItem } from '$lib/api/menu';
+  import { fetchCategories, type Category } from '$lib/api/categories';
+  import { normalizeImageUrl, type MenuItem } from '$lib/api/menu';
+  import { showToast } from '$lib/stores/toast';
+  import Skeleton from '$lib/components/Skeleton.svelte';
 
-  type FormState = {
-    id?: number;
-    name: string;
-    description: string;
-    price: string;
-    category_id: string;
-    image_url: string;
-    is_active: boolean;
-  };
+  let items = $state<MenuItem[]>([]);
+  let categories = $state<Category[]>([]);
+  let loading = $state(true);
+  let error = $state<string | null>(null);
 
-  let items: MenuItem[] = [];
-  let categories: Category[] = [];
-  let loading = true;
-  let error = '';
-  let categoryError = '';
-  let categoryName = '';
-  let submitting = false;
-
-  let form: FormState = {
+  // Dialog state
+  let dialogOpen = $state(false);
+  let editing = $state<MenuItem | null>(null);
+  let saving = $state(false);
+  let form = $state({
     name: '',
     description: '',
     price: '',
     category_id: '',
     image_url: '',
     is_active: true
-  };
+  });
 
-  async function load() {
-    loading = true;
-    error = '';
+  // Delete confirm
+  let deleting = $state<MenuItem | null>(null);
+
+  // Category panel
+  let newCategoryName = $state('');
+  let categoryBusy = $state(false);
+
+  async function refresh() {
     try {
-      const [menuItems, categoryItems] = await Promise.all([listAdminMenu(), fetchCategories()]);
-      items = menuItems;
-      categories = categoryItems;
-    } catch (e) {
-      console.error(e);
-      error = 'Could not load admin menu data. Admin login required.';
+      const [m, c] = await Promise.all([listAdminMenu(), fetchCategories()]);
+      items = m;
+      categories = c;
+      error = null;
+    } catch {
+      error = 'Could not load menu data.';
     } finally {
       loading = false;
     }
   }
 
-  function resetForm() {
+  onMount(refresh);
+
+  function categoryName(id: number): string {
+    return categories.find((c) => c.id === id)?.name ?? '—';
+  }
+
+  function openCreate() {
+    editing = null;
     form = {
       name: '',
       description: '',
       price: '',
-      category_id: categories.length > 0 ? String(categories[0].id) : '',
+      category_id: categories[0] ? String(categories[0].id) : '',
       image_url: '',
       is_active: true
     };
+    dialogOpen = true;
   }
 
-  function startEdit(item: MenuItem) {
+  function openEdit(item: MenuItem) {
+    editing = item;
     form = {
-      id: item.id,
       name: item.name,
       description: item.description,
       price: String(item.price),
       category_id: String(item.category_id),
-      image_url: item.image_url || '',
-      is_active: item.is_active ?? true
+      image_url: item.image_url ?? '',
+      is_active: item.is_active !== false
     };
+    dialogOpen = true;
   }
 
-  async function submitMenu() {
-    error = '';
-    submitting = true;
-
+  async function save(e: Event) {
+    e.preventDefault();
+    if (saving) return;
+    const price = Number(form.price);
+    const categoryId = Number(form.category_id);
+    if (!form.name.trim() || !Number.isFinite(price) || price <= 0 || !Number.isFinite(categoryId)) {
+      showToast('Please fill in name, a valid price, and a category.', 'error');
+      return;
+    }
+    saving = true;
+    const payload = {
+      name: form.name.trim(),
+      description: form.description.trim(),
+      price,
+      category_id: categoryId,
+      image_url: form.image_url.trim(),
+      is_active: form.is_active
+    };
     try {
-      const payload = {
-        name: form.name,
-        description: form.description,
-        price: Number(form.price),
-        category_id: Number(form.category_id),
-        image_url: form.image_url,
-        is_active: form.is_active
-      };
-
-      if (form.id) {
-        await updateAdminMenu(form.id, payload);
+      if (editing) {
+        await updateAdminMenu(editing.id, payload);
+        showToast(`${payload.name} updated`, 'success');
       } else {
         await createAdminMenu(payload);
+        showToast(`${payload.name} added to the menu`, 'success');
       }
-
-      await load();
-      resetForm();
-    } catch (e) {
-      console.error(e);
-      error = 'Could not save menu item.';
+      dialogOpen = false;
+      await refresh();
+    } catch {
+      showToast('Could not save the dish. Please try again.', 'error');
     } finally {
-      submitting = false;
+      saving = false;
     }
   }
 
-  async function removeMenuItem(id: number) {
-    if (!confirm('Delete this menu item?')) return;
+  async function confirmDelete() {
+    if (!deleting) return;
     try {
-      await deleteAdminMenu(id);
-      await load();
-    } catch (e) {
-      console.error(e);
-      error = 'Could not delete menu item.';
+      await deleteAdminMenu(deleting.id);
+      showToast(`${deleting.name} deleted`, 'success');
+      deleting = null;
+      await refresh();
+    } catch {
+      showToast('Could not delete the dish.', 'error');
     }
   }
 
-  async function submitCategory() {
-    categoryError = '';
+  async function addCategory(e: Event) {
+    e.preventDefault();
+    const name = newCategoryName.trim();
+    if (!name || categoryBusy) return;
+    categoryBusy = true;
     try {
-      await createAdminCategory(categoryName.trim());
-      categoryName = '';
-      await load();
-    } catch (e) {
-      console.error(e);
-      categoryError = 'Could not create category.';
+      await createAdminCategory(name);
+      newCategoryName = '';
+      showToast(`Category “${name}” created`, 'success');
+      await refresh();
+    } catch {
+      showToast('Could not create the category.', 'error');
+    } finally {
+      categoryBusy = false;
     }
   }
 
-  async function removeCategory(id: number) {
-    if (!confirm('Delete this category?')) return;
+  async function removeCategory(cat: Category) {
+    if (categoryBusy) return;
+    categoryBusy = true;
     try {
-      await deleteAdminCategory(id);
-      await load();
-    } catch (e) {
-      console.error(e);
-      categoryError = 'Could not delete category.';
+      await deleteAdminCategory(cat.id);
+      showToast(`Category “${cat.name}” deleted`, 'success');
+      await refresh();
+    } catch {
+      showToast('Could not delete the category — it may still have dishes.', 'error');
+    } finally {
+      categoryBusy = false;
     }
   }
-
-  onMount(async () => {
-    await load();
-    resetForm();
-  });
 </script>
 
-<main class="shell">
-  <h1>Menu Management</h1>
-  <p class="muted">Add categories and manage menu items.</p>
+<svelte:head>
+  <title>Menu Management — Blessed Admin</title>
+</svelte:head>
 
-  <section class="layout">
-    <aside class="card">
-      <h2>Categories</h2>
-      <form on:submit|preventDefault={submitCategory} class="stack">
-        <label for="category">New category</label>
-        <input id="category" bind:value={categoryName} required />
-        <button class="btn mustard" type="submit">Add Category</button>
-      </form>
-      {#if categoryError}<p class="error">{categoryError}</p>{/if}
+<header class="head">
+  <div>
+    <h1 class="headline-lg">Menu &amp; Categories</h1>
+    <p class="body-md muted">Manage dishes, pricing, and availability.</p>
+  </div>
+  <button type="button" class="bb-btn-primary" onclick={openCreate}>
+    <span class="material-symbols-outlined" aria-hidden="true">add</span>
+    New Dish
+  </button>
+</header>
 
-      <ul class="stack list">
+{#if error}
+  <p class="bb-form-error" role="alert">{error}</p>
+{/if}
+
+<div class="panels">
+  <!-- Menu table -->
+  <section class="bb-card panel">
+    {#if loading}
+      <Skeleton width="100%" height="320px" radius="8px" />
+    {:else if items.length === 0}
+      <p class="body-md muted">No dishes yet — create your first one.</p>
+    {:else}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="label-sm">Dish</th>
+              <th class="label-sm">Category</th>
+              <th class="label-sm num">Price</th>
+              <th class="label-sm">Status</th>
+              <th class="label-sm actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each items as item (item.id)}
+              <tr>
+                <td>
+                  <div class="dish">
+                    {#if item.image_url}
+                      <img src={normalizeImageUrl(item.image_url)} alt="" loading="lazy" />
+                    {:else}
+                      <span class="thumb material-symbols-outlined" aria-hidden="true">restaurant</span>
+                    {/if}
+                    <div class="dish-text">
+                      <span class="title-md">{item.name}</span>
+                      <span class="label-sm muted clamp">{item.description}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="body-md">{categoryName(item.category_id)}</td>
+                <td class="body-md num strong">${item.price.toFixed(2)}</td>
+                <td>
+                  <span class="chip label-sm" class:active-chip={item.is_active !== false}>
+                    {item.is_active !== false ? 'Active' : 'Hidden'}
+                  </span>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" class="icon-btn" aria-label={`Edit ${item.name}`} onclick={() => openEdit(item)}>
+                      <span class="material-symbols-outlined">edit</span>
+                    </button>
+                    <button type="button" class="icon-btn danger" aria-label={`Delete ${item.name}`} onclick={() => (deleting = item)}>
+                      <span class="material-symbols-outlined">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    {/if}
+  </section>
+
+  <!-- Categories panel -->
+  <section class="bb-card panel">
+    <h2 class="title-lg">Categories</h2>
+    <form class="cat-form" onsubmit={addCategory}>
+      <input
+        type="text"
+        placeholder="New category name"
+        aria-label="New category name"
+        bind:value={newCategoryName}
+      />
+      <button type="submit" class="bb-btn-primary" disabled={categoryBusy || !newCategoryName.trim()}>
+        Add
+      </button>
+    </form>
+    {#if loading}
+      <Skeleton width="100%" height="120px" radius="8px" />
+    {:else if categories.length === 0}
+      <p class="body-md muted">No categories yet.</p>
+    {:else}
+      <ul class="cat-list">
         {#each categories as cat (cat.id)}
           <li>
-            <span>{cat.name}</span>
-            <button class="icon" type="button" on:click={() => removeCategory(cat.id)}>Delete</button>
+            <span class="body-lg">{cat.name}</span>
+            <span class="label-sm muted count">
+              {items.filter((i) => i.category_id === cat.id).length} dishes
+            </span>
+            <button type="button" class="icon-btn danger" aria-label={`Delete category ${cat.name}`} onclick={() => removeCategory(cat)}>
+              <span class="material-symbols-outlined">delete</span>
+            </button>
           </li>
         {/each}
       </ul>
-    </aside>
-
-    <section>
-      <article class="card">
-        <h2>{form.id ? 'Edit Menu Item' : 'Add Menu Item'}</h2>
-        <form on:submit|preventDefault={submitMenu} class="stack">
-          <label for="name">Name</label>
-          <input id="name" bind:value={form.name} required />
-
-          <label for="description">Description</label>
-          <textarea id="description" bind:value={form.description} rows="3" required></textarea>
-
-          <label for="price">Price (BZD)</label>
-          <input id="price" type="number" step="0.01" min="0" bind:value={form.price} required />
-
-          <label for="catSelect">Category</label>
-          <select id="catSelect" bind:value={form.category_id} required>
-            {#each categories as cat (cat.id)}
-              <option value={String(cat.id)}>{cat.name}</option>
-            {/each}
-          </select>
-
-          <label for="image">Image URL</label>
-          <input id="image" bind:value={form.image_url} placeholder="/uploads/filename.jpg" />
-
-          <label class="toggle">
-            <input type="checkbox" bind:checked={form.is_active} /> Active
-          </label>
-
-          <div class="row">
-            <button class="btn" type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Save Item'}</button>
-            {#if form.id}
-              <button class="btn ghost" type="button" on:click={resetForm}>Cancel Edit</button>
-            {/if}
-          </div>
-        </form>
-      </article>
-
-      <article class="card">
-        <h2>Existing Items</h2>
-        {#if loading}
-          <p>Loading menu...</p>
-        {:else}
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>State</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {#each items as item (item.id)}
-                  <tr>
-                    <td>{item.name}</td>
-                    <td>{categories.find((c) => c.id === item.category_id)?.name || '-'}</td>
-                    <td>${item.price.toFixed(2)}</td>
-                    <td>{item.is_active ? 'Active' : 'Inactive'}</td>
-                    <td>
-                      <button class="icon" type="button" on:click={() => startEdit(item)}>Edit</button>
-                      <button class="icon danger" type="button" on:click={() => removeMenuItem(item.id)}>Delete</button>
-                    </td>
-                  </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-        {/if}
-        {#if error}<p class="error">{error}</p>{/if}
-      </article>
-    </section>
+    {/if}
   </section>
-</main>
+</div>
+
+<!-- Create/Edit dialog -->
+{#if dialogOpen}
+  <div class="overlay" role="presentation" onclick={(e) => e.target === e.currentTarget && (dialogOpen = false)}>
+    <div class="dialog bb-card" role="dialog" aria-modal="true" aria-label={editing ? 'Edit dish' : 'New dish'}>
+      <h2 class="headline-md">{editing ? `Edit ${editing.name}` : 'New Dish'}</h2>
+      <form onsubmit={save}>
+        <label class="bb-field">
+          <span>Name</span>
+          <input type="text" required bind:value={form.name} />
+        </label>
+        <label class="bb-field">
+          <span>Description</span>
+          <textarea rows="3" bind:value={form.description}></textarea>
+        </label>
+        <div class="field-row">
+          <label class="bb-field">
+            <span>Price ($)</span>
+            <input type="number" step="0.01" min="0.01" required bind:value={form.price} />
+          </label>
+          <label class="bb-field">
+            <span>Category</span>
+            <select required bind:value={form.category_id}>
+              {#each categories as cat (cat.id)}
+                <option value={String(cat.id)}>{cat.name}</option>
+              {/each}
+            </select>
+          </label>
+        </div>
+        <label class="bb-field">
+          <span>Image URL</span>
+          <input type="text" placeholder="/uploads/dish.jpg" bind:value={form.image_url} />
+        </label>
+        <label class="toggle">
+          <input type="checkbox" bind:checked={form.is_active} />
+          <span class="label-lg">Visible on the customer menu</span>
+        </label>
+        <div class="dialog-actions">
+          <button type="button" class="text-btn label-lg" onclick={() => (dialogOpen = false)}>Cancel</button>
+          <button type="submit" class="bb-btn-primary" disabled={saving}>
+            {saving ? 'Saving…' : editing ? 'Save changes' : 'Create dish'}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{/if}
+
+<!-- Delete confirm -->
+{#if deleting}
+  <div class="overlay" role="presentation" onclick={(e) => e.target === e.currentTarget && (deleting = null)}>
+    <div class="dialog bb-card" role="alertdialog" aria-modal="true" aria-label="Confirm deletion">
+      <h2 class="headline-md">Delete “{deleting.name}”?</h2>
+      <p class="body-md muted">This removes the dish permanently. This action cannot be undone.</p>
+      <div class="dialog-actions">
+        <button type="button" class="text-btn label-lg" onclick={() => (deleting = null)}>Cancel</button>
+        <button type="button" class="danger-btn label-lg" onclick={confirmDelete}>Delete</button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
-  .shell { max-width: 1200px; margin: 1.2rem auto; padding: 1rem; }
-  .muted { color: #6f4744; }
-  .layout { display: grid; grid-template-columns: 280px 1fr; gap: 1rem; }
-  .card { background: #fffaf5; border: 1px solid #e7d3c9; border-radius: 20px; padding: 1rem; }
-  .stack { display: grid; gap: 0.55rem; }
-  .row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-  input, textarea, select { border: 1px solid #d9c5bc; border-radius: 12px; padding: 0.6rem 0.8rem; font: inherit; }
-  .btn { border: none; border-radius: 999px; padding: 0.6rem 0.95rem; background: #7f1d2d; color: #fff; font-weight: 700; }
-  .btn.mustard { background: #8d6500; }
-  .btn.ghost { background: #eee0d5; color: #482826; }
-  .toggle { display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 700; }
-  .list { list-style: none; margin: 0.9rem 0 0; padding: 0; }
-  .list li { display: flex; justify-content: space-between; gap: 0.7rem; align-items: center; }
-  .icon { border: none; border-radius: 999px; padding: 0.32rem 0.7rem; background: #f6dfb7; color: #492316; font-weight: 700; }
-  .icon.danger { background: #ffd9de; color: #5c1524; }
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 0.55rem 0.4rem; border-bottom: 1px solid #f0dfd6; }
-  .error { color: #8a1732; }
-  @media (max-width: 900px) {
-    .layout { grid-template-columns: 1fr; }
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bb-space-md);
+    margin-bottom: var(--bb-space-lg);
+    flex-wrap: wrap;
+  }
+
+  .head h1 {
+    margin: 0;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .head p {
+    margin: var(--bb-space-xs) 0 0;
+  }
+
+  .muted {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--bb-space-lg);
+    align-items: start;
+  }
+
+  @media (min-width: 1200px) {
+    .panels {
+      grid-template-columns: 3fr 1fr;
+    }
+  }
+
+  .panel {
+    padding: var(--bb-space-lg);
+  }
+
+  .panel h2 {
+    margin: 0 0 var(--bb-space-md);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th {
+    text-align: left;
+    color: var(--md-sys-color-on-surface-variant);
+    text-transform: uppercase;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  td {
+    padding: 12px;
+    color: var(--md-sys-color-on-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    vertical-align: middle;
+  }
+
+  tbody tr:nth-child(even) {
+    background: var(--md-sys-color-surface-container-low);
+  }
+
+  tbody tr:hover {
+    background: var(--md-sys-color-surface-container-high);
+  }
+
+  .num {
+    text-align: right;
+  }
+
+  .strong {
+    font-weight: 700;
+  }
+
+  .actions-col {
+    width: 96px;
+  }
+
+  .dish {
+    display: flex;
+    align-items: center;
+    gap: var(--bb-space-md);
+    min-width: 220px;
+  }
+
+  .dish img,
+  .thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--bb-shape-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .thumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-outline);
+  }
+
+  .dish-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .chip {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--bb-shape-full);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .chip.active-chip {
+    border-color: transparent;
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+  }
+
+  .row-actions {
+    display: flex;
+    gap: var(--bb-space-xs);
+  }
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    border-radius: var(--bb-shape-full);
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+
+  .icon-btn:hover {
+    background: var(--md-sys-color-surface-container-highest);
+  }
+
+  .icon-btn.danger:hover {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+  }
+
+  .icon-btn .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  .cat-form {
+    display: flex;
+    gap: var(--bb-space-sm);
+    margin-bottom: var(--bb-space-md);
+  }
+
+  .cat-form input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--bb-shape-sm);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    padding: 10px 14px;
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 14px;
+    outline: none;
+  }
+
+  .cat-form input:focus {
+    border-color: var(--md-sys-color-primary);
+  }
+
+  .cat-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cat-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--bb-space-sm);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .cat-list li:last-child {
+    border-bottom: none;
+  }
+
+  .cat-list .body-lg {
+    flex: 1;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .count {
+    white-space: nowrap;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: color-mix(in srgb, var(--md-sys-color-scrim, #000) 45%, transparent);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--bb-space-md);
+  }
+
+  .dialog {
+    width: 100%;
+    max-width: 520px;
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+    padding: var(--bb-space-lg);
+    border-radius: var(--bb-shape-lg);
+  }
+
+  .dialog h2 {
+    margin: 0 0 var(--bb-space-md);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .dialog form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-md);
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--bb-space-md);
+  }
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--bb-space-sm);
+    cursor: pointer;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--md-sys-color-primary);
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--bb-space-sm);
+    margin-top: var(--bb-space-sm);
+  }
+
+  .text-btn {
+    border: none;
+    background: transparent;
+    color: var(--md-sys-color-primary);
+    padding: 12px 20px;
+    border-radius: var(--bb-shape-full);
+    cursor: pointer;
+  }
+
+  .text-btn:hover {
+    background: var(--md-sys-color-surface-container-high);
+  }
+
+  .danger-btn {
+    border: none;
+    background: var(--md-sys-color-error);
+    color: var(--md-sys-color-on-error);
+    padding: 12px 24px;
+    border-radius: var(--bb-shape-full);
+    cursor: pointer;
+  }
+
+  .danger-btn:hover {
+    opacity: 0.9;
   }
 </style>

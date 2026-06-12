@@ -1,18 +1,25 @@
 :80 {
-  encode gzip
+  # SSE stream must not be gzip-encoded, otherwise events get buffered.
+  handle /api/v1/orders/stream {
+    reverse_proxy go-api:8080 {
+      flush_interval -1
+    }
+  }
 
-  # Static user-uploaded images (served directly by Caddy)
-  handle /uploads/* {
+  # Static user-uploaded images (served directly by Caddy).
+  # handle_path strips the /uploads prefix before file_server resolves the path.
+  handle_path /uploads/* {
     root * /srv/uploads
-    rewrite * {path}
     file_server
   }
 
   handle /api/* {
+    encode gzip
     reverse_proxy go-api:8080
   }
 
   handle {
+    encode gzip
     reverse_proxy svelte-frontend:3000
   }
 }

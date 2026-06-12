@@ -41,7 +41,7 @@ services:
   caddy:
     image: caddy:2
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       # Serve user-uploaded images at /uploads/*

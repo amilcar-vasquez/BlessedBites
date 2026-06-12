@@ -1,53 +1,84 @@
 <script lang="ts">
   import { requestPasswordReset } from '$lib/api/auth';
+  import AuthCard from '$lib/components/AuthCard.svelte';
 
-  let email = '';
-  let message = '';
-  let error = '';
-  let submitting = false;
+  let email = $state('');
+  let submitting = $state(false);
+  let sent = $state(false);
+  let errorMessage = $state<string | null>(null);
 
-  async function submit() {
-    error = '';
-    message = '';
+  async function handleSubmit(e: Event) {
+    e.preventDefault();
+    if (submitting) return;
     submitting = true;
+    errorMessage = null;
     try {
-      const res = await requestPasswordReset(email);
-      message = res.message;
-    } catch (e) {
-      console.error(e);
-      error = 'Could not submit reset request.';
+      await requestPasswordReset(email.trim());
+      sent = true;
+    } catch {
+      errorMessage = 'Something went wrong. Please try again.';
     } finally {
       submitting = false;
     }
   }
 </script>
 
-<main class="auth-shell">
-  <section class="card">
-    <h1>Reset Password</h1>
-    <p>Enter your account email to request a reset token.</p>
+<svelte:head>
+  <title>Reset Password — Blessed Bites</title>
+</svelte:head>
 
-    <form on:submit|preventDefault={submit}>
-      <label for="email">Email</label>
-      <input id="email" type="email" bind:value={email} required />
-
-      {#if message}<p class="ok">{message}</p>{/if}
-      {#if error}<p class="error">{error}</p>{/if}
-
-      <button class="btn" type="submit" disabled={submitting}>
-        {submitting ? 'Sending...' : 'Send Reset Request'}
+<AuthCard
+  title="Reset your password"
+  subtitle="Enter your email and we'll send you a reset link."
+>
+  {#if sent}
+    <div class="sent">
+      <span class="material-symbols-outlined icon" aria-hidden="true">mark_email_read</span>
+      <p class="body-lg">
+        If an account exists for <strong>{email}</strong>, a reset link is on its way. Check your inbox.
+      </p>
+    </div>
+  {:else}
+    <form onsubmit={handleSubmit}>
+      <label class="bb-field">
+        <span>Email</span>
+        <input type="email" required autocomplete="email" placeholder="you@example.com" bind:value={email} />
+      </label>
+      {#if errorMessage}
+        <p class="bb-form-error" role="alert">{errorMessage}</p>
+      {/if}
+      <button type="submit" class="bb-btn-primary" disabled={submitting}>
+        {submitting ? 'Sending…' : 'Send reset link'}
       </button>
     </form>
-  </section>
-</main>
+  {/if}
+  {#snippet footer()}
+    Remembered it? <a href="/login">Back to Login</a>
+  {/snippet}
+</AuthCard>
 
 <style>
-  .auth-shell { max-width: 520px; margin: 2rem auto; padding: 1rem; }
-  .card { background: #fffaf5; border: 1px solid #e7d3c9; border-radius: 20px; padding: 1rem 1.2rem; }
-  form { display: grid; gap: 0.55rem; }
-  label { font-weight: 700; font-size: 0.9rem; }
-  input { border: 1px solid #d9c5bc; border-radius: 12px; padding: 0.65rem 0.8rem; }
-  .btn { margin-top: 0.35rem; border: none; border-radius: 999px; padding: 0.65rem 1rem; background: #7f1d2d; color: #fff; font-weight: 700; }
-  .error { color: #8a1732; }
-  .ok { color: #225f38; }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-md);
+  }
+
+  .sent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--bb-space-md);
+  }
+
+  .icon {
+    font-size: 48px;
+    color: var(--md-sys-color-secondary);
+  }
+
+  .sent p {
+    margin: 0;
+    color: var(--md-sys-color-on-surface-variant);
+  }
 </style>

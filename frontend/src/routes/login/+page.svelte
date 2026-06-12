@@ -1,64 +1,76 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { login } from '$lib/api/auth';
+  import { setSession } from '$lib/stores/auth';
+  import { showToast } from '$lib/stores/toast';
+  import AuthCard from '$lib/components/AuthCard.svelte';
 
-  let email = '';
-  let password = '';
-  let error = '';
-  let submitting = false;
+  let email = $state('');
+  let password = $state('');
+  let submitting = $state(false);
+  let errorMessage = $state<string | null>(null);
 
-  async function submit() {
-    error = '';
+  async function handleSubmit(e: Event) {
+    e.preventDefault();
+    if (submitting) return;
     submitting = true;
+    errorMessage = null;
     try {
-      const result = await login(email, password);
-      localStorage.setItem('bb_access_token', result.token);
-      localStorage.setItem('bb_user', JSON.stringify(result.user));
-      await goto('/');
-    } catch (e) {
-      console.error(e);
-      error = 'Invalid credentials. Please try again.';
+      const res = await login(email.trim(), password);
+      setSession(res.token, res.user);
+      showToast(`Welcome back, ${res.user.full_name.split(' ')[0]}!`, 'success', 2500);
+      const redirect = $page.url.searchParams.get('redirect');
+      goto(redirect && redirect.startsWith('/') ? redirect : res.user.role === 'admin' ? '/dashboard' : '/menu');
+    } catch {
+      errorMessage = 'Invalid email or password.';
     } finally {
       submitting = false;
     }
   }
 </script>
 
-<main class="auth-shell">
-  <section class="card">
-    <h1>Login</h1>
-    <p>Welcome back to BlessedBites.</p>
+<svelte:head>
+  <title>Login — Blessed Bites</title>
+</svelte:head>
 
-    <form on:submit|preventDefault={submit}>
-      <label for="email">Email</label>
-      <input id="email" type="email" bind:value={email} required />
-
-      <label for="password">Password</label>
-      <input id="password" type="password" bind:value={password} required />
-
-      {#if error}<p class="error">{error}</p>{/if}
-
-      <button class="btn" type="submit" disabled={submitting}>
-        {submitting ? 'Logging in...' : 'Login'}
-      </button>
-    </form>
-
-    <div class="links">
-      <a href="/reset-password-request">Forgot password?</a>
-      <a href="/signup">Create account</a>
-    </div>
-  </section>
-</main>
+<AuthCard title="Welcome back" subtitle="Log in to order faster and track your meals.">
+  <form onsubmit={handleSubmit}>
+    <label class="bb-field">
+      <span>Email</span>
+      <input type="email" required autocomplete="email" placeholder="you@example.com" bind:value={email} />
+    </label>
+    <label class="bb-field">
+      <span>Password</span>
+      <input type="password" required autocomplete="current-password" placeholder="••••••••" bind:value={password} />
+    </label>
+    <a class="forgot label-lg" href="/reset-password-request">Forgot password?</a>
+    {#if errorMessage}
+      <p class="bb-form-error" role="alert">{errorMessage}</p>
+    {/if}
+    <button type="submit" class="bb-btn-primary" disabled={submitting}>
+      {submitting ? 'Logging in…' : 'Login'}
+    </button>
+  </form>
+  {#snippet footer()}
+    New here? <a href="/signup">Create an account</a>
+  {/snippet}
+</AuthCard>
 
 <style>
-  .auth-shell { max-width: 520px; margin: 2rem auto; padding: 1rem; }
-  .card { background: #fffaf5; border: 1px solid #e7d3c9; border-radius: 20px; padding: 1rem 1.2rem; }
-  h1 { margin: 0 0 0.4rem; }
-  p { margin: 0 0 1rem; color: #6f4744; }
-  form { display: grid; gap: 0.55rem; }
-  label { font-weight: 700; font-size: 0.9rem; }
-  input { border: 1px solid #d9c5bc; border-radius: 12px; padding: 0.65rem 0.8rem; }
-  .btn { margin-top: 0.35rem; border: none; border-radius: 999px; padding: 0.65rem 1rem; background: #7f1d2d; color: #fff; font-weight: 700; }
-  .error { color: #8a1732; margin: 0.15rem 0; }
-  .links { margin-top: 0.9rem; display: flex; justify-content: space-between; }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-md);
+  }
+
+  .forgot {
+    align-self: flex-end;
+    color: var(--md-sys-color-primary);
+    text-decoration: none;
+  }
+
+  .forgot:hover {
+    text-decoration: underline;
+  }
 </style>

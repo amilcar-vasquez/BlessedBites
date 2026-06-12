@@ -1,674 +1,370 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { onDestroy, onMount } from 'svelte';
-  import { cubicOut } from 'svelte/easing';
-  import { fade, fly, scale } from 'svelte/transition';
-  import MenuCard from '$lib/components/MenuCard.svelte';
+  import { onMount } from 'svelte';
   import { fetchCategories, type Category } from '$lib/api/categories';
   import { fetchMenu, type MenuItem } from '$lib/api/menu';
+  import MenuCard from '$lib/components/MenuCard.svelte';
+  import Skeleton from '$lib/components/Skeleton.svelte';
 
-  type CartItem = MenuItem & { qty: number };
+  let categories = $state<Category[]>([]);
+  let popularItems = $state<MenuItem[]>([]);
+  let loading = $state(true);
 
-  let items: MenuItem[] = [];
-  let categories: Category[] = [];
-  let selectedCategory = 'all';
-  let searchTerm = '';
+  const CATEGORY_ICONS: Record<string, string> = {
+    breakfast: 'egg_alt',
+    lunch: 'lunch_dining',
+    dinner: 'dinner_dining',
+    dessert: 'cake',
+    desserts: 'cake',
+    drinks: 'local_cafe',
+    beverages: 'local_cafe',
+    sides: 'tapas',
+    salads: 'eco',
+    soups: 'soup_kitchen',
+    specials: 'star',
+    bowls: 'rice_bowl',
+    burgers: 'lunch_dining',
+    pizza: 'local_pizza',
+    seafood: 'set_meal',
+    grill: 'outdoor_grill',
+    vegan: 'eco'
+  };
 
-  let cart: CartItem[] = [];
-  let cartOpen = false;
-  let cartPulse = false;
-  let addFeedback = '';
-  let feedbackTimer: ReturnType<typeof setTimeout> | null = null;
-  let pulseTimer: ReturnType<typeof setTimeout> | null = null;
-
-  let loading = true;
-  let categoriesLoading = true;
-  let error = '';
-
-  $: normalizedSearch = searchTerm.trim().toLowerCase();
-  $: categoryLookup = new Map<number, string>(categories.map((cat) => [cat.id, cat.name]));
-  $: filteredItems = items.filter((item) => {
-    const categoryMatches = selectedCategory === 'all' || item.category_id === Number(selectedCategory);
-    if (!categoryMatches) {
-      return false;
-    }
-
-    if (!normalizedSearch) {
-      return true;
-    }
-
-    return (
-      item.name.toLowerCase().includes(normalizedSearch) ||
-      item.description.toLowerCase().includes(normalizedSearch)
-    );
-  });
-  $: cartCount = cart.reduce((acc, item) => acc + item.qty, 0);
-  $: cartTotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
-
-  function loadCart() {
-    const raw = localStorage.getItem('bb_cart');
-    cart = raw ? (JSON.parse(raw) as CartItem[]) : [];
-  }
-
-  function persistCart(next: CartItem[]) {
-    localStorage.setItem('bb_cart', JSON.stringify(next));
-  }
-
-  function updateCart(updater: (current: CartItem[]) => CartItem[]) {
-    const next = updater(cart);
-    cart = next;
-    persistCart(next);
-  }
-
-  function showAddedFeedback(itemName: string) {
-    addFeedback = `${itemName} added to order`;
-    if (feedbackTimer) {
-      clearTimeout(feedbackTimer);
-    }
-    feedbackTimer = setTimeout(() => {
-      addFeedback = '';
-    }, 1600);
-  }
-
-  function triggerCartPulse() {
-    cartPulse = false;
-    if (pulseTimer) {
-      clearTimeout(pulseTimer);
-    }
-
-    requestAnimationFrame(() => {
-      cartPulse = true;
-      pulseTimer = setTimeout(() => {
-        cartPulse = false;
-      }, 320);
-    });
-  }
-
-  function addToCart(item: MenuItem) {
-    updateCart((current) => {
-      const idx = current.findIndex((x) => x.id === item.id);
-      if (idx >= 0) {
-        return current.map((entry, i) => (i === idx ? { ...entry, qty: entry.qty + 1 } : entry));
-      }
-
-      return [...current, { ...item, qty: 1 }];
-    });
-
-    if (window.matchMedia('(max-width: 819px)').matches) {
-      cartOpen = true;
-    }
-
-    triggerCartPulse();
-    showAddedFeedback(item.name);
-  }
-
-  function decrementFromCart(id: number) {
-    updateCart((current) => {
-      const idx = current.findIndex((entry) => entry.id === id);
-      if (idx < 0) {
-        return current;
-      }
-
-      if (current[idx].qty > 1) {
-        return current.map((entry, i) => (i === idx ? { ...entry, qty: entry.qty - 1 } : entry));
-      }
-
-      return current.filter((entry) => entry.id !== id);
-    });
-  }
-
-  function incrementCart(id: number) {
-    updateCart((current) => {
-      const idx = current.findIndex((entry) => entry.id === id);
-      if (idx < 0) {
-        return current;
-      }
-      return current.map((entry, i) => (i === idx ? { ...entry, qty: entry.qty + 1 } : entry));
-    });
-  }
-
-  function clearCart() {
-    cart = [];
-    localStorage.removeItem('bb_cart');
-  }
-
-  async function moveToCheckout() {
-    await goto('/checkout');
+  function iconFor(name: string): string {
+    return CATEGORY_ICONS[name.trim().toLowerCase()] ?? 'restaurant';
   }
 
   onMount(async () => {
-    loadCart();
     try {
-      const [menuPayload, categoriesPayload] = await Promise.all([fetchMenu(true), fetchCategories()]);
-      items = menuPayload;
-      categories = categoriesPayload;
-    } catch (e) {
-      error = 'Could not load menu. Please try again.';
-      console.error(e);
+      const [cats, items] = await Promise.all([fetchCategories(), fetchMenu(true)]);
+      categories = cats;
+      popularItems = items.slice(0, 3);
+    } catch {
+      categories = [];
+      popularItems = [];
     } finally {
       loading = false;
-      categoriesLoading = false;
     }
   });
 
-  onDestroy(() => {
-    if (feedbackTimer) {
-      clearTimeout(feedbackTimer);
+  const TESTIMONIALS = [
+    {
+      quote:
+        'The Golden Harvest Bowl is genuinely the best lunch in the neighborhood. Fresh, fast, and the flavors are incredible.',
+      name: 'Sarah M.',
+      role: 'Regular since 2023'
+    },
+    {
+      quote:
+        'Ordered for the whole office — everything arrived hot and exactly as described. Blessed Bites never misses.',
+      name: 'James K.',
+      role: 'Office lunch hero'
+    },
+    {
+      quote:
+        'Beautiful food, honest portions, and the seasonal specials keep me coming back every single week.',
+      name: 'Amara O.',
+      role: 'Weekly visitor'
     }
-    if (pulseTimer) {
-      clearTimeout(pulseTimer);
-    }
-  });
+  ];
 </script>
 
-<main class="app-shell">
-  <header class="top-app-bar" in:fly={{ y: -14, duration: 280, easing: cubicOut }}>
-    <div class="brand-wrap">
-      <span class="brand-mark" aria-hidden="true">BB</span>
-      <div>
-        <h1>BlessedBites</h1>
-        <p>San Ignacio pickup menu</p>
-      </div>
-    </div>
-    <div class="bar-actions">
-      <button type="button" class="tonal" on:click={() => (cartOpen = !cartOpen)}>
-        Cart
-        {#if cartCount > 0}
-          <span class:badge-pulse={cartPulse} class="badge">{cartCount}</span>
-        {/if}
-      </button>
-      <button type="button" class="filled" on:click={moveToCheckout}>Checkout</button>
-    </div>
-  </header>
+<svelte:head>
+  <title>Blessed Bites — Wholesome Food, Made with Grace</title>
+  <meta
+    name="description"
+    content="Premium fast-casual dining. Browse the Blessed Bites menu and order fresh, seasonal dishes online."
+  />
+</svelte:head>
 
-  <section class="hero" in:fade={{ duration: 260 }}>
-    <h2>Order quickly, eat happily.</h2>
-    <p>Browse by category, search your comfort food, and send your order in minutes.</p>
-
-    <div class="search-row">
-      <input
-        id="search"
-        type="search"
-        bind:value={searchTerm}
-        placeholder="Search menu items..."
-        aria-label="Search menu items"
-      />
-      <button
-        type="button"
-        class="outlined"
-        on:click={() => {
-          searchTerm = '';
-        }}
-      >
-        Clear
-      </button>
-    </div>
-  </section>
-
-  {#if addFeedback}
-    <p class="snackbar" role="status" aria-live="polite" transition:fly={{ y: 10, duration: 220, easing: cubicOut }}>
-      {addFeedback}
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow label-lg">Premium Fast-Casual Dining</span>
+    <h1 class="display-lg">Wholesome food,<br />made with <em>grace</em>.</h1>
+    <p class="body-lg">
+      Seasonal ingredients, honest cooking, and dishes prepared fresh the moment you order.
     </p>
-  {/if}
+    <div class="hero-actions">
+      <a class="cta label-lg" href="/menu">
+        <span class="material-symbols-outlined" aria-hidden="true">restaurant_menu</span>
+        Order Now
+      </a>
+      <a class="cta-secondary label-lg" href="#popular">Explore Popular</a>
+    </div>
+  </div>
+</section>
 
-  <section class="category-strip" aria-label="Menu categories" in:fade={{ duration: 320, delay: 40 }}>
-    <button
-      type="button"
-      class:active-chip={selectedCategory === 'all'}
-      class="chip"
-      on:click={() => {
-        selectedCategory = 'all';
-      }}
-    >
-      All
-    </button>
-
-    {#if categoriesLoading}
-      <span class="chip muted">Loading categories...</span>
+<!-- Categories -->
+<section class="section">
+  <h2 class="headline-lg">Browse by craving</h2>
+  <div class="categories hide-scrollbar">
+    {#if loading}
+      {#each Array(5) as _, i (i)}
+        <div class="category">
+          <Skeleton width="96px" height="96px" radius="50%" />
+          <Skeleton width="64px" height="14px" />
+        </div>
+      {/each}
     {:else}
-      {#each categories as category}
-        <button
-          type="button"
-          class:active-chip={selectedCategory === String(category.id)}
-          class="chip"
-          on:click={() => {
-            selectedCategory = String(category.id);
-          }}
-        >
-          {category.name}
-        </button>
+      {#each categories as cat (cat.id)}
+        <a class="category" href={`/menu?category=${cat.id}`}>
+          <span class="category-circle">
+            <span class="material-symbols-outlined" aria-hidden="true">{iconFor(cat.name)}</span>
+          </span>
+          <span class="label-lg">{cat.name}</span>
+        </a>
       {/each}
     {/if}
-  </section>
+  </div>
+</section>
 
-  <section class="content-grid">
-    <div>
-      {#if loading}
-        <p class="status">Loading menu...</p>
-      {:else if error}
-        <p class="status error">{error}</p>
-      {:else if filteredItems.length === 0}
-        <p class="status">No menu items match your filters.</p>
-      {:else}
-        <p class="results-copy">Showing {filteredItems.length} dishes</p>
-        <section class="grid">
-          {#each filteredItems as item, index (item.id)}
-            <div in:fly={{ y: 16, duration: 280, delay: Math.min(index * 35, 280), easing: cubicOut }}>
-              <MenuCard {item} categoryName={categoryLookup.get(item.category_id) || ''} onAdd={addToCart} />
-            </div>
-          {/each}
-        </section>
-      {/if}
-    </div>
+<!-- Popular items -->
+<section class="section" id="popular">
+  <div class="section-head">
+    <h2 class="headline-lg">Popular right now</h2>
+    <a class="see-all label-lg" href="/menu">
+      Full menu
+      <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+    </a>
+  </div>
+  <div class="grid">
+    {#if loading}
+      {#each Array(3) as _, i (i)}
+        <Skeleton width="100%" height="320px" radius="16px" />
+      {/each}
+    {:else}
+      {#each popularItems as item (item.id)}
+        <MenuCard {item} popular />
+      {/each}
+    {/if}
+  </div>
+</section>
 
-    <aside class:open={cartOpen} class="cart-panel" aria-label="Cart summary">
-      <div class="cart-head">
-        <h3>Your Order</h3>
-        {#if cart.length > 0}
-          <button type="button" class="clear-link" on:click={clearCart}>Clear</button>
-        {/if}
-      </div>
-
-      {#if cart.length === 0}
-        <p class="status">Your cart is empty.</p>
-      {:else}
-        <ul>
-          {#each cart as line (line.id)}
-            <li transition:scale={{ duration: 180, start: 0.95 }}>
-              <div>
-                <p>{line.name}</p>
-                <small>${line.price.toFixed(2)} each</small>
-              </div>
-              <div class="qty-controls">
-                <button type="button" on:click={() => decrementFromCart(line.id)} aria-label={`Remove one ${line.name}`}>
-                  -
-                </button>
-                <span>{line.qty}</span>
-                <button type="button" on:click={() => incrementCart(line.id)} aria-label={`Add one ${line.name}`}>
-                  +
-                </button>
-              </div>
-            </li>
-          {/each}
-        </ul>
-        <p class="cart-total">Total: ${cartTotal.toFixed(2)}</p>
-      {/if}
-
-      <button type="button" class="filled wide" disabled={cart.length === 0} on:click={moveToCheckout}>
-        Continue to Checkout
-      </button>
-    </aside>
-  </section>
-</main>
+<!-- About / testimonials -->
+<section class="section about" id="about">
+  <h2 class="headline-lg">Loved by the neighborhood</h2>
+  <div class="grid">
+    {#each TESTIMONIALS as t (t.name)}
+      <figure class="bb-card testimonial">
+        <span class="quote-mark material-symbols-outlined fill" aria-hidden="true">format_quote</span>
+        <blockquote class="body-lg">{t.quote}</blockquote>
+        <figcaption>
+          <span class="title-md">{t.name}</span>
+          <span class="label-sm muted">{t.role}</span>
+        </figcaption>
+      </figure>
+    {/each}
+  </div>
+</section>
 
 <style>
-  :global(body) {
-    margin: 0;
-    font-family: "Nunito Sans", "Avenir Next", "Segoe UI", sans-serif;
-    background:
-      radial-gradient(circle at 12% 12%, rgb(203 34 61 / 8%), transparent 30%),
-      radial-gradient(circle at 88% 8%, rgb(180 130 8 / 10%), transparent 32%),
-      linear-gradient(180deg, #fff8ee 0%, #fffdf8 100%);
-    color: #352220;
-  }
-
-  :global(:root) {
-    --primary: #7f1d2d;
-    --on-primary: #fff;
-    --primary-container: #ffd9de;
-    --secondary: #8d6500;
-    --secondary-container: #f6dfb7;
-    --on-secondary-container: #492316;
-    --surface: #fffaf5;
-    --surface-container: #f6ece2;
-    --surface-container-high: #f2e6da;
-    --on-surface: #2f1d1c;
-    --on-surface-variant: #6f4744;
-    --outline-variant: #e7d3c9;
-  }
-
-  .app-shell {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 16px 16px 28px;
-  }
-
-  .top-app-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 14px;
-    border-radius: 22px;
-    background: color-mix(in srgb, var(--surface) 84%, white 16%);
-    border: 1px solid var(--outline-variant);
-    box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
-    position: sticky;
-    top: 10px;
-    z-index: 20;
-  }
-
-  .brand-wrap {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-
-  .brand-mark {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff9f1;
-    font-weight: 900;
-    background: linear-gradient(145deg, #7f1d2d 0%, #651625 100%);
-  }
-
-  h1 {
-    margin: 0;
-    color: var(--on-surface);
-    font-size: 1.1rem;
-    line-height: 1.1;
-    letter-spacing: 0.01em;
-  }
-
-  .brand-wrap p {
-    margin: 0;
-    color: var(--on-surface-variant);
-    font-size: 0.82rem;
-  }
-
-  .bar-actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  button {
-    border: none;
-    border-radius: 999px;
-    padding: 0.55rem 1rem;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .filled {
-    background: var(--primary);
-    color: var(--on-primary);
-  }
-
-  .tonal {
-    background: var(--secondary-container);
-    color: var(--on-secondary-container);
-    position: relative;
-  }
-
-  .outlined {
-    background: transparent;
-    color: var(--on-surface-variant);
-    border: 1px solid var(--outline-variant);
-  }
-
-  .badge {
-    margin-left: 0.45rem;
-    border-radius: 999px;
-    padding: 0.1rem 0.45rem;
-    background: var(--primary);
-    color: var(--on-primary);
-    font-size: 0.74rem;
-  }
-
-  .badge-pulse {
-    animation: badge-bump 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
   .hero {
-    margin-top: 16px;
-    background: linear-gradient(150deg, #fef4dc 0%, #f9e5ec 100%);
-    border: 1px solid var(--outline-variant);
-    border-radius: 24px;
-    padding: 20px;
+    display: flex;
+    align-items: center;
+    min-height: clamp(440px, 70dvh, 716px);
+    padding: var(--bb-space-xl) var(--bb-margin-mobile);
+    background:
+      radial-gradient(ellipse 80% 60% at 80% 20%, color-mix(in srgb, var(--md-sys-color-tertiary-container) 55%, transparent), transparent),
+      radial-gradient(ellipse 70% 70% at 10% 90%, color-mix(in srgb, var(--md-sys-color-secondary-container) 45%, transparent), transparent),
+      var(--md-sys-color-surface-container-low);
   }
 
-  .hero h2 {
-    margin: 0;
-    color: #532122;
-    font-size: 1.35rem;
+  @media (min-width: 1024px) {
+    .hero {
+      padding: var(--bb-space-xl) var(--bb-margin-desktop);
+    }
+  }
+
+  .hero-inner {
+    max-width: 720px;
+  }
+
+  .hero-eyebrow {
+    display: inline-block;
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    padding: 6px 16px;
+    border-radius: var(--bb-shape-full);
+    margin-bottom: var(--bb-space-md);
+  }
+
+  .hero h1 {
+    margin: 0 0 var(--bb-space-md);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .hero h1 em {
+    color: var(--md-sys-color-primary);
+    font-style: italic;
   }
 
   .hero p {
-    margin: 8px 0 0;
-    color: #6f4340;
+    margin: 0 0 var(--bb-space-xl);
+    color: var(--md-sys-color-on-surface-variant);
+    max-width: 480px;
   }
 
-  .search-row {
-    margin-top: 14px;
+  .hero-actions {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: var(--bb-space-md);
   }
 
-  input {
-    flex: 1;
-    border-radius: 16px;
-    border: 1px solid var(--outline-variant);
-    padding: 0.75rem 0.9rem;
-    background: #fffdfa;
-    color: var(--on-surface);
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bb-space-sm);
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    padding: 14px 28px;
+    border-radius: var(--bb-shape-full);
+    text-decoration: none;
+    box-shadow: var(--bb-elev-2);
+    transition: transform 200ms ease, box-shadow 200ms ease;
   }
 
-  .category-strip {
-    margin-top: 14px;
+  .cta:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--bb-elev-3);
+  }
+
+  .cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: 14px 28px;
+    border-radius: var(--bb-shape-full);
+    border: 1px solid var(--md-sys-color-outline);
+    color: var(--md-sys-color-primary);
+    text-decoration: none;
+    transition: background-color 150ms ease;
+  }
+
+  .cta-secondary:hover {
+    background: var(--md-sys-color-surface-container-high);
+  }
+
+  .section {
+    padding: var(--bb-space-xl) var(--bb-margin-mobile);
+  }
+
+  @media (min-width: 1024px) {
+    .section {
+      padding: var(--bb-space-xl) var(--bb-margin-desktop);
+    }
+  }
+
+  .section h2 {
+    margin: 0 0 var(--bb-space-lg);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .section-head {
     display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 2px;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bb-space-md);
   }
 
-  .chip {
-    border-radius: 999px;
-    border: 1px solid var(--outline-variant);
-    background: #fff;
-    color: var(--on-surface-variant);
+  .see-all {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bb-space-xs);
+    color: var(--md-sys-color-primary);
+    text-decoration: none;
     white-space: nowrap;
   }
 
-  .chip.muted {
-    opacity: 0.7;
-    pointer-events: none;
+  .see-all:hover {
+    text-decoration: underline;
   }
 
-  .active-chip {
-    background: var(--primary-container);
-    color: #5c1524;
-    border-color: #e8b6bf;
+  .categories {
+    display: flex;
+    gap: var(--bb-space-lg);
+    overflow-x: auto;
+    padding-bottom: var(--bb-space-sm);
   }
 
-  .content-grid {
-    margin-top: 16px;
-    display: grid;
-    gap: 16px;
-    align-items: start;
+  .category {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--bb-space-sm);
+    text-decoration: none;
+    color: var(--md-sys-color-on-surface);
+    flex-shrink: 0;
   }
 
-  .results-copy {
-    margin: 0 0 10px;
-    color: var(--on-surface-variant);
-    font-size: 0.88rem;
+  .category-circle {
+    width: 96px;
+    height: 96px;
+    border-radius: var(--bb-shape-full);
+    background: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 150ms ease, transform 200ms ease;
+  }
+
+  .category-circle .material-symbols-outlined {
+    font-size: 36px;
+    color: var(--md-sys-color-primary);
+  }
+
+  .category:hover .category-circle {
+    background: var(--md-sys-color-secondary-container);
+    transform: translateY(-4px);
   }
 
   .grid {
     display: grid;
-    gap: 12px;
+    grid-template-columns: 1fr;
+    gap: var(--bb-space-lg);
   }
 
-  .cart-panel {
-    background: var(--surface-container);
-    border: 1px solid var(--outline-variant);
-    border-radius: 24px;
-    padding: 14px;
-  }
-
-  .cart-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .cart-head h3 {
-    margin: 0;
-    color: var(--on-surface);
-  }
-
-  .clear-link {
-    background: none;
-    border: none;
-    color: #7f1d2d;
-    padding: 0.1rem 0.2rem;
-    border-radius: 8px;
-  }
-
-  .cart-panel ul {
-    list-style: none;
-    margin: 12px 0;
-    padding: 0;
-    display: grid;
-    gap: 10px;
-  }
-
-  .cart-panel li {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    align-items: center;
-    background: #fff;
-    border-radius: 14px;
-    border: 1px solid var(--outline-variant);
-    padding: 10px;
-  }
-
-  .cart-panel li p {
-    margin: 0;
-    color: var(--on-surface);
-    font-weight: 700;
-    font-size: 0.9rem;
-  }
-
-  .cart-panel li small {
-    color: var(--on-surface-variant);
-  }
-
-  .qty-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .qty-controls button {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    padding: 0;
-    background: var(--secondary-container);
-    color: var(--on-secondary-container);
-  }
-
-  .cart-total {
-    margin: 2px 0 14px;
-    color: var(--on-surface);
-    font-weight: 800;
-  }
-
-  .wide {
-    width: 100%;
-  }
-
-  .status {
-    margin: 0;
-    color: var(--on-surface-variant);
-    background: var(--surface);
-    border: 1px solid var(--outline-variant);
-    border-radius: 16px;
-    padding: 0.9rem;
-  }
-
-  .status.error {
-    color: #7f1d2d;
-    border-color: #f0b8c1;
-    background: #ffeef1;
-  }
-
-  .snackbar {
-    margin: 12px 0 0;
-    width: fit-content;
-    max-width: 100%;
-    background: #4f2f00;
-    color: #fff8e9;
-    border-radius: 999px;
-    padding: 0.45rem 0.8rem;
-    font-size: 0.85rem;
-    box-shadow: 0 2px 8px rgb(0 0 0 / 16%);
-  }
-
-  @keyframes badge-bump {
-    0% {
-      transform: scale(1);
-    }
-    40% {
-      transform: scale(1.22);
-    }
-    100% {
-      transform: scale(1);
-    }
-  }
-
-  @media (min-width: 820px) {
-    .content-grid {
-      grid-template-columns: minmax(0, 1fr) 320px;
-    }
-
-    .cart-panel {
-      position: sticky;
-      top: 88px;
-    }
-
+  @media (min-width: 640px) {
     .grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 
-  @media (max-width: 819px) {
-    .top-app-bar {
-      flex-wrap: wrap;
-      position: static;
-    }
-
-    .bar-actions {
-      width: 100%;
-    }
-
-    .bar-actions button {
-      flex: 1;
-      text-align: center;
-    }
-
-    .search-row {
-      flex-direction: column;
-    }
-
-    .cart-panel {
-      display: none;
-    }
-
-    .cart-panel.open {
-      display: block;
+  @media (min-width: 1024px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .badge-pulse {
-      animation: none;
-    }
+  .about {
+    background: var(--md-sys-color-surface-container-low);
+  }
+
+  .testimonial {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-md);
+    padding: var(--bb-space-lg);
+    margin: 0;
+  }
+
+  .quote-mark {
+    font-size: 40px;
+    color: var(--md-sys-color-tertiary);
+  }
+
+  blockquote {
+    margin: 0;
+    color: var(--md-sys-color-on-surface);
+    flex: 1;
+  }
+
+  figcaption {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .muted {
+    color: var(--md-sys-color-on-surface-variant);
   }
 </style>
