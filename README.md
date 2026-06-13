@@ -11,7 +11,6 @@ This README is intended to document how the application is organized so new cont
 - Ordering flow: create orders and order items from checkout.
 - Customer feedback: ratings endpoints for menu items.
 - Account support: password reset request + reset completion.
-- Server-side rendering: HTML templates from `ui/html`.
 
 ## Tech Stack
 
@@ -21,7 +20,7 @@ This README is intended to document how the application is organized so new cont
 - Database: PostgreSQL via `github.com/lib/pq`
 - Sessions: `github.com/gorilla/sessions` cookie store
 - API Contract: OpenAPI 3.0 (see `backend/openapi.yaml`)
-- Dev tooling: `make`, `air`, `migrate`
+- Dev tooling: `make`, `migrate`
 
 **Frontend:**
 - Framework: SvelteKit
@@ -237,7 +236,6 @@ Caddy (`deploy/Caddyfile`) routes:
 - Node.js 20+ and npm (for frontend)
 - PostgreSQL 13+ (local or via Docker)
 - `migrate` CLI (for SQL migrations) - install with `go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest`
-- Optional: `air` binary (for live-reload backend)
 
 **Setup:**
 

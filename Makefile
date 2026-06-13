@@ -1,6 +1,6 @@
 # ====================================
 # Project: BlessedBites
-# Monolith SSR app  +  Go REST API  +  SvelteKit frontend
+# Go REST API  +  SvelteKit frontend
 # ====================================
 
 # Load environment variables from .env if it exists
@@ -13,7 +13,6 @@ endif
 # Tuneable defaults (override via .env or CLI)
 # ------------------------------------
 APP_ENV     ?= development
-ADDR        ?= :4000
 API_ADDR    ?= :8080
 DB_DSN      ?= $(JOURNAL_DB_DSN)
 JWT_SECRET  ?= change-me-in-production
@@ -69,23 +68,7 @@ test/frontend: ## Run SvelteKit type-checks
 	cd frontend && npm run check
 
 # ====================================
-# Legacy SSR monolith (cmd/web)
-# ====================================
-
-.PHONY: run
-run: vet ## Run the legacy SSR server locally on $(ADDR)
-	go run ./cmd/web -addr="$(ADDR)" -dsn="$(DB_DSN)"
-
-.PHONY: dev
-dev: ## Run the legacy SSR server with Air hot-reload
-	@if [ -x ./bin/air ]; then \
-		APP_ENV="$(APP_ENV)" DB_DSN="$(DB_DSN)" ./bin/air -c .air.toml; \
-	else \
-		APP_ENV="$(APP_ENV)" DB_DSN="$(DB_DSN)" air -c .air.toml; \
-	fi
-
-# ====================================
-# New Go REST API  (backend/cmd/api)
+# Go REST API  (backend/cmd/api)
 # ====================================
 
 .PHONY: run/api

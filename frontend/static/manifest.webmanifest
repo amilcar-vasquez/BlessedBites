@@ -8,9 +8,10 @@
   "description": "Mobile-first food ordering in San Ignacio, Belize.",
   "icons": [
     {
-      "src": "/icons/placeholder.svg",
+      "src": "/icons/BlessedBitesIcon.png",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

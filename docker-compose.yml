@@ -1,12 +1,52 @@
 services:
-  app:
-    build: .
-    env_file:
-      - .env
+  postgres:
+    image: postgres:16
     environment:
-      DB_DSN: ${JOURNAL_DB_DSN}
-    ports:
-      - "4000:4000"
+      POSTGRES_DB: blessed_bites
+      POSTGRES_USER: blessed_bites
+      POSTGRES_PASSWORD: blessed_bites
     volumes:
-      - ./uploads:/app/uploads
-    restart: unless-stopped
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blessed_bites -d blessed_bites"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  go-api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DB_DSN: postgres://blessed_bites:blessed_bites@postgres:5432/blessed_bites?sslmode=disable
+      JWT_SECRET: change-me
+      CORS_ORIGIN: http://localhost
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+
+  svelte-frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      PUBLIC_API_BASE_URL: /api/v1
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "8080:80"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Serve user-uploaded images at /uploads/*
+      - ./uploads:/srv/uploads:ro
+    depends_on:
+      - go-api
+      - svelte-frontend
+
+volumes:
+  pg_data:

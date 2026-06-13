@@ -48,7 +48,10 @@
     >
       <span class="material-symbols-outlined">menu</span>
     </button>
-    <a class="brand" href="/">Blessed Bites</a>
+    <a class="brand" href="/">
+      <img class="brand-logo" src="/icons/BlessedBitesIcon.png" alt="" />
+      <span>Blessed Bites</span>
+    </a>
     <nav class="desktop-nav" aria-label="Main">
       <a class="label-lg" class:active={path === '/menu'} href="/menu">Menu</a>
       <a class="label-lg" href="/#popular">Offers</a>
@@ -174,6 +177,9 @@
   }
 
   .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--bb-space-sm);
     font-family: var(--md-ref-typeface-brand);
     font-size: 24px;
     line-height: 32px;
@@ -181,6 +187,13 @@
     color: var(--md-sys-color-primary);
     text-decoration: none;
     white-space: nowrap;
+  }
+
+  .brand-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: var(--md-sys-shape-corner-small, 8px);
   }
 
   .desktop-nav {
